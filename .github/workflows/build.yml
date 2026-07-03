@@ -22,7 +22,7 @@ jobs:
 
       - name: Draw app icon
         run: |
-          python3 -m pip install --quiet pillow
+          python3 -m pip install --quiet --break-system-packages pillow || python3 -m pip install --quiet pillow
           python3 scripts/make_icon.py ios/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
 
       - name: Generate Xcode project
