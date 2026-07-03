@@ -1,0 +1,66 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.0.0"
+        required: true
+        default: "1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Draw app icon
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 scripts/make_icon.py ios/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
+
+      - name: Generate Xcode project
+        run: cd ios && xcodegen generate
+
+      - name: Build unsigned app
+        run: |
+          cd ios
+          xcodebuild -project SummerLockIn.xcodeproj \
+            -scheme SummerLockIn \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            MARKETING_VERSION="${{ github.event.inputs.version }}" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Package IPA
+        run: |
+          cd ios
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/SummerLockIn.app Payload/
+          zip -qry ../SummerLockIn.ipa Payload
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ github.event.inputs.version }}" SummerLockIn.ipa \
+            --title "v${{ github.event.inputs.version }}" \
+            --notes "Summer Lock In ${{ github.event.inputs.version }} (unsigned IPA for SideStore)" \
+          || gh release upload "v${{ github.event.inputs.version }}" SummerLockIn.ipa --clobber
+
+      - name: Update SideStore source
+        run: |
+          python3 scripts/make_source.py "${{ github.repository }}" "${{ github.event.inputs.version }}" "$(stat -f%z SummerLockIn.ipa)"
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git pull --rebase
+          git add source.json
+          git commit -m "source.json for v${{ github.event.inputs.version }}" || echo "nothing to commit"
+          git push

@@ -1,0 +1,38 @@
+name: SummerLockIn
+options:
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  SummerLockIn:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Sources
+      - path: Resources/index.html
+        buildPhase: resources
+      - path: Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.summerlockin.app
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Summer Lock In
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIViewControllerBasedStatusBarAppearance: false
+        UIStatusBarStyle: UIStatusBarStyleLightContent
+        NSPhotoLibraryUsageDescription: Lets you add progress photos from your library.
+        NSCameraUsageDescription: Lets you take progress photos.
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate

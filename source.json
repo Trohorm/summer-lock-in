@@ -1,0 +1,16 @@
+{
+ "name": "Summer Lock In",
+ "identifier": "com.summerlockin.source",
+ "apps": [
+  {
+   "name": "Summer Lock In",
+   "bundleIdentifier": "com.summerlockin.app",
+   "developerName": "Summer Lock In crew",
+   "subtitle": "Offline gym tracker",
+   "localizedDescription": "UL/PPL gym tracker: set-by-set logging with automatic progressive overload (8\u219210), rest timers, daily check-ins, weight trend, cardio log and progress photos. Fully offline \u2014 all data stays on your phone.",
+   "iconURL": "https://summer-lock-in.puter.site/icon-512.png",
+   "tintColor": "5b93ff",
+   "versions": []
+  }
+ ]
+}

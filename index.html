@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Summer Lock In</title>
+<meta name="theme-color" content="#0e1013">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lock In">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1013'/%3E%3Crect x='8' y='27' width='6' height='10' rx='2' fill='%235b93ff'/%3E%3Crect x='50' y='27' width='6' height='10' rx='2' fill='%235b93ff'/%3E%3Crect x='15' y='23' width='7' height='18' rx='2' fill='%235b93ff'/%3E%3Crect x='42' y='23' width='7' height='18' rx='2' fill='%235b93ff'/%3E%3Crect x='22' y='30' width='20' height='4' rx='2' fill='%23e9ecf1'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<style>
+:root{
+  color-scheme:dark;
+  --ice:#0e1013; --snow:#171a20; --navy:#e9ecf1; --slate:#a6aeba; --mist:#7d8592;
+  --glacier:#5b93ff; --sky:#8fb7ff; --frost:#262c35; --deep:#d9e4f8; --raised:#20252d;
+  --ok:#3ecf8e; --warn:#d9a441; --bad:#ef6a56;
+  --r:14px; --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--ice);
+  color:var(--navy); min-height:100vh; padding-bottom:84px;
+}
+/* ---------- header ---------- */
+.hero{
+  background:var(--snow); border-bottom:1px solid var(--frost);
+  color:var(--navy); padding:calc(18px + env(safe-area-inset-top)) 18px 14px;
+}
+.hero h1{font-size:19px;letter-spacing:.14em;text-transform:uppercase;font-weight:800}
+.hero h1 span{color:var(--glacier)}
+.hero .sub{font-size:13px;color:var(--slate);margin-top:3px}
+.badge{
+  display:inline-block;background:rgba(91,147,255,.14);border:1px solid rgba(91,147,255,.4);
+  color:var(--sky);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:1px;
+}
+/* ---------- layout ---------- */
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 30px}
+.view{display:none}
+.view.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--snow);border:1px solid var(--frost);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);margin-bottom:12px;font-weight:800}
+.card h2 .right{float:right;font-weight:600;letter-spacing:0;text-transform:none;color:var(--mist)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.muted{color:var(--slate);font-size:13px;line-height:1.5}
+.tiny{color:var(--mist);font-size:11.5px;line-height:1.45}
+hr.sep{border:none;border-top:1px solid var(--frost);margin:12px 0}
+/* ---------- inputs ---------- */
+label.f{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--slate);font-weight:700;margin-bottom:4px}
+input,select,textarea{
+  width:100%;padding:9px 10px;border:1px solid var(--frost);border-radius:9px;font-size:15px;
+  color:var(--navy);background:#12151b;font-family:inherit;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--glacier);border-color:var(--glacier)}
+textarea{resize:vertical;min-height:56px}
+.field{margin-bottom:10px}
+.checkline{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--slate);font-weight:600}
+.checkline input{width:20px;height:20px;accent-color:var(--glacier)}
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-block;border:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:transform .05s;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--glacier);color:#fff;width:100%}
+.btn-primary:hover{background:#4a82ea}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.btn-ghost{background:#232933;color:#dbe2ec}
+.btn-danger{background:#33201c;color:#ff8b76}
+.btn-sm{padding:7px 12px;font-size:12.5px;border-radius:8px}
+.chipbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{
+  border:1px solid var(--frost);background:#12151b;color:var(--slate);border-radius:999px;
+  padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.chip.on{background:var(--glacier);border-color:var(--glacier);color:#fff}
+/* ---------- stats ---------- */
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--snow);border:1px solid var(--frost);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--shadow)}
+.stat .v{font-size:22px;font-weight:800;color:var(--deep)}
+.stat .v small{font-size:12px;font-weight:700;color:var(--mist)}
+.stat .l{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mist);font-weight:700;margin-top:2px}
+.bar{height:8px;background:var(--ice);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--glacier);border-radius:99px;transition:width .3s}
+.bar i.over{background:var(--ok)}
+.tgtline{display:flex;justify-content:space-between;font-size:12px;color:var(--slate);margin-top:8px;font-weight:600}
+.cirow{display:flex;align-items:center;gap:6px}
+.cinav{background:#232933;border:1px solid var(--frost);color:var(--navy);border-radius:7px;width:26px;height:26px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;padding:0}
+.cinav:disabled{opacity:.35;cursor:default}
+#ciDate{width:auto;background:#12151b;border:1px solid var(--frost);border-radius:7px;color:var(--navy);padding:4px 6px;font-size:12px;font-weight:700;font-family:inherit;letter-spacing:0}
+/* ---------- workout ---------- */
+.excard{border:1px solid var(--frost);border-radius:12px;padding:12px;margin-bottom:12px;background:#12151b}
+.exhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.exhead .nm{font-weight:800;font-size:15px}
+.exhead .tg{font-size:12px;color:var(--glacier);font-weight:700;white-space:nowrap}
+.exnote{font-size:11.5px;color:var(--warn);margin-top:2px}
+.lastline{font-size:12px;color:var(--slate);margin:6px 0 8px}
+.suggest{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;margin-left:6px}
+.suggest.up{background:#17301f;color:#4cd487}
+.suggest.hold{background:#182337;color:var(--sky)}
+.setrow{display:grid;grid-template-columns:34px 1fr 1fr 44px;gap:8px;align-items:center;margin-bottom:6px}
+.setrow .sn{font-size:12px;font-weight:800;color:var(--mist);text-align:center}
+.setrow input{padding:8px;text-align:center;font-size:15px;font-weight:700}
+.setrow input.done-in{accent-color:var(--ok);width:22px;height:22px;justify-self:center}
+.exfoot{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.restbtn{background:#1a2433;color:var(--sky);border:1px solid #2b3a52;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+/* ---------- AI feedback ---------- */
+.aibox{
+  border:1px solid #2b3a52;background:linear-gradient(160deg,#151d2c,#141824);
+  border-radius:12px;padding:13px 14px;margin:12px 0;display:none;
+}
+.aibox.show{display:block}
+.aibox .ttl{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--sky);font-weight:800;margin-bottom:7px}
+.aibox .txt{font-size:13.5px;line-height:1.6;color:#cfdcf3;white-space:pre-wrap}
+.aibox .txt.thinking{color:var(--mist);font-style:italic}
+/* ---------- timer sheet ---------- */
+#timerSheet{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:60;display:none;
+  background:var(--raised);color:#fff;border-radius:16px;padding:14px 22px;box-shadow:0 10px 30px rgba(0,0,0,.55);
+  text-align:center;min-width:230px;
+}
+#timerSheet.show{display:block}
+#timerLabel{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sky);font-weight:700}
+#timerLeft{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0 6px}
+#timerLeft.doneflash{color:#7be6b4}
+/* ---------- tables / lists ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mist);text-align:left;padding:6px 6px;border-bottom:1px solid var(--frost)}
+td{padding:7px 6px;border-bottom:1px solid #1e232b;color:var(--navy)}
+td .del{color:var(--bad);cursor:pointer;font-weight:700;font-size:12px}
+.histitem{border:1px solid var(--frost);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#12151b;cursor:pointer}
+.histitem .top{display:flex;justify-content:space-between;font-size:13.5px;font-weight:700}
+.histitem .top .d{color:var(--slate);font-weight:600}
+.histitem .det{display:none;margin-top:8px;font-size:12.5px;color:var(--slate);line-height:1.6}
+.histitem.open .det{display:block}
+.histitem .ai{margin-top:8px;padding:8px 10px;border-radius:8px;background:#151d2c;color:#b9cdf0;font-size:12px;line-height:1.55;white-space:pre-wrap}
+/* ---------- charts ---------- */
+.chartbox{width:100%;overflow:hidden}
+.chartbox svg{width:100%;height:auto;display:block}
+.insight{background:#151d29;border:1px solid #24364e;border-radius:10px;padding:10px 12px;font-size:13px;color:#c2d6f2;margin-top:10px;line-height:1.5}
+/* ---------- photos ---------- */
+.ph-month{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mist);font-weight:800;margin:12px 0 6px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pcell{position:relative;border-radius:10px;overflow:hidden;border:2px solid transparent;cursor:pointer;aspect-ratio:3/4;background:var(--ice)}
+.pcell img{width:100%;height:100%;object-fit:cover;display:block}
+.pcell.sel{border-color:var(--glacier)}
+.pcell .pd{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.72);color:#fff;font-size:10px;padding:3px 6px;text-align:center;font-weight:700}
+.pcell .px{position:absolute;top:4px;right:4px;background:rgba(192,74,58,.9);color:#fff;border-radius:6px;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;font-weight:800}
+.pcell.loading::after{content:'…';position:absolute;inset:0;display:grid;place-items:center;color:var(--mist);font-weight:800}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.compare figure img{width:100%;border-radius:10px;display:block}
+.compare figcaption{text-align:center;font-size:11px;font-weight:700;color:var(--slate);margin-top:4px}
+/* ---------- plan ---------- */
+.planday{margin-bottom:16px}
+.planday h3{font-size:14px;font-weight:800;color:var(--deep);border-bottom:2px solid var(--sky);padding-bottom:4px;margin-bottom:8px}
+.planday ol{margin-left:18px}
+.planday li{font-size:13.5px;margin-bottom:6px;line-height:1.45}
+.planday li b{display:block}
+.planday li span{color:var(--slate);font-size:12.5px}
+.plansec h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--glacier);margin:14px 0 6px}
+.plansec p,.plansec li{font-size:13.5px;color:var(--navy);line-height:1.55;margin-bottom:6px}
+.plansec ul{margin-left:18px}
+/* ---------- login / wizard ---------- */
+.authcard{max-width:420px;margin:8vh auto 0;text-align:center}
+.authcard .logo{font-size:24px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.authcard .logo span{color:var(--glacier)}
+.authcard p{color:var(--slate);font-size:13.5px;line-height:1.6;margin-bottom:18px}
+.authmsg{color:var(--warn);font-size:12.5px;margin-top:12px;min-height:16px}
+.wizhead{font-size:16px;font-weight:800;margin-bottom:4px}
+.wizsub{color:var(--slate);font-size:13px;margin-bottom:16px;line-height:1.5}
+.wizerr{color:var(--bad);font-size:12.5px;margin-top:10px;min-height:16px;font-weight:600}
+/* ---------- nav ---------- */
+nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(14,16,19,.92);
+  backdrop-filter:blur(10px);border-top:1px solid var(--frost);
+  display:none;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+body.authed nav{display:flex}
+nav button{
+  background:none;border:none;font-family:inherit;cursor:pointer;color:var(--mist);
+  font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px;border-radius:10px;min-width:52px;
+}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--glacier)}
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:90px;z-index:70;
+  background:var(--raised);color:#fff;padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:700;
+  opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:88vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ---------- misc ---------- */
+.restcard{background:#141a24;border:1px solid #24304a}
+.countcard{background:#182236;border:1px solid #263a5c;color:#fff}
+.countcard h2{color:var(--sky)}
+.countcard .big{font-size:34px;font-weight:800}
+.countcard p{font-size:13px;color:#b9c6dd;margin-top:6px;line-height:1.5}
+details.warm{background:#251e10;border:1px solid #453714;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+details.warm summary{font-size:12.5px;font-weight:800;color:#d9a441;cursor:pointer;letter-spacing:.04em}
+details.warm div{font-size:12.5px;color:#c0a35e;line-height:1.6;margin-top:8px}
+.exdone{opacity:.55}
+.exdone .nm{text-decoration:line-through}
+footer{max-width:760px;margin:0 auto;padding:0 14px 20px;text-align:center}
+footer,footer a{font-size:11px;color:var(--mist)}
+@media(max-width:420px){
+  .grid3{grid-template-columns:1fr 1fr}
+  .statrow{gap:8px}
+  .stat .v{font-size:19px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Summer <span>Lock In</span><span class="badge" id="weekBadge">—</span></h1>
+  <div class="sub" id="heroSub">Loading…</div>
+</header>
+
+<div class="wrap">
+  <!-- ================= WIZARD ================= -->
+  <section class="view" id="view-wizard">
+    <div class="card" style="max-width:480px;margin:4vh auto 0">
+      <div class="wizhead">Set up your tracker</div>
+      <div class="wizsub">Your goals, your numbers — you can change any of this later in Setup.</div>
+      <div class="field"><label class="f">Display name</label><input id="wz-name" maxlength="24" placeholder="How should the app call you?"></div>
+      <div class="field"><label class="f">Goal</label><div class="chipbar" id="wz-goal" style="margin-bottom:2px"></div></div>
+      <div class="grid2">
+        <div class="field"><label class="f">Weight kg</label><input id="wz-weight" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label class="f">Height cm</label><input id="wz-height" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Age</label><input id="wz-age" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Sex</label><select id="wz-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
+      </div>
+      <div class="field"><label class="f">Week 1 starts (a Sunday)</label><input type="date" id="wz-start"></div>
+      <p class="tiny" style="margin-bottom:10px">Weeks run Sunday → Saturday (Sun rest · Mon upper · Tue lower · Wed rest · Thu push · Fri pull · Sat legs).</p>
+      <div class="grid2">
+        <div class="field"><label class="f">Daily calorie target</label><input id="wz-kcal" type="number" inputmode="numeric" placeholder="kcal per day"></div>
+        <div class="field"><label class="f">Daily protein target</label><input id="wz-protein" type="number" inputmode="numeric" placeholder="grams per day"></div>
+      </div>
+      <p class="tiny" style="margin-bottom:12px" id="wzSugNote">Fill in your stats and goal above and the targets get suggested automatically — protein equals your bodyweight in lbs, calories match the goal. Edit them freely; they're yours.</p>
+      <button class="btn btn-primary" id="wzSaveBtn">Start tracking</button>
+      <div class="wizerr" id="wzErr"></div>
+    </div>
+  </section>
+
+  <!-- ================= TODAY ================= -->
+  <section class="view" id="view-today">
+    <div class="statrow">
+      <div class="stat"><div class="v" id="stWeight">—</div><div class="l">Weight kg</div></div>
+      <div class="stat"><div class="v" id="stStreak">0</div><div class="l">Day streak</div></div>
+      <div class="stat"><div class="v" id="stWeek">0<small>/5</small></div><div class="l">Lifts this wk</div></div>
+    </div>
+    <div id="todayPlanCard"></div>
+    <div class="card">
+      <h2>Daily check-in <span class="right cirow"><button type="button" class="cinav" id="ciPrev">‹</button><input type="date" id="ciDate"><button type="button" class="cinav" id="ciNext">›</button></span></h2>
+      <div class="grid2">
+        <div class="field"><label class="f">Weight kg</label><input id="ci-weight" type="number" step="0.1" inputmode="decimal" placeholder="kg"></div>
+        <div class="field"><label class="f">Sleep h</label><input id="ci-sleep" type="number" step="0.5" inputmode="decimal" placeholder="hours"></div>
+        <div class="field"><label class="f">Calories</label><input id="ci-kcal" type="number" inputmode="numeric" placeholder="kcal"></div>
+        <div class="field"><label class="f">Protein g</label><input id="ci-protein" type="number" inputmode="numeric" placeholder="g"></div>
+      </div>
+      <div id="ciBars"></div>
+      <div style="margin-top:12px"><button class="btn btn-primary" id="ciSaveBtn">Save check-in</button></div>
+    </div>
+    <div class="card">
+      <h2>Bodyweight trend</h2>
+      <div class="chartbox" id="weightChart"><p class="muted">Log your weight in the daily check-in to see the trend.</p></div>
+      <div class="insight" id="bodyInsight" style="display:none"></div>
+    </div>
+    <div class="card">
+      <h2>Progress photos</h2>
+      <p class="tiny">Same spot, same light, same poses, every 2 weeks. Tap two photos to compare across months. Photos are stored privately in your account's cloud storage — no one else can see them.</p>
+      <div style="margin-top:10px"><input type="file" id="photoInput" accept="image/*" multiple></div>
+      <div id="photoGrid"></div>
+      <div id="compareBox"></div>
+    </div>
+  </section>
+
+  <!-- ================= WORKOUT ================= -->
+  <section class="view" id="view-workout">
+    <div class="card">
+      <h2>Log a workout</h2>
+      <div class="chipbar" id="dayChips"></div>
+      <div class="field"><label class="f">Date</label><input type="date" id="woDate"></div>
+      <details class="warm">
+        <summary>Warm-up before the first big lift</summary>
+        <div>1. Very light × 8–10 &nbsp;→&nbsp; 2. Medium × 5 &nbsp;→&nbsp; 3. Heavier × 2–3 &nbsp;→&nbsp; working sets.<br>
+        1–2 lighter feel-sets before later compounds if needed. Warm-ups never go near failure and don't count as working sets.</div>
+      </details>
+      <div id="woList"></div>
+      <div class="field"><label class="f">Session notes</label><textarea id="woNotes" placeholder="Energy, tweaks, machine settings…"></textarea></div>
+      <button class="btn btn-primary" id="saveWoBtn">Save workout</button>
+    </div>
+    <div class="card">
+      <h2>History</h2>
+      <div id="histList" class="muted">No workouts logged yet.</div>
+    </div>
+  </section>
+
+  <!-- ================= CARDIO ================= -->
+  <section class="view" id="view-cardio">
+    <div class="card">
+      <h2>Log cardio</h2>
+      <div class="grid2">
+        <div class="field"><label class="f">Date</label><input type="date" id="cardioDate"></div>
+        <div class="field"><label class="f">Type</label>
+          <select id="cardioType">
+            <option>Easy run</option>
+            <option>Long run</option>
+            <option>Intervals</option>
+            <option>Bike / other zone-2</option>
+            <option>Mobility / stretching</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label class="f">Minutes</label><input id="cardioMins" type="number" inputmode="numeric" placeholder="30"></div>
+        <div class="field"><label class="f">Distance km</label><input id="cardioKm" type="number" step="0.1" inputmode="decimal" placeholder="optional"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">Intensity</label>
+          <select id="cardioInt"><option>Easy</option><option>Moderate</option><option>Hard</option></select>
+        </div>
+        <div class="field"><label class="f">Notes</label><input id="cardioNotes" placeholder="Route, how it felt…"></div>
+      </div>
+      <button class="btn btn-primary" id="cardioAdd">Save session</button>
+    </div>
+    <div class="card">
+      <h2>Running around the lifting plan</h2>
+      <div class="plansec">
+        <p><b>Best slots: Sunday and Wednesday</b> (rest days). Keep most running easy — you should be able to talk in full sentences. Easy cardio helps recovery; hard cardio steals from it.</p>
+        <ul>
+          <li>Easy / zone-2 runs 30–60 min are the default.</li>
+          <li>Keep Friday easy so Saturday legs are quality, and go easy the day before Lower Body too.</li>
+          <li>Intervals or hard runs: max 1× per week, ideally Sunday, not the day before a leg day.</li>
+          <li>If legs feel dead in the gym, cut running volume before cutting lifting.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Session history</h2>
+      <div id="cardioList" class="muted">Nothing logged yet.</div>
+    </div>
+  </section>
+
+  <!-- ================= PLAN ================= -->
+  <section class="view" id="view-plan">
+    <div class="card"><h2>Weekly schedule</h2><div id="planWeek"></div></div>
+    <div class="card"><h2>The workouts</h2><div id="planContent"></div></div>
+    <div class="card"><h2>Rules of the program</h2><div class="plansec" id="planRules"></div></div>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <h2>This phone</h2>
+      <p class="muted">Offline app — everything is stored on this phone only. No account, no internet needed.</p>
+      <p class="tiny" id="storageInfo" style="margin-top:6px"></p>
+    </div>
+    <div class="card">
+      <h2>Profile &amp; targets</h2>
+      <div class="field"><label class="f">Display name</label><input id="set-name" maxlength="24"></div>
+      <div class="field"><label class="f">Week 1 starts (a Sunday)</label><input type="date" id="set-start"></div>
+      <div class="field"><label class="f">Goal</label><div class="chipbar" id="set-goal" style="margin-bottom:2px"></div></div>
+      <div class="grid2">
+        <div class="field"><label class="f">Weight kg</label><input id="set-weight" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label class="f">Height cm</label><input id="set-height" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Age</label><input id="set-age" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Sex</label><select id="set-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">Daily calories</label><input id="set-kcal" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Daily protein g</label><input id="set-protein" type="number" inputmode="numeric"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="suggestBtn" style="margin-bottom:12px">Suggest targets from my stats</button>
+      <button class="btn btn-primary" id="setSaveBtn">Save settings</button>
+    </div>
+    <div class="card">
+      <h2>Data</h2>
+      <p class="tiny">Everything lives on this phone. Export a backup now and then — it also moves your data between the website and this app (photos not included).</p>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn btn-ghost" id="exportBtn">Export backup</button>
+        <label class="btn btn-ghost" style="text-align:center" for="importFile">Import backup file</label>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+        <button class="btn btn-ghost" id="importTextBtn" style="grid-column:1 / -1">Paste a backup instead</button>
+      </div>
+      <hr class="sep">
+      <button class="btn btn-danger btn-sm" id="eraseBtn">Erase all my data</button>
+    </div>
+  </section>
+</div>
+
+
+<div id="timerSheet">
+  <div id="timerLabel">Rest</div>
+  <div id="timerLeft">0:00</div>
+  <button class="btn btn-ghost btn-sm" id="timerStop">Stop</button>
+</div>
+<div id="toast"></div>
+
+<nav id="mainNav">
+  <button data-v="today" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>Today</button>
+  <button data-v="workout"><svg viewBox="0 0 24 24"><path d="M2 12h3M19 12h3M7 12h10"/><rect x="4" y="8" width="3" height="8" rx="1"/><rect x="17" y="8" width="3" height="8" rx="1"/></svg>Lift</button>
+  <button data-v="cardio"><svg viewBox="0 0 24 24"><circle cx="16" cy="4.5" r="2"/><path d="M13 8.5 9 11l3 3-2 6M13 8.5l3.5 2 3-1.5M13 8.5 15 14l4 2M9 20l2-4"/></svg>Cardio</button>
+  <button data-v="plan"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Plan</button>
+  <button data-v="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2"/></svg>Setup</button>
+</nav>
+
+<script>
+'use strict';
+/* ================= PLAN DATA ================= */
+const PLAN = {
+  upper:{name:'Upper Body',ex:[
+    {id:'chest_press',   name:'Machine Chest Press',        sets:3,lo:8, hi:10,rest:150,restTxt:'2.5 min'},
+    {id:'cs_row',        name:'Chest-Supported Row',        sets:3,lo:8, hi:10,rest:150,restTxt:'2.5 min'},
+    {id:'lat_pulldown',  name:'Neutral-Grip Lat Pulldown',  sets:3,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'incline_press', name:'Incline Machine Press',      sets:2,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'lateral_raise', name:'Cable Lateral Raise',        sets:3,lo:12,hi:15,rest:75, restTxt:'60–90 s'},
+    {id:'shrug',         name:'Dumbbell / Machine Shrug',   sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'curl_cable',    name:'Cable Curl / Machine Preacher',sets:2,lo:10,hi:12,rest:90,restTxt:'90 s'},
+    {id:'pressdown',     name:'Rope Triceps Pressdown',     sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'}
+  ]},
+  lower:{name:'Lower Body',ex:[
+    {id:'leg_press',     name:'Leg Press',                  sets:3,lo:8, hi:10,rest:180,restTxt:'3 min',note:"Don't let your lower back curl off the pad at the bottom."},
+    {id:'seated_curl',   name:'Seated Leg Curl',            sets:3,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'bss',           name:'Bulgarian Split Squat (DBs)',sets:3,lo:8, hi:10,rest:120,restTxt:'2 min',perSide:true},
+    {id:'hip_thrust',    name:'Hip-Thrust Machine',         sets:3,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'leg_ext',       name:'Leg Extension',              sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'adductor',      name:'Hip Adduction Machine',      sets:2,lo:10,hi:12,rest:75, restTxt:'60–90 s'},
+    {id:'calf_stand',    name:'Standing Calf Raise',        sets:4,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'cable_crunch',  name:'Cable Crunch',               sets:3,lo:10,hi:15,rest:75, restTxt:'60–90 s'}
+  ]},
+  push:{name:'Push',ex:[
+    {id:'chest_press',   name:'Machine Chest Press',        sets:3,lo:8, hi:10,rest:150,restTxt:'2.5 min'},
+    {id:'incline_press', name:'Incline Machine / DB Press', sets:3,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'pec_deck',      name:'Pec Deck',                   sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'shoulder_press',name:'Seated Machine Shoulder Press',sets:2,lo:8,hi:10,rest:120,restTxt:'2 min'},
+    {id:'dip_machine',   name:'Machine / Assisted Dip',     sets:2,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'lateral_raise', name:'Cable Lateral Raise',        sets:4,lo:12,hi:15,rest:75, restTxt:'60–90 s'},
+    {id:'oh_triceps',    name:'Overhead Cable Triceps Ext.',sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'pressdown',     name:'Rope Triceps Pressdown',     sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'}
+  ]},
+  pull:{name:'Pull',ex:[
+    {id:'lat_pulldown',  name:'Neutral-Grip Lat Pulldown',  sets:3,lo:8, hi:10,rest:150,restTxt:'2.5 min'},
+    {id:'cs_row',        name:'Chest-Supported Machine Row',sets:3,lo:8, hi:10,rest:150,restTxt:'2.5 min'},
+    {id:'pullup_assist', name:'Assisted Pull-Up Machine',   sets:2,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'sa_cable_row',  name:'Single-Arm Cable Row',       sets:2,lo:8, hi:10,rest:120,restTxt:'2 min',perSide:true},
+    {id:'rev_pec_deck',  name:'Reverse Pec Deck / Face Pull',sets:3,lo:12,hi:15,rest:75,restTxt:'60–90 s'},
+    {id:'inc_db_curl',   name:'Incline Dumbbell Curl',      sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'preacher_curl', name:'Preacher-Curl Machine',      sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'hammer_curl',   name:'Hammer Curl',                sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'}
+  ]},
+  legs:{name:'Legs',ex:[
+    {id:'hack_squat',    name:'Hack Squat / Pendulum / Leg Press',sets:3,lo:8,hi:10,rest:180,restTxt:'3 min'},
+    {id:'lying_curl',    name:'Lying Leg Curl',             sets:3,lo:8, hi:10,rest:120,restTxt:'2 min'},
+    {id:'rev_lunge',     name:'Supported Reverse Lunge',    sets:3,lo:8, hi:10,rest:120,restTxt:'2 min',perSide:true},
+    {id:'leg_ext',       name:'Leg Extension',              sets:3,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'abductor',      name:'Hip Abduction Machine',      sets:2,lo:10,hi:12,rest:75, restTxt:'60–90 s'},
+    {id:'back_ext',      name:'Back Extension (45°)',       sets:2,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'calf_seated',   name:'Seated Calf Raise',          sets:4,lo:10,hi:12,rest:90, restTxt:'90 s'},
+    {id:'knee_raise',    name:'Hanging Knee Raise',         sets:3,lo:10,hi:15,rest:75, restTxt:'60–90 s',bw:true}
+  ]}
+};
+const WEEKMAP = ['rest','upper','lower','rest','push','pull','legs'];
+const DAYNAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYORDER = ['upper','lower','push','pull','legs'];
+const LS_KEY='lockin_local_v1';
+
+/* ================= STATE & SYNC ================= */
+let S=null, selPhotos=[];
+function fresh(){return {settings:{name:'',start:'',kcal:0,protein:0,goal:'recomp',weight:null,height:null,age:null,sex:'m',aiAuto:true,setupDone:false},checkins:{},workouts:{},cardio:[],photos:[]};}
+const GOALS={cut:'Cut',recomp:'Recomp',bulk:'Lean bulk',maintain:'Maintain'};
+const GOALMULT={cut:0.80,recomp:1.0,bulk:1.10,maintain:1.0};
+function calcTargets(w,h,age,sex,goal){
+  const protein=(w&&w>0)?Math.round(w*2.2):null; // grams = bodyweight in lbs
+  let kcal=null;
+  if(w&&h&&age){
+    const bmr=10*w+6.25*h-5*age+(sex==='f'?-161:5); // Mifflin-St Jeor
+    kcal=Math.round(bmr*1.55*(GOALMULT[goal]||1)/50)*50; // 5 lifting days/wk ≈ moderate-high activity
+  }
+  return {kcal,protein};
+}
+function renderGoalChips(elId,cur,onPick){
+  $(elId).innerHTML=Object.keys(GOALS).map(g=>'<button type="button" class="chip'+(g===cur?' on':'')+'" data-g="'+g+'">'+GOALS[g]+'</button>').join('');
+  $(elId).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>onPick(b.dataset.g)));
+}
+function merge(base,d){
+  const out=Object.assign(base,d||{});
+  out.settings=Object.assign(fresh().settings,(d&&d.settings)||{});
+  out.checkins=out.checkins||{};out.workouts=out.workouts||{};out.cardio=out.cardio||[];out.photos=out.photos||[];
+  return out;
+}
+function save(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}
+  catch(e){alert('Phone storage is full — delete some progress photos, then save again.');}
+}
+function loadState(){
+  try{S=merge(fresh(),JSON.parse(localStorage.getItem(LS_KEY)||'null'));}
+  catch(e){S=fresh();}
+}
+function storageText(){
+  const kb=Math.round(JSON.stringify(S).length/1024);
+  return 'Using ~'+kb+' KB of roughly 5,000 KB app storage ('+S.photos.length+' photos, '+Object.keys(S.workouts).length+' workouts, '+Object.keys(S.checkins).length+' check-ins).';
+}
+
+/* ================= UTILS ================= */
+const $=id=>document.getElementById(id);
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseD(s){const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c);}
+function fmtD(s){return parseD(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function fmtDY(s){return parseD(s).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
+function nextSunday(){const d=new Date();d.setDate(d.getDate()+((7-d.getDay())%7||7));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function weekOf(s){
+  if(!S.settings.start)return 0;
+  const d=parseD(s),st=parseD(S.settings.start);
+  if(d<st)return 0;
+  return Math.floor((d-st)/(864e5*7))+1;
+}
+function dayKeyFor(s){return WEEKMAP[parseD(s).getDay()];}
+function addDays(s,n){const d=parseD(s);d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+let ciDate=todayStr();
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
+/* ================= BOOT ================= */
+function boot(){
+  loadState();
+  if(!S.settings.setupDone){openWizard();return;}
+  enterApp();
+}
+function enterApp(){
+  document.body.classList.add('authed');
+  show('today');
+}
+let wzGoal='recomp',wzTouched={kcal:false,protein:false};
+function wzSuggest(){
+  const t=calcTargets(parseFloat($('wz-weight').value),parseFloat($('wz-height').value),parseInt($('wz-age').value),$('wz-sex').value,wzGoal);
+  if(t.protein&&!wzTouched.protein)$('wz-protein').value=t.protein;
+  if(t.kcal&&!wzTouched.kcal)$('wz-kcal').value=t.kcal;
+  if(t.kcal&&t.protein)$('wzSugNote').textContent='Suggested for a '+GOALS[wzGoal].toLowerCase()+': '+t.kcal+' kcal and '+t.protein+' g protein (your bodyweight in lbs). Edit freely — your numbers, your call.';
+}
+function openWizard(){
+  $('wz-name').value=S.settings.name||'';
+  $('wz-start').value=S.settings.start||nextSunday();
+  $('wz-weight').value=S.settings.weight||'';
+  $('wz-height').value=S.settings.height||'';
+  $('wz-age').value=S.settings.age||'';
+  $('wz-sex').value=S.settings.sex||'m';
+  $('wz-kcal').value=S.settings.kcal||'';
+  $('wz-protein').value=S.settings.protein||'';
+  wzGoal=S.settings.goal||'recomp';
+  wzTouched={kcal:!!S.settings.kcal,protein:!!S.settings.protein};
+  const pick=g=>{wzGoal=g;renderGoalChips('wz-goal',wzGoal,pick);wzTouched={kcal:false,protein:false};wzSuggest();};
+  renderGoalChips('wz-goal',wzGoal,pick);
+  show('wizard');
+}
+function finishWizard(){
+  const err=$('wzErr');err.textContent='';
+  const name=$('wz-name').value.trim();
+  const start=$('wz-start').value;
+  const weight=parseFloat($('wz-weight').value);
+  const height=parseFloat($('wz-height').value);
+  const age=parseInt($('wz-age').value);
+  const kcal=parseInt($('wz-kcal').value);
+  const protein=parseInt($('wz-protein').value);
+  if(!name){err.textContent='Give yourself a name.';return;}
+  if(!weight||weight<30||weight>250){err.textContent='Enter your weight in kg.';return;}
+  if(!height||height<120||height>230){err.textContent='Enter your height in cm.';return;}
+  if(!age||age<10||age>90){err.textContent='Enter your age.';return;}
+  if(!start||parseD(start).getDay()!==0){err.textContent='The start date must be a Sunday — weeks run Sun–Sat.';return;}
+  if(!kcal||kcal<1200||kcal>7000){err.textContent='Enter a daily calorie target (1200–7000).';return;}
+  if(!protein||protein<40||protein>400){err.textContent='Enter a daily protein target in grams (40–400).';return;}
+  Object.assign(S.settings,{name,start,kcal,protein,weight,height,age,sex:$('wz-sex').value,goal:wzGoal,setupDone:true});
+  save();enterApp();toast('You\'re set, '+name+' — locked in!');
+}
+/* ================= ROUTER ================= */
+function show(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  $('view-'+v).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(S&&S.settings.setupDone){
+    if(v==='today'){ciDate=todayStr();renderToday();renderWeightChart();renderPhotos();}
+    if(v==='workout')renderWorkout();
+    if(v==='cardio')renderCardio();
+    if(v==='plan')renderPlan();
+    if(v==='settings')renderSettings();
+  }
+  renderHeader();
+  window.scrollTo({top:0});
+}
+
+/* ================= HEADER ================= */
+function renderHeader(){
+  const d=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  if(!S||!S.settings.setupDone){
+    $('heroSub').textContent=d;
+    $('weekBadge').textContent='—';
+    return;
+  }
+  const t=todayStr(),w=weekOf(t);
+  const day=WEEKMAP[new Date().getDay()];
+  $('heroSub').textContent=d+' · '+(day==='rest'?'Rest day':PLAN[day].name+' day')+(S.settings.name?' · '+S.settings.name:'');
+  if(w>0){$('weekBadge').textContent='Week '+w;}
+  else if(S.settings.start){
+    const days=Math.ceil((parseD(S.settings.start)-parseD(t))/864e5);
+    $('weekBadge').textContent=days>0?'Starts in '+days+'d':'Week 1';
+  }else $('weekBadge').textContent='—';
+}
+/* ================= TODAY ================= */
+function currentWeekLifts(){
+  const now=parseD(todayStr());
+  const sun=new Date(now); sun.setDate(now.getDate()-now.getDay());
+  let n=0;
+  for(const k in S.workouts){const d=parseD(S.workouts[k].date);if(d>=sun&&d<=now)n++;}
+  return n;
+}
+function checkinStreak(){
+  let n=0,d=new Date();
+  const has=s=>!!S.checkins[s];
+  const str=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  if(!has(str(d)))d.setDate(d.getDate()-1);
+  while(has(str(d))){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+function lastWeight(){
+  const ds=Object.keys(S.checkins).filter(k=>S.checkins[k].weight).sort();
+  return ds.length?S.checkins[ds[ds.length-1]].weight:null;
+}
+function renderToday(){
+  const t=todayStr(),day=dayKeyFor(t),w=weekOf(t);
+  const lw=lastWeight();
+  $('stWeight').textContent=lw!=null?lw:'—';
+  $('stStreak').textContent=checkinStreak();
+  $('stWeek').innerHTML=currentWeekLifts()+'<small>/5</small>';
+  const card=$('todayPlanCard');
+  if(w===0&&S.settings.start){
+    const days=Math.ceil((parseD(S.settings.start)-parseD(t))/864e5);
+    card.innerHTML='<div class="card countcard"><h2>Pre-season</h2>'+
+      '<div class="big">'+days+' day'+(days===1?'':'s')+'</div>'+
+      '<p>Week 1 starts Sunday '+fmtD(S.settings.start)+'. Until then: easy runs, mobility, sleep 8–10 h, keep protein up. Anything you log now shows as pre-season.</p></div>';
+  }else if(day==='rest'){
+    card.innerHTML='<div class="card restcard"><h2>Today · Rest</h2>'+
+      '<p class="muted"><b>No lifting.</b> Eat enough, hydrate, sleep 8–10 hours.</p>'+
+      '<p class="muted" style="margin-top:6px">Optional easy work (6/10 effort max): easy run or zone-2 30–60 min, mobility, core. Log it on the Cardio tab.</p>'+
+      '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="show(\'cardio\')">Log cardio</button></div></div>';
+  }else{
+    const p=PLAN[day];
+    const done=!!S.workouts[t+'|'+day];
+    const list=p.ex.slice(0,3).map(e=>esc(e.name)).join(' · ');
+    card.innerHTML='<div class="card"><h2>Today · '+p.name+(done?' <span class="suggest up">Logged ✓</span>':'')+'</h2>'+
+      '<p class="muted">'+p.ex.length+' exercises · '+list+' …</p>'+
+      '<div style="margin-top:12px"><button class="btn btn-primary" onclick="openWorkout(\''+day+'\')">'+(done?'View / edit workout':'Start workout')+'</button></div></div>';
+  }
+  if(ciDate>t)ciDate=t;
+  $('ciDate').value=ciDate;
+  $('ciDate').max=t;
+  $('ciNext').disabled=(ciDate>=t);
+  const c=S.checkins[ciDate]||{};
+  $('ci-weight').value=c.weight??'';
+  $('ci-sleep').value=c.sleep??'';
+  $('ci-kcal').value=c.kcal??'';
+  $('ci-protein').value=c.protein??'';
+  renderCiBars();
+}
+function renderCiBars(){
+  const g=(id)=>parseFloat($(id).value)||0;
+  const rows=[
+    ['Calories',g('ci-kcal'),S.settings.kcal,''],
+    ['Protein',g('ci-protein'),S.settings.protein,' g']
+  ];
+  $('ciBars').innerHTML=rows.map(([l,v,t,u])=>{
+    const pct=t?Math.min(100,v/t*100):0;
+    return '<div class="tgtline"><span>'+l+'</span><span>'+v+u+' / '+(t||'—')+u+'</span></div>'+
+      '<div class="bar"><i style="width:'+pct+'%" class="'+(pct>=100?'over':'')+'"></i></div>';
+  }).join('');
+}
+function saveCheckin(){
+  const val=id=>{const v=parseFloat($(id).value);return isNaN(v)?null:v;};
+  const c={weight:val('ci-weight'),sleep:val('ci-sleep'),kcal:val('ci-kcal'),protein:val('ci-protein')};
+  if(Object.values(c).every(v=>v==null)){
+    if(S.checkins[ciDate]){delete S.checkins[ciDate];save();renderToday();renderWeightChart();toast('Check-in cleared for '+fmtD(ciDate));}
+    else toast('Nothing to save yet');
+    return;
+  }
+  S.checkins[ciDate]=c;save();renderToday();renderWeightChart();
+  toast('Check-in saved'+(ciDate===todayStr()?'':' for '+fmtD(ciDate)));
+}
+
+/* ================= WORKOUT ================= */
+let woDay='upper';
+function openWorkout(day){woDay=day;show('workout');}
+function pickDefaultDay(){
+  const k=dayKeyFor(todayStr());
+  if(k!=='rest')woDay=k;
+}
+function lastSession(exId,beforeDate){
+  let best=null;
+  for(const k in S.workouts){
+    const w=S.workouts[k];
+    if(!w.ex[exId]||!w.ex[exId].some(s=>s.r))continue;
+    if(w.date>=beforeDate)continue;
+    if(!best||w.date>best.date)best=w;
+  }
+  return best;
+}
+function suggestFor(ex,prev){
+  if(!prev)return {txt:'New — find a weight where '+ex.lo+' clean reps is close to your max',cls:'hold'};
+  const sets=prev.ex[ex.id].filter(s=>s.r);
+  const allTop=sets.length>=ex.sets&&sets.every(s=>s.r>=ex.hi);
+  if(allTop)return {txt:'Hit '+ex.hi+' on every set — add weight (smallest jump)',cls:'up'};
+  return {txt:'Same weight — beat a rep',cls:'hold'};
+}
+function fmtPrev(ex,prev){
+  if(!prev)return '';
+  const sets=prev.ex[ex.id].filter(s=>s.r);
+  const w=[...new Set(sets.map(s=>s.w||0))];
+  const wtxt=w.length===1?(w[0]?w[0]+' kg':'BW'):sets.map(s=>(s.w||0)+'kg').join('/');
+  return 'Last ('+fmtD(prev.date)+'): '+wtxt+' × '+sets.map(s=>s.r).join(', ');
+}
+function renderWorkout(){
+  if(!renderWorkout.inited){renderWorkout.inited=true;pickDefaultDay();}
+  $('dayChips').innerHTML=DAYORDER.map(k=>
+    '<button class="chip'+(k===woDay?' on':'')+'" onclick="woDay=\''+k+'\';renderWorkout()">'+PLAN[k].name+'</button>').join('');
+  if(!$('woDate').value)$('woDate').value=todayStr();
+  const date=$('woDate').value;
+  const existing=S.workouts[date+'|'+woDay];
+  const p=PLAN[woDay];
+  $('woList').innerHTML=p.ex.map((ex,i)=>{
+    const prev=lastSession(ex.id,date);
+    const sug=suggestFor(ex,prev);
+    const saved=existing&&existing.ex[ex.id]||[];
+    let rows='';
+    for(let s=0;s<ex.sets;s++){
+      const sv=saved[s]||{};
+      const pw=prev?(prev.ex[ex.id][s]&&prev.ex[ex.id][s].w||''):'';
+      const pr=prev?(prev.ex[ex.id][s]&&prev.ex[ex.id][s].r||''):'';
+      rows+='<div class="setrow"><div class="sn">'+(s+1)+'</div>'+
+        '<input type="number" step="0.5" inputmode="decimal" placeholder="'+(ex.bw?'+kg':(pw!==''?pw:'kg'))+'" value="'+(sv.w||'')+'" id="w_'+i+'_'+s+'">'+
+        '<input type="number" inputmode="numeric" placeholder="'+(pr!==''?pr:ex.lo+'–'+ex.hi)+'" value="'+(sv.r||'')+'" id="r_'+i+'_'+s+'">'+
+        '<input type="checkbox" class="done-in" id="d_'+i+'_'+s+'" '+(sv.r?'checked':'')+' onchange="markDone(this,'+i+')"></div>';
+    }
+    return '<div class="excard" id="exc_'+i+'">'+
+      '<div class="exhead"><div class="nm">'+(i+1)+'. '+esc(ex.name)+(ex.perSide?' <span class="tiny">(each side)</span>':'')+'</div>'+
+      '<div class="tg">'+ex.sets+' × '+ex.lo+'–'+ex.hi+(ex.bw?' · bodyweight':'')+'</div></div>'+
+      (ex.note?'<div class="exnote">⚠ '+esc(ex.note)+'</div>':'')+
+      '<div class="lastline">'+(prev?esc(fmtPrev(ex,prev)):'No history yet')+
+      '<span class="suggest '+sug.cls+'">'+esc(sug.txt)+'</span></div>'+
+      '<div class="setrow" style="margin-bottom:2px"><div></div><div class="sn">WEIGHT KG</div><div class="sn">REPS</div><div class="sn">✓</div></div>'+
+      rows+
+      '<div class="exfoot"><span class="tiny">Last rep hard, form clean</span>'+
+      '<button class="restbtn" onclick="startTimer('+ex.rest+',\''+esc(ex.name).replace(/&#39;/g,'')+'\')">Rest '+ex.restTxt+'</button></div>'+
+      '</div>';
+  }).join('');
+  $('woNotes').value=existing?existing.notes||'':'';
+  renderHistory();
+}
+function markDone(cb,i){
+  const card=$('exc_'+i);
+  const boxes=card.querySelectorAll('.done-in');
+  card.classList.toggle('exdone',[...boxes].every(b=>b.checked));
+}
+function saveWorkout(){
+  const date=$('woDate').value||todayStr();
+  const p=PLAN[woDay];
+  const exData={};let any=false;
+  p.ex.forEach((ex,i)=>{
+    exData[ex.id]=[];
+    for(let s=0;s<ex.sets;s++){
+      const w=parseFloat($('w_'+i+'_'+s).value);
+      const r=parseInt($('r_'+i+'_'+s).value);
+      exData[ex.id].push({w:isNaN(w)?0:w,r:isNaN(r)?0:r});
+      if(!isNaN(r)&&r>0)any=true;
+    }
+  });
+  if(!any){toast('Log at least one set first');return;}
+  let prs=[];
+  p.ex.forEach(ex=>{
+    const newBest=Math.max(...exData[ex.id].map(s=>s.r?s.w:0));
+    if(!newBest)return;
+    let oldBest=0;
+    for(const k in S.workouts){const w=S.workouts[k];if(w.ex[ex.id])oldBest=Math.max(oldBest,...w.ex[ex.id].map(s=>s.r?(s.w||0):0));}
+    if(newBest>oldBest&&oldBest>0)prs.push(ex.name);
+  });
+  const key=date+'|'+woDay;
+  const prevAi=S.workouts[key]&&S.workouts[key].ai;
+  S.workouts[key]={date,day:woDay,ex:exData,notes:$('woNotes').value.trim(),ai:prevAi||null,ts:Date.now()};
+  save();renderWorkout();
+  toast(prs.length?'Saved — new best: '+prs[0]+'!':'Workout saved');
+}
+function renderHistory(){
+  const items=Object.values(S.workouts).sort((a,b)=>b.date<a.date?-1:1).slice(0,30);
+  if(!items.length){$('histList').innerHTML='<span class="muted">No workouts logged yet.</span>';return;}
+  $('histList').innerHTML=items.map(w=>{
+    const p=PLAN[w.day];if(!p)return '';
+    const vol=Object.values(w.ex).flat().reduce((a,s)=>a+(s.w||0)*(s.r||0),0);
+    const wk=weekOf(w.date);
+    const k=w.date+'|'+w.day;
+    const det=p.ex.map(ex=>{
+      const sets=(w.ex[ex.id]||[]).filter(s=>s.r);
+      if(!sets.length)return null;
+      return esc(ex.name)+': '+sets.map(s=>(s.w?s.w+'kg':'BW')+'×'+s.r).join(', ');
+    }).filter(Boolean).join('<br>');
+    return '<div class="histitem" onclick="this.classList.toggle(\'open\')">'+
+      '<div class="top"><span>'+p.name+(wk>0?' · Wk '+wk:'')+(w.ai?' ·<span style="color:var(--sky)"> AI ✓</span>':'')+'</span><span class="d">'+fmtDY(w.date)+'</span></div>'+
+      '<div class="det">'+det+(w.notes?'<br><i>'+esc(w.notes)+'</i>':'')+
+      (w.ai?'<div class="ai">'+esc(w.ai)+'</div>':'')+
+      '<br><span class="tiny">Volume ≈ '+Math.round(vol).toLocaleString()+' kg · </span>'+
+      '<span class="tiny" style="color:var(--bad);cursor:pointer" onclick="event.stopPropagation();delWorkout(\''+k+'\')">delete</span></div></div>';
+  }).join('');
+}
+function delWorkout(k){
+  if(!confirm('Delete this workout?'))return;
+  delete S.workouts[k];save();renderWorkout();toast('Deleted');
+}
+
+/* ================= REST TIMER ================= */
+let timerInt=null,timerEnd=0;
+function startTimer(sec,label){
+  clearInterval(timerInt);
+  timerEnd=Date.now()+sec*1000;
+  $('timerLabel').textContent=label||'Rest';
+  $('timerLeft').classList.remove('doneflash');
+  $('timerSheet').classList.add('show');
+  tick();
+  timerInt=setInterval(tick,250);
+}
+function tick(){
+  const left=Math.max(0,Math.round((timerEnd-Date.now())/1000));
+  $('timerLeft').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+  if(left<=0){
+    clearInterval(timerInt);
+    $('timerLeft').textContent='GO';
+    $('timerLeft').classList.add('doneflash');
+    beep();if(navigator.vibrate)navigator.vibrate([200,100,200]);
+    setTimeout(()=>$('timerSheet').classList.remove('show'),2500);
+  }
+}
+function stopTimer(){clearInterval(timerInt);$('timerSheet').classList.remove('show');}
+function beep(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    [0,.25,.5].forEach(t=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=880;g.gain.setValueAtTime(.28,ctx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.2);
+      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.22);
+    });
+  }catch(e){}
+}
+/* ================= WEIGHT CHART ================= */
+function renderWeightChart(){
+  const data=Object.keys(S.checkins).filter(k=>S.checkins[k].weight).sort()
+    .map(k=>({d:k,ts:parseD(k).getTime(),w:S.checkins[k].weight}));
+  const box=$('weightChart');
+  if(data.length<2){
+    box.innerHTML='<p class="muted">'+(data.length===1?'One point logged ('+data[0].w+' kg) — one more and the line appears.':'Log your weight in the daily check-in to see the trend.')+'</p>';
+    $('bodyInsight').style.display='none';
+    return;
+  }
+  const W=700,H=260,padL=44,padR=16,padT=18,padB=30;
+  const xs=data.map(p=>p.ts),ys=data.map(p=>p.w);
+  const x0=Math.min(...xs),x1=Math.max(...xs);
+  let y0=Math.min(...ys),y1=Math.max(...ys);
+  const span=Math.max(1.6,(y1-y0)*1.4);const mid=(y0+y1)/2;y0=mid-span/2;y1=mid+span/2;
+  const X=t=>padL+(t-x0)/Math.max(1,(x1-x0))*(W-padL-padR);
+  const Y=w=>padT+(y1-w)/(y1-y0)*(H-padT-padB);
+  const avg=data.map((p,i)=>{
+    const win=data.filter(q=>p.ts-q.ts<7*864e5&&q.ts<=p.ts);
+    return {ts:p.ts,w:win.reduce((a,q)=>a+q.w,0)/win.length};
+  });
+  let grid='';
+  const steps=4;
+  for(let i=0;i<=steps;i++){
+    const w=y0+(y1-y0)*i/steps,y=Y(w);
+    grid+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#232a33" stroke-width="1"/>'+
+      '<text x="'+(padL-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#7d8592">'+w.toFixed(1)+'</text>';
+  }
+  const line=p=>p.map((q,i)=>(i?'L':'M')+X(q.ts).toFixed(1)+' '+Y(q.w).toFixed(1)).join(' ');
+  const dots=data.map(p=>'<circle cx="'+X(p.ts).toFixed(1)+'" cy="'+Y(p.w).toFixed(1)+'" r="3.2" fill="#5b93ff"/>').join('');
+  const first=data[0],last=data[data.length-1];
+  const lbl=(p,anchor)=>'<text x="'+X(p.ts).toFixed(1)+'" y="'+(Y(p.w)-9)+'" text-anchor="'+anchor+'" font-size="12" font-weight="700" fill="#d9e4f8">'+p.w+'</text>';
+  const xt='<text x="'+padL+'" y="'+(H-8)+'" font-size="11" fill="#7d8592">'+fmtD(first.d)+'</text>'+
+    '<text x="'+(W-padR)+'" y="'+(H-8)+'" text-anchor="end" font-size="11" fill="#7d8592">'+fmtD(last.d)+'</text>';
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+grid+
+    '<path d="'+line(avg)+'" fill="none" stroke="#8fb7ff" stroke-width="2.5" opacity=".5"/>'+
+    '<path d="'+line(data)+'" fill="none" stroke="#5b93ff" stroke-width="2"/>'+dots+lbl(first,'start')+lbl(last,'end')+xt+'</svg>'+
+    '<p class="tiny" style="margin-top:4px">Dark line: daily · light line: 7-day average (trust this one)</p>';
+  const now=last.ts;
+  const w1=data.filter(p=>now-p.ts<7*864e5),w2=data.filter(p=>now-p.ts>=7*864e5&&now-p.ts<14*864e5);
+  const ins=$('bodyInsight');
+  if(w1.length&&w2.length){
+    const a1=w1.reduce((a,p)=>a+p.w,0)/w1.length,a2=w2.reduce((a,p)=>a+p.w,0)/w2.length;
+    const d=a1-a2;let msg;
+    const g=S.settings.goal||'recomp';
+    const dir=(d>=0?'+':'')+d.toFixed(2)+' kg vs last week';
+    if(g==='cut'){
+      if(d<=-0.25&&d>=-0.8)msg='Down '+Math.abs(d).toFixed(2)+' kg vs last week — sweet-spot pace for a cut. Keep protein at target to hold muscle.';
+      else if(d<-0.8)msg='Down '+Math.abs(d).toFixed(2)+' kg — faster than needed, and that risks muscle. Add ~150–200 kcal/day.';
+      else if(d<0.15)msg='Scale barely moving ('+dir+'). For a steady cut, trim ~150–200 kcal/day or add easy walking, then re-check in a week.';
+      else msg='Up '+d.toFixed(2)+' kg on a cut — probably water or a salty week. If it repeats next week, trim ~200 kcal/day.';
+    }else if(g==='bulk'){
+      if(d>=0.1&&d<=0.4)msg='Up '+d.toFixed(2)+' kg vs last week — clean lean-bulk pace. Keep it rolling.';
+      else if(d>0.4)msg='Up '+d.toFixed(2)+' kg — quicker than a lean bulk needs; the extra speed is mostly fat. Hold or trim ~100–150 kcal.';
+      else if(d>-0.15)msg='Scale flat ('+dir+') on a bulk — add ~150–200 kcal/day and re-check in a week.';
+      else msg='Trending down on a bulk — you\'re under maintenance. Add ~250 kcal/day.';
+    }else{
+      if(Math.abs(d)<0.15)msg='Holding steady ('+dir+') — exactly what '+(g==='maintain'?'maintaining':'recomp')+' looks like. Strength up while the scale holds means fat out, muscle in.';
+      else if(d>=0.15&&d<=0.4)msg='Up '+d.toFixed(2)+' kg vs last week — a lean-gaining pace. Fine while training hard; keep protein at target.';
+      else if(d>0.4)msg='Up '+d.toFixed(2)+' kg vs last week — faster than needed. No panic; hold calories here for a week and re-check.';
+      else msg='Down '+Math.abs(d).toFixed(2)+' kg vs last week — you\'re under-fueled. Add ~150–200 kcal/day, keep protein up, and re-check in a week.';
+    }
+    ins.textContent=msg;ins.style.display='block';
+  }else ins.style.display='none';
+}
+
+/* ================= PHOTOS (on this phone) ================= */
+function monthLbl(d){
+  if(!d)return 'Unknown';
+  return parseD(d).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+}
+function renderPhotos(){
+  const g=$('photoGrid');if(!g)return;
+  const ph=S.photos;
+  if(!ph.length){g.innerHTML='';$('compareBox').innerHTML='';return;}
+  let html='',curMonth='';
+  ph.forEach((p,i)=>{
+    const m=monthLbl(p.date);
+    if(m!==curMonth){
+      if(curMonth)html+='</div>';
+      html+='<div class="ph-month">'+m+'</div><div class="pgrid">';
+      curMonth=m;
+    }
+    html+='<div class="pcell'+(selPhotos.includes(i)?' sel':'')+'" onclick="selPhoto('+i+')">'+
+      '<img src="'+p.src+'" alt=""><div class="pd">'+(p.date?fmtD(p.date):'—')+'</div>'+
+      '<div class="px" onclick="event.stopPropagation();delPhoto('+i+')">✕</div></div>';
+  });
+  html+='</div>';
+  g.innerHTML=html;
+  const box=$('compareBox');
+  if(selPhotos.length===2){
+    const pair=selPhotos.map(i=>ph[i]).filter(Boolean).sort((x,y)=>x.date<y.date?-1:1);
+    if(pair.length===2){
+      box.innerHTML='<div class="compare"><figure><img src="'+pair[0].src+'"><figcaption>'+fmtD(pair[0].date)+'</figcaption></figure>'+
+        '<figure><img src="'+pair[1].src+'"><figcaption>'+fmtD(pair[1].date)+'</figcaption></figure></div>'+
+        '<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="selPhotos=[];renderPhotos()">Clear comparison</button>';
+      return;
+    }
+  }
+  box.innerHTML='';
+}
+function selPhoto(i){
+  if(selPhotos.includes(i))selPhotos=selPhotos.filter(x=>x!==i);
+  else{selPhotos.push(i);if(selPhotos.length>2)selPhotos.shift();}
+  renderPhotos();
+}
+function delPhoto(i){
+  if(!confirm('Delete this photo?'))return;
+  S.photos.splice(i,1);selPhotos=[];save();renderPhotos();
+}
+function addPhotos(files){
+  let queue=[...files];
+  const next=()=>{
+    if(!queue.length){save();renderPhotos();renderSettings.lastStorage&&0;toast('Photo saved on this phone');return;}
+    const f=queue.shift();
+    const img=new Image(),url=URL.createObjectURL(f);
+    img.onload=()=>{
+      const max=900,sc=Math.min(1,max/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas');
+      cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      URL.revokeObjectURL(url);
+      const src=cv.toDataURL('image/jpeg',0.72);
+      if(JSON.stringify(S).length+src.length>4.6e6){alert('Phone storage is nearly full — delete an old photo first.');renderPhotos();return;}
+      S.photos.push({id:Date.now()+Math.random(),date:todayStr(),src});
+      next();
+    };
+    img.onerror=()=>next();
+    img.src=url;
+  };
+  next();
+}
+
+/* ================= CARDIO ================= */
+function saveCardio(){
+  const mins=parseInt($('cardioMins').value);
+  if(isNaN(mins)||mins<=0){toast('How many minutes?');return;}
+  const km=parseFloat($('cardioKm').value);
+  S.cardio.push({date:$('cardioDate').value||todayStr(),type:$('cardioType').value,mins,km:isNaN(km)?null:km,int:$('cardioInt').value,notes:$('cardioNotes').value.trim()});
+  S.cardio.sort((a,b)=>a.date<b.date?1:-1);
+  save();$('cardioMins').value='';$('cardioKm').value='';$('cardioNotes').value='';renderCardio();toast('Session saved');
+}
+function renderCardio(){
+  if(!$('cardioDate').value)$('cardioDate').value=todayStr();
+  const el=$('cardioList');
+  if(!S.cardio.length){el.innerHTML='<span class="muted">Nothing logged yet.</span>';return;}
+  el.innerHTML='<table><tr><th>Date</th><th>Type</th><th>Min</th><th>Km</th><th>Int.</th><th></th></tr>'+
+    S.cardio.slice(0,25).map((s,i)=>'<tr><td>'+fmtD(s.date)+'</td><td>'+esc(s.type)+(s.notes?'<br><span class="tiny">'+esc(s.notes)+'</span>':'')+'</td><td>'+s.mins+'</td><td>'+(s.km!=null?s.km:'—')+'</td><td>'+s.int+'</td>'+
+      '<td><span class="del" onclick="delCardio('+i+')">✕</span></td></tr>').join('')+'</table>';
+}
+function delCardio(i){S.cardio.splice(i,1);save();renderCardio();}
+
+/* ================= PLAN TAB ================= */
+function renderPlan(){
+  const sched=[['Sunday','Rest — eat, hydrate, sleep 8–10 h · optional easy cardio'],['Monday','Upper Body'],['Tuesday','Lower Body'],['Wednesday','Rest · optional easy cardio'],['Thursday','Push'],['Friday','Pull'],['Saturday','Legs']];
+  $('planWeek').innerHTML='<table>'+sched.map(([d,w])=>'<tr><td style="width:92px"><b>'+d+'</b></td><td>'+w+'</td></tr>').join('')+'</table>';
+  $('planContent').innerHTML=DAYORDER.map(k=>{
+    const p=PLAN[k];
+    return '<div class="planday"><h3>'+p.name+'</h3><ol>'+p.ex.map(e=>
+      '<li><b>'+esc(e.name)+(e.perSide?' (each side)':'')+'</b><span>'+e.sets+' × '+e.lo+'–'+e.hi+' · rest '+e.restTxt+(e.note?' · '+esc(e.note):'')+'</span></li>').join('')+'</ol></div>';
+  }).join('');
+  $('planRules').innerHTML=
+    '<h4>Progressive overload: 8 → 10</h4><p>On the big lifts, pick a weight you can lift for about 8 clean reps — the 8th should be hard. Add reps workout to workout. When you hit 10 on <b>every</b> working set, add the smallest jump the machine allows (~2.5–5%), drop back to 8, and climb again. Small-muscle moves (laterals, curls, calves, abs) run 10–12 or 12–15 instead, because tiny joints don\'t like max-8 loads. The Lift tab tracks all of this and tells you when to add weight.</p>'+
+    '<h4>Effort</h4><p>Work close to failure — the last rep of each set should be a grind, but a clean one. Stop the set the moment form breaks. Never test 1-rep maxes, never bounce or jerk the weight, never chase someone else\'s numbers.</p>'+
+    '<h4>Rest (research-backed)</h4><p>~3 min on big leg presses and squats, ~2–2.5 min on heavy presses, rows and pulldowns, ~90 s on machine isolation, ~60–90 s on laterals, small arms work and abs. Cutting compound rest short costs 10–20% of your reps on the next set, which costs growth.</p>'+
+    '<h4>Rep speed</h4><p>Up in ~1–2 s, down in ~2–3 s, full controlled range. Technique beats load, every time.</p>'+
+    '<h4>Short on time?</h4><p>Drop the last one or two isolation moves (shrugs, adduction/abduction, back extension, second triceps/biceps exercise) — never the big presses, rows, pulldowns or leg machines. They carry the progress.</p>'+
+    '<h4>Stop immediately if</h4><ul><li>Sharp pain, joint pain, numbness, tingling</li><li>Unusual back pain, dizziness, chest pain</li></ul><p>Muscle burn and fatigue are normal; sharp or joint pain is not. Never max out (no 1RMs), never chase someone else\'s weights, use machine stops / a spotter, and get a trainer to check new exercises.</p>'+
+    '<h4>Recovery</h4><p>Sleep 8–10 h, eat enough calories and protein, drink water, take both rest days seriously, and never train through an injured, painful area. Controlled resistance training with good technique is growth-safe — the risks come from accidents, sloppy reps, and ego weights, not from the exercises.</p>';
+}
+
+/* ================= SETTINGS ================= */
+let setGoalSel='recomp';
+function renderSettings(){
+  $('storageInfo').textContent=storageText();
+  $('set-name').value=S.settings.name;
+  $('set-start').value=S.settings.start;
+  $('set-weight').value=S.settings.weight||'';
+  $('set-height').value=S.settings.height||'';
+  $('set-age').value=S.settings.age||'';
+  $('set-sex').value=S.settings.sex||'m';
+  $('set-kcal').value=S.settings.kcal||'';
+  $('set-protein').value=S.settings.protein||'';
+  setGoalSel=S.settings.goal||'recomp';
+  const pick=g=>{setGoalSel=g;renderGoalChips('set-goal',setGoalSel,pick);};
+  renderGoalChips('set-goal',setGoalSel,pick);
+}
+function suggestSettings(){
+  const t=calcTargets(parseFloat($('set-weight').value),parseFloat($('set-height').value),parseInt($('set-age').value),$('set-sex').value,setGoalSel);
+  if(!t.kcal&&!t.protein){toast('Fill in weight, height and age first');return;}
+  if(t.kcal)$('set-kcal').value=t.kcal;
+  if(t.protein)$('set-protein').value=t.protein;
+  toast('Suggested for a '+GOALS[setGoalSel].toLowerCase()+' — hit Save to apply');
+}
+function saveSettings(){
+  const sd=$('set-start').value;
+  if(sd){
+    if(parseD(sd).getDay()!==0){toast('Start date must be a Sunday (weeks run Sun–Sat)');return;}
+    S.settings.start=sd;
+  }
+  const name=$('set-name').value.trim();
+  if(name)S.settings.name=name;
+  const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),age=parseInt($('set-age').value);
+  if(w)S.settings.weight=w;
+  if(h)S.settings.height=h;
+  if(age)S.settings.age=age;
+  S.settings.sex=$('set-sex').value;
+  S.settings.goal=setGoalSel;
+  const kcal=parseInt($('set-kcal').value),protein=parseInt($('set-protein').value);
+  if(kcal)S.settings.kcal=kcal;
+  if(protein)S.settings.protein=protein;
+  save();renderHeader();toast('Settings saved');
+}
+function exportData(){
+  const json=JSON.stringify(S,null,1);
+  try{
+    const blob=new Blob([json],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='lockin-backup-'+todayStr()+'.json';
+    a.click();URL.revokeObjectURL(a.href);
+  }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(json).then(()=>toast('Backup copied to clipboard — paste it somewhere safe'),()=>toast('Backup ready'));
+  else toast('Backup ready');
+}
+function importText(){
+  const t=prompt('Paste your backup here:');
+  if(!t)return;
+  try{
+    const d=JSON.parse(t);
+    if(!d.settings||!d.workouts)throw 0;
+    S=merge(fresh(),d);save();
+    toast('Backup restored');show('today');
+  }catch(e){alert("That doesn't look like a backup.");}
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d.settings||!d.workouts)throw 0;
+      S=merge(fresh(),d);save();
+      toast('Backup restored');show('today');
+    }catch(e){alert('That file doesn\'t look like a tracker backup.');}
+  };
+  r.readAsText(file);
+}
+function eraseAll(){
+  if(!confirm('Erase ALL data from this phone? This cannot be undone. Export a backup first!'))return;
+  if(!confirm('Really sure?'))return;
+  try{localStorage.removeItem(LS_KEY);}catch(e){}
+  S=fresh();selPhotos=[];
+  document.body.classList.remove('authed');
+  openWizard();toast('Fresh start');
+}
+
+/* ================= INIT ================= */
+function init(){
+  document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
+  $('wzSaveBtn').addEventListener('click',finishWizard);
+  ['wz-weight','wz-height','wz-age'].forEach(id=>$(id).addEventListener('input',wzSuggest));
+  $('wz-sex').addEventListener('change',wzSuggest);
+  $('wz-kcal').addEventListener('input',()=>wzTouched.kcal=true);
+  $('wz-protein').addEventListener('input',()=>wzTouched.protein=true);
+  $('suggestBtn').addEventListener('click',suggestSettings);
+  $('ciSaveBtn').addEventListener('click',saveCheckin);
+  $('ciPrev').addEventListener('click',()=>{ciDate=addDays(ciDate,-1);renderToday();});
+  $('ciNext').addEventListener('click',()=>{if(ciDate<todayStr()){ciDate=addDays(ciDate,1);renderToday();}});
+  $('ciDate').addEventListener('change',()=>{let v=$('ciDate').value;if(!v)return;if(v>todayStr())v=todayStr();ciDate=v;renderToday();});
+  ['ci-kcal','ci-protein'].forEach(id=>$(id).addEventListener('input',renderCiBars));
+  $('saveWoBtn').addEventListener('click',saveWorkout);
+  $('woDate').addEventListener('change',renderWorkout);
+  $('timerStop').addEventListener('click',stopTimer);
+  $('photoInput').addEventListener('change',e=>{addPhotos(e.target.files);e.target.value='';});
+  $('cardioAdd').addEventListener('click',saveCardio);
+  $('setSaveBtn').addEventListener('click',saveSettings);
+  $('exportBtn').addEventListener('click',exportData);
+  $('importTextBtn').addEventListener('click',importText);
+  $('importFile').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value='';});
+  $('eraseBtn').addEventListener('click',eraseAll);
+  boot();
+}
+init();
+</script>
+</body>
+</html>
