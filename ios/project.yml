@@ -32,6 +32,12 @@ targets:
         UIStatusBarStyle: UIStatusBarStyleLightContent
         NSPhotoLibraryUsageDescription: Lets you add progress photos from your library.
         NSCameraUsageDescription: Lets you take progress photos.
+        WKAppBoundDomains:
+          - summer-lock-in.puter.site
+          - puter.site
+          - puter.com
+          - api.puter.com
+          - js.puter.com
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
           UISceneConfigurations:
