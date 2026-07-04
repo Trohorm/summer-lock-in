@@ -46,6 +46,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         return host == "puter.com"  || host.hasSuffix(".puter.com")
             || host == "puter.site" || host.hasSuffix(".puter.site")
             || host == "puter.localhost"
+            || host == "cloudflare.com" || host.hasSuffix(".cloudflare.com")   // keep the login Cloudflare check in-app
     }
 
     // Keep Puter navigation (app, auth, API) inside the app; send other links to Safari.
