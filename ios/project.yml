@@ -38,6 +38,8 @@ targets:
           - puter.com
           - api.puter.com
           - js.puter.com
+          - challenges.cloudflare.com
+          - cloudflare.com
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
           UISceneConfigurations:
