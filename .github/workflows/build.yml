@@ -39,6 +39,11 @@ jobs:
             MARKETING_VERSION="${{ github.event.inputs.version }}" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
+      - name: Embed HealthKit entitlements (ad-hoc sign)
+        run: |
+          cd ios
+          /usr/bin/codesign --force --sign - --entitlements SummerLockIn.entitlements build/Build/Products/Release-iphoneos/SummerLockIn.app
+
       - name: Package IPA
         run: |
           cd ios
