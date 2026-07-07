@@ -15,31 +15,26 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.summerlockin.app
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.2.0"
+        CURRENT_PROJECT_VERSION: "2"
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "5.0"
+        CODE_SIGN_ENTITLEMENTS: SummerLockIn.entitlements
     info:
       path: Info.plist
       properties:
-        CFBundleShortVersionString: "$(MARKETING_VERSION)"
-        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDisplayName: Summer Lock In
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIViewControllerBasedStatusBarAppearance: false
         UIStatusBarStyle: UIStatusBarStyleLightContent
         NSPhotoLibraryUsageDescription: Lets you add progress photos from your library.
         NSCameraUsageDescription: Lets you take progress photos.
-        WKAppBoundDomains:
-          - summer-lock-in.puter.site
-          - puter.site
-          - puter.com
-          - api.puter.com
-          - js.puter.com
-          - challenges.cloudflare.com
-          - cloudflare.com
+        NSHealthShareUsageDescription: Reads your daily steps and last night's sleep to fill in the daily check-in automatically. Nothing is written back to Health.
+        WKAppBoundDomains: [puter.site, puter.com, cloudflare.com]
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
           UISceneConfigurations:
