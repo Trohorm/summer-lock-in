@@ -1,66 +1,10 @@
 import UIKit
 import WebKit
-import HealthKit
 
 let LIVE_URL = URL(string: "https://summer-lock-in.puter.site")!
 
-// MARK: - HealthKit (steps today + last night's sleep, read-only)
-enum Health {
-    static let store = HKHealthStore()
-
-    static func request(_ done: @escaping () -> Void) {
-        guard HKHealthStore.isHealthDataAvailable(),
-              let steps = HKObjectType.quantityType(forIdentifier: .stepCount),
-              let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { done(); return }
-        store.requestAuthorization(toShare: nil, read: [steps, sleep]) { _, _ in
-            DispatchQueue.main.async { done() }
-        }
-    }
-
-    static func fetch(_ done: @escaping (Int?, Double?) -> Void) {
-        guard HKHealthStore.isHealthDataAvailable() else { done(nil, nil); return }
-        let group = DispatchGroup()
-        var steps: Int?
-        var sleepHours: Double?
-
-        if let type = HKObjectType.quantityType(forIdentifier: .stepCount) {
-            group.enter()
-            let start = Calendar.current.startOfDay(for: Date())
-            let pred = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
-            let q = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: pred, options: .cumulativeSum) { _, result, _ in
-                if let sum = result?.sumQuantity() {
-                    let v = Int(sum.doubleValue(for: .count()))
-                    if v > 0 { steps = v }
-                }
-                group.leave()
-            }
-            store.execute(q)
-        }
-
-        if let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
-            group.enter()
-            let start = Date().addingTimeInterval(-20 * 3600)
-            let pred = HKQuery.predicateForSamples(withStart: start, end: Date(), options: [])
-            let q = HKSampleQuery(sampleType: type, predicate: pred, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
-                var seconds: Double = 0
-                (samples as? [HKCategorySample])?.forEach { s in
-                    if s.value != HKCategoryValueSleepAnalysis.inBed.rawValue &&
-                       s.value != HKCategoryValueSleepAnalysis.awake.rawValue {
-                        seconds += s.endDate.timeIntervalSince(s.startDate)
-                    }
-                }
-                if seconds > 15 * 60 { sleepHours = (seconds / 360).rounded() / 10 }
-                group.leave()
-            }
-            store.execute(q)
-        }
-
-        group.notify(queue: .main) { done(steps, sleepHours) }
-    }
-}
-
 // MARK: - Main view controller (thin shell around the live site)
-final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
     private var webView: WKWebView!
     private var retryView: UIView?
     private var popupNav: UINavigationController?
@@ -75,14 +19,11 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         config.mediaTypesRequiringUserActionForPlayback = []
         config.websiteDataStore = .default()
         if #available(iOS 14.0, *) { config.limitsNavigationsToAppBoundDomains = true }
-        config.userContentController.add(self, name: "health")
 
         webView = makeWebView(config)
         view.addSubview(webView)
         webView.load(URLRequest(url: LIVE_URL))
 
-        NotificationCenter.default.addObserver(self, selector: #selector(appActive),
-                                               name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
     private func makeWebView(_ config: WKWebViewConfiguration) -> WKWebView {
@@ -98,26 +39,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
-    @objc private func appActive() { pushHealth() }
-
     private var topVC: UIViewController { presentedViewController ?? self }
-
-    // MARK: Health bridge (web -> native via webkit.messageHandlers.health)
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.name == "health" else { return }
-        Health.request { [weak self] in self?.pushHealth() }
-    }
-
-    private func pushHealth() {
-        Health.fetch { [weak self] steps, sleep in
-            guard let self = self, steps != nil || sleep != nil else { return }
-            var parts: [String] = []
-            if let s = steps { parts.append("steps:\(s)") }
-            if let sl = sleep { parts.append("sleep:\(sl)") }
-            let js = "window.healthImport && window.healthImport({\(parts.joined(separator: ","))})"
-            self.webView.evaluateJavaScript(js, completionHandler: nil)
-        }
-    }
 
     // MARK: Navigation — keep app domains inside, open the rest in Safari
     private func isAllowed(_ host: String) -> Bool {
@@ -168,7 +90,6 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if webView == self.webView {
             retryView?.removeFromSuperview(); retryView = nil
-            pushHealth()
         }
     }
 
