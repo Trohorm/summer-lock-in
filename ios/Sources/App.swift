@@ -22,8 +22,19 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
         webView = makeWebView(config)
         view.addSubview(webView)
-        webView.load(URLRequest(url: LIVE_URL))
+        load()
+    }
 
+    private var watchdog: Timer?
+    private var loaded = false
+    private func load() {
+        loaded = false
+        webView.load(URLRequest(url: LIVE_URL, cachePolicy: .reloadRevalidatingCacheData, timeoutInterval: 20))
+        watchdog?.invalidate()
+        watchdog = Timer.scheduledTimer(withTimeInterval: 25, repeats: false) { [weak self] _ in
+            guard let self = self, !self.loaded else { return }
+            self.showRetry("The page took too long to load.")
+        }
     }
 
     private func makeWebView(_ config: WKWebViewConfiguration) -> WKWebView {
@@ -84,26 +95,36 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     // MARK: Offline retry screen
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        if webView == self.webView && self.webView.url == nil { showRetry() }
+        if webView == self.webView { showRetry(error.localizedDescription) }
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        if webView == self.webView && !loaded { showRetry(error.localizedDescription) }
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        if webView == self.webView { load() }
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if webView == self.webView {
+            loaded = true
+            watchdog?.invalidate()
             retryView?.removeFromSuperview(); retryView = nil
         }
     }
 
-    private func showRetry() {
+    private func showRetry(_ detail: String = "") {
         guard retryView == nil else { return }
         let v = UIView(frame: view.bounds)
         v.backgroundColor = bg
         v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         let label = UILabel()
-        label.text = "No connection"
+        label.text = "Couldn’t load Lock In"
         label.textColor = .white
         label.font = .systemFont(ofSize: 20, weight: .bold)
         let sub = UILabel()
-        sub.text = "Summer Lock In needs internet for the first load."
+        sub.text = "Check your connection and try again." + (detail.isEmpty ? "" : "\n\n" + detail)
         sub.textColor = UIColor(white: 0.7, alpha: 1)
         sub.font = .systemFont(ofSize: 14)
         sub.numberOfLines = 0
@@ -130,7 +151,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     @objc private func retryLoad() {
         retryView?.removeFromSuperview(); retryView = nil
-        webView.load(URLRequest(url: LIVE_URL))
+        load()
     }
 
     // MARK: alert / confirm / prompt

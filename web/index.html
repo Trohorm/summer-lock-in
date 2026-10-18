@@ -442,7 +442,7 @@ footer,footer a{font-size:11px;color:var(--mist)}
       </div>
       <div class="row wrapr"><button class="btn btn-ghost btn-sm" id="macroSuggest">Suggest from my stats</button><button class="btn btn-ok btn-sm" id="macroSave">Save macros</button></div>
       <details class="fold"><summary>Micronutrient goals</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Defaults are the official daily recommendations for your age and sex. Blank = default.</p><div class="tgtgrid" id="microTgt"></div></div></details>
-      <details class="fold"><summary>Anti-nutrient limits</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Conservative reference values (literature intakes and safety thresholds; solanine and cyanide scale with bodyweight). Blank = default.</p><div class="tgtgrid" id="antiTgt"></div></div></details>
+      <details class="fold"><summary>Anti-nutrient limits</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Strict defaults: oxalates 40 mg (clinical low-oxalate diet), phytates 400 mg (keeps zinc absorbing well), solanine 0.1 mg/kg and cyanide 0.02 mg/kg bodyweight (EU food-safety thresholds); the rest are set at low everyday intakes. Blank = default.</p><div class="tgtgrid" id="antiTgt"></div></div></details>
       <div class="row wrapr" style="margin-top:10px"><button class="btn btn-ok btn-sm" id="tgtSave">Save goals &amp; limits</button><button class="btn btn-ghost btn-sm" id="tgtReset">Reset to defaults</button></div>
     </div>
     <div class="card">
@@ -544,7 +544,6 @@ const NUT=[
  ['calcium','Calcium','mg','min'],['iron','Iron','mg','min'],['magnesium','Magnesium','mg','min'],['phosphorus','Phosphorus','mg','min'],['potassium','Potassium','mg','min'],
  ['sodium','Sodium','mg','min'],['zinc','Zinc','mg','min'],['copper','Copper','µg','min'],['manganese','Manganese','mg','min'],['selenium','Selenium','µg','min'],
  ['iodine','Iodine','µg','min'],['chromium','Chromium','µg','min'],['molybdenum','Molybdenum','µg','min'],
- ['fiber','Fiber','g','oth'],['omega3','Omega-3','g','oth'],
  ['phytate','Phytic acid (phytates)','mg','anti'],['oxalate','Oxalates','mg','anti'],['tannins','Tannins','mg','anti'],['lectins','Lectins (active)','mg','anti'],
  ['saponins','Saponins','mg','anti'],['goitrogens','Goitrogens (glucosinolates)','mg','anti'],['protease','Protease / trypsin inhibitors','mg','anti'],
  ['isoflavones','Phytoestrogens (isoflavones)','mg','anti'],['glycoalkaloids','Glycoalkaloids (solanine)','mg','anti'],['cyanogenic','Cyanogenic glycosides (as HCN)','mg','anti']
@@ -555,12 +554,14 @@ const NMAP={};NUT.forEach(n=>NMAP[n[0]]={k:n[0],n:n[1],u:n[2],g:n[3]});
 const RDA={vitA:[900,900,700,700],vitC:[75,90,65,75],vitD:[15,15,15,15],vitE:[15,15,15,15],vitK:[75,120,75,90],b1:[1.2,1.2,1,1.1],b2:[1.3,1.3,1,1.1],
  b3:[16,16,14,14],b5:[5,5,5,5],b6:[1.3,1.3,1.2,1.3],b7:[25,30,25,30],b9:[400,400,400,400],b12:[2.4,2.4,2.4,2.4],choline:[550,550,400,425],
  calcium:[1300,1000,1300,1000],iron:[11,8,15,18],magnesium:[410,400,360,310],phosphorus:[1250,700,1250,700],potassium:[3000,3400,2300,2600],sodium:[1500,1500,1500,1500],
- zinc:[11,11,9,8],copper:[890,900,890,900],manganese:[2.2,2.3,1.6,1.8],selenium:[55,55,55,55],iodine:[150,150,150,150],chromium:[35,35,24,25],molybdenum:[43,45,43,45],
- fiber:[38,38,26,25],omega3:[1.6,1.6,1.1,1.1]};
+ zinc:[11,11,9,8],copper:[890,900,890,900],manganese:[2.2,2.3,1.6,1.8],selenium:[55,55,55,55],iodine:[150,150,150,150],chromium:[35,35,24,25],molybdenum:[43,45,43,45]};
 function antiDefaults(){
   const bw=S&&S.settings.weight||70;
-  return {phytate:1000,oxalate:200,tannins:1000,lectins:20,saponins:200,goitrogens:300,protease:200,isoflavones:100,
-    glycoalkaloids:Math.round(bw*0.5),cyanogenic:Math.round(bw*0.02*10)/10};
+  /* strict daily limits: oxalate = clinical low-oxalate diet (<40-50 mg); phytate keeps phytate:zinc molar ratio ~5
+     (good zinc absorption); glycoalkaloids = EFSA LOAEL 1 mg/kg bw with a x10 margin; cyanide = EFSA ARfD 20 µg/kg bw;
+     the rest sit at or below ordinary low intakes, since there is no official safe level */
+  return {phytate:400,oxalate:40,tannins:300,lectins:5,saponins:50,goitrogens:50,protease:50,isoflavones:25,
+    glycoalkaloids:Math.round(bw*0.1*10)/10,cyanogenic:Math.round(bw*0.02*10)/10};
 }
 function microDefault(k){const r=RDA[k];if(!r)return 0;const s=S.settings;const teen=(s.age||25)<19;return r[(s.sex==='f'?2:0)+(teen?0:1)];}
 function goalFor(k){
@@ -1309,8 +1310,7 @@ function renderDiet(){
   $('antiBox').innerHTML=NUT.filter(n=>n[3]==='anti').map(n=>row(n[0],true)).join('');
   const mh=microHits(dDate);$('microScore').textContent=mh.hit+'/'+mh.of+' goals hit';
   $('microBox').innerHTML='<div class="nsec">Vitamins</div>'+NUT.filter(n=>n[3]==='vit').map(n=>row(n[0])).join('')+
-    '<div class="nsec">Minerals</div>'+NUT.filter(n=>n[3]==='min').map(n=>row(n[0])).join('')+
-    '<div class="nsec">Fiber &amp; fats</div>'+NUT.filter(n=>n[3]==='oth').map(n=>row(n[0])).join('');
+    '<div class="nsec">Minerals</div>'+NUT.filter(n=>n[3]==='min').map(n=>row(n[0])).join('');
   const over=antiOver(dDate);
   $('dietAlert').innerHTML=over.length?'<div class="alert">⚠ <b>Over your anti-nutrient limit:</b> '+over.map(o=>esc(NMAP[o.k].n)+' '+fmtNum(o.v)+'/'+fmtNum(o.g)+' '+NMAP[o.k].u).join(' · ')+'<br><span style="font-size:12px">'+antiTip(over.map(o=>o.k))+'</span></div>':'';
   $('mealList').innerHTML=meals.length?meals.slice().reverse().map(e=>mealHTML(e)).join(''):'<span class="muted">Nothing logged for this day yet.</span>';
