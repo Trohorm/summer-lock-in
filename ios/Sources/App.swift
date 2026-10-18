@@ -62,6 +62,8 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Sign-in popups (Google / Apple / Microsoft via Puter) must finish inside the popup, so never bounce them to Safari.
+        if webView != self.webView { decisionHandler(.allow); return }
         if navigationAction.targetFrame?.isMainFrame ?? true,
            let url = navigationAction.request.url,
            let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
@@ -79,6 +81,10 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         let popup = WKWebView(frame: .zero, configuration: configuration)
         popup.navigationDelegate = self
         popup.uiDelegate = self
+        // Google refuses OAuth in embedded web views by user agent; present as mobile Safari.
+        let osv = UIDevice.current.systemVersion.replacingOccurrences(of: ".", with: "_")
+        let major = UIDevice.current.systemVersion.split(separator: ".").first.map(String.init) ?? "18"
+        popup.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS \(osv) like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/\(major).0 Mobile/15E148 Safari/604.1"
         let vc = UIViewController()
         vc.view.backgroundColor = bg
         popup.frame = vc.view.bounds
@@ -87,8 +93,10 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         vc.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(closePopup))
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .formSheet
-        present(nav, animated: true)
-        popupNav = nav
+        var top: UIViewController = self
+        while let p = top.presentedViewController { top = p }
+        top.present(nav, animated: true)
+        if popupNav == nil { popupNav = nav }
         return popup
     }
 
