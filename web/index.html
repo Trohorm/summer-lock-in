@@ -878,9 +878,7 @@ function renderToday(){
     main='<div class="card hero-card"><div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--sky)">Today'+(done?' · logged ✓':'')+'</div><h3>'+esc(pd.name)+'</h3><p class="muted">'+pd.ex.length+' exercises · '+list+(pd.ex.length>4?' …':'')+'</p><p class="tiny" style="margin-top:4px">at '+esc(gym?gym.name:'')+'</p>'+
       '<div style="margin-top:12px"><button class="btn btn-primary" onclick="startDay(\''+pd.id+'\')">'+(done?'Open workout':'Start workout')+'</button></div></div>';
   }else{
-    const sp=activeSplit(),ski=sp&&sp.days.find(d=>/ski/i.test(d.name));
-    main='<div class="card hero-card"><div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--sky)">Today</div><h3>Rest day</h3><p class="muted">No lifting. Eat enough, drink water, sleep 8–10 h.'+(ski?' Feeling fresh? A light ski-prep session keeps your legs ready for the slopes.':'')+'</p>'+
-      '<div class="row" style="margin-top:12px">'+(ski?'<button class="btn btn-ghost grow" onclick="startDay(\''+ski.id+'\')">Ski prep (light)</button>':'')+'<button class="btn btn-ghost grow" onclick="show(\'workout\')">Train anyway</button></div></div>';
+    main='<div class="card hero-card"><div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--sky)">Today</div><h3>Rest day</h3><p class="muted">No lifting. Eat enough, drink water, sleep 8–10 h.</p></div>';
   }
   $('todayMain').innerHTML=main;
   const tt=dayTotals(t),mh=microHits(t),n=(S.food[t]||[]).length;

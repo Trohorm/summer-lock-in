@@ -18,9 +18,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.websiteDataStore = .default()
-        // Domains stay declared in WKAppBoundDomains (needed for the offline service worker), but navigation is not
-        // locked to them: iOS refused the page load with "navigate away from an app-bound domain" when locked.
-        if #available(iOS 14.0, *) { config.limitsNavigationsToAppBoundDomains = false }
+        // No app-bound domains: they blocked the offline copy (and service workers never ran in sideloaded builds).
 
         webView = makeWebView(config)
         view.addSubview(webView)
