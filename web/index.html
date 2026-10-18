@@ -707,6 +707,72 @@ details.exinfo summary::before,details.fold summary::before{transition:transform
 .nrow{content-visibility:auto;contain-intrinsic-size:auto 36px}
 img.tl{opacity:0;transition:opacity .35s var(--out)}img.tl.ok{opacity:1}
 input.done-in.pressed{transform:scale(.85)}
+/* ================= meal grades, analysis, flags, streak ================= */
+.g-A{--gc:#3ecf8e;--gt:#8ff0c2}.g-B{--gc:#9bd65c;--gt:#c6ef9a}.g-C{--gc:#e2ac45;--gt:#f6d08a}.g-D{--gc:#ef8a4c;--gt:#ffb48a}.g-F{--gc:#ef6a56;--gt:#ff9d8c}
+.ancard{position:relative;overflow:hidden;border-color:rgba(110,166,255,.22)!important;background:radial-gradient(360px 160px at 0% 0%,rgba(91,147,255,.12),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 60%),var(--snow)!important}
+.anhead{display:flex;gap:14px;align-items:center}
+.anh{font-size:17px;font-weight:800;line-height:1.25;margin-top:2px;letter-spacing:-.01em}
+.gring{position:relative;width:62px;height:62px;flex:none}
+.gring.sm{width:40px;height:40px}
+.gring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.gring circle{fill:none;stroke-width:6;stroke-linecap:round}
+.gring.sm circle{stroke-width:4.5}
+.gring .bg{stroke:rgba(255,255,255,.08)}
+.gring .fg{stroke:var(--gc);transition:stroke-dashoffset 1.15s var(--out);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--gc) 45%,transparent))}
+.gring b{position:absolute;inset:0;display:grid;place-items:center;font-size:25px;font-weight:900;color:var(--gt);letter-spacing:-.02em}
+.gring.sm b{font-size:16px}
+.gring b.pop{animation:gpop .6s var(--sp-bounce) .25s both}
+@keyframes gpop{from{transform:scale(0);opacity:0}}
+.skelring{border-radius:50%;background:rgba(255,255,255,.06);position:relative;overflow:hidden}
+.skel{height:11px;border-radius:6px;background:rgba(255,255,255,.07);position:relative;overflow:hidden;margin-top:10px}
+.skel::after,.skelring::after{content:'';position:absolute;inset:0;transform:translate3d(-100%,0,0);background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:skel 1.3s ease-in-out infinite}
+@keyframes skel{to{transform:translate3d(100%,0,0)}}
+.anlist{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:7px}
+.anlist li{display:flex;gap:9px;font-size:13px;line-height:1.45;color:#c9d2de}
+.anlist li i{flex:none;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:900;margin-top:0}
+.anlist li.good i{background:rgba(62,207,142,.16);color:#7ee2b1}
+.anlist li.bad i{background:rgba(239,106,86,.18);color:#ff9d8c}
+.anlist li.bad span{color:#ffc8be}
+.anlist li.low i{background:rgba(226,172,69,.16);color:#f0c46a}
+.anlist li.next i{background:rgba(91,147,255,.16);color:var(--sky)}
+.annext{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(91,147,255,.1);border:1px solid rgba(110,166,255,.22);font-size:13px;line-height:1.45;color:#d7e3f6}
+.annext b{color:var(--sky);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:6px}
+.anmini{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.anmini .anh{font-size:13.5px}.anmini .anlist{margin-top:6px;gap:5px}.anmini .anlist li{font-size:12px}.anmini .annext{margin-top:8px;padding:7px 9px;font-size:12px}
+.gpill{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:7px;font-size:12px;font-weight:900;margin-right:7px;vertical-align:1px;color:#0e1013;background:var(--gc);box-shadow:0 2px 10px color-mix(in srgb,var(--gc) 40%,transparent)}
+.gpill.none{display:none}
+.gpill.busy{background:rgba(255,255,255,.08);box-shadow:none;position:relative;overflow:hidden}
+.gpill.busy i{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transform:translate3d(-100%,0,0);animation:skel 1s ease-in-out infinite}
+.gchip{color:#0e1013!important;background:var(--gc)!important;border-color:transparent!important;font-weight:900!important}
+.flags{margin-top:2px}
+.wkstrip .wd .wg{display:grid;place-items:center;width:20px;height:18px;margin:5px auto 0;border-radius:6px;font-size:10.5px;font-weight:900;color:#0e1013;background:var(--gc)}
+.wkstrip .wd .wg.none{background:transparent}
+@media (prefers-reduced-motion:no-preference){.view.enter .wkstrip .wg:not(.none){animation:dotPop .55s var(--sp-bounce) both;animation-delay:calc(.35s + var(--j,0) * 45ms)}}
+.flagchip{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:99px;margin:4px 4px 0 0;background:rgba(239,106,86,.12);color:#ff9d8c;border:1px solid rgba(239,106,86,.3);letter-spacing:.01em}
+.flagchip.amber{background:rgba(226,172,69,.12);color:#f0c46a;border-color:rgba(226,172,69,.3)}
+.meal.hasbad{border-color:rgba(239,106,86,.32)!important;background:linear-gradient(90deg,rgba(239,106,86,.07),transparent 55%),rgba(8,10,13,.4)!important}
+.seedrow{cursor:pointer;padding:9px 11px;border-radius:12px;margin-bottom:4px}
+.seedrow .tgtline{margin-top:0}
+.seedrow.ok{background:rgba(62,207,142,.07);border:1px solid rgba(62,207,142,.2)}
+.seedrow.no{background:rgba(239,106,86,.09);border:1px solid rgba(239,106,86,.32);animation:seedPulse 2.4s ease-in-out 3}
+.seedrow .sok{color:#7ee2b1}
+@keyframes seedPulse{50%{box-shadow:0 0 0 4px rgba(239,106,86,.12)}}
+.streak{display:inline-flex!important;align-items:center;gap:5px}
+.streak svg{width:12px;height:13px;transform-origin:50% 90%;animation:flick 1.7s ease-in-out infinite}
+@keyframes flick{0%,100%{transform:scale(1) rotate(0)}30%{transform:scale(1.1,.93) rotate(-4deg)}60%{transform:scale(.95,1.07) rotate(3deg)}}
+.nexttip{margin-top:10px;padding:9px 11px;border-radius:12px;background:rgba(91,147,255,.09);border:1px solid rgba(110,166,255,.2);font-size:12.5px;line-height:1.45;color:#d7e3f6}
+.nexttip b{color:var(--sky);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-right:6px}
+.shake{animation:shake .55s var(--out)}
+@keyframes shake{15%{transform:translate3d(-7px,0,0)}35%{transform:translate3d(6px,0,0)}55%{transform:translate3d(-4px,0,0)}75%{transform:translate3d(2px,0,0)}}
+details.rules .fb{display:grid;gap:10px}
+.rcol{border-radius:12px;padding:10px 12px;border:1px solid var(--line)}
+.rcol b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.rcol ul{margin:0;padding-left:17px;display:grid;gap:3px}.rcol li{font-size:12.5px;line-height:1.45;color:#c9d2de}
+.rcol.good{background:rgba(62,207,142,.06);border-color:rgba(62,207,142,.2)}.rcol.good b{color:#7ee2b1}
+.rcol.bad{background:rgba(239,106,86,.07);border-color:rgba(239,106,86,.25)}.rcol.bad b{color:#ff9d8c}
+.rcol.amber{background:rgba(226,172,69,.06);border-color:rgba(226,172,69,.22)}.rcol.amber b{color:#f0c46a}
+@supports not (color:color-mix(in srgb,red 50%,blue)){.gring .fg{filter:none}.gpill{box-shadow:none}}
+
 </style>
 </head>
 <body>
@@ -767,7 +833,7 @@ input.done-in.pressed{transform:scale(.85)}
     <div id="todayMain"></div>
     <div class="hubgrid" id="todayHub"></div>
     <div class="card">
-      <h2>Last 7 days <span class="right"><span style="color:var(--glacier)">●</span> lifted &nbsp;<span style="color:var(--ok)">●</span> food logged</span></h2>
+      <h2>Last 7 days <span class="right"><span style="color:var(--glacier)">●</span> lifted &nbsp;<span style="color:var(--ok)">●</span> food &nbsp;<b style="color:#8ff0c2">A</b> food grade</span></h2>
       <div class="wkstrip" id="todayWeek"></div>
     </div>
   </section>
@@ -856,12 +922,20 @@ input.done-in.pressed{transform:scale(.85)}
       <input type="file" id="libIn" accept="image/*" style="display:none">
       <p class="tiny" style="margin-top:8px;text-align:center">Snap a photo and the AI estimates every macro, micro and anti-nutrient. <span class="linkbtn" style="font-size:11.5px" onclick="$('libIn').click()">Pick from photos instead</span></p>
     </div>
+    <div class="card ancard" id="anCard" style="display:none"></div>
     <div id="dietAlert"></div>
     <div class="card"><h2>Macros <span class="right" id="dietCount"></span></h2><div id="macroBox"></div></div>
+    <div class="card"><h2>Seed oils, omega-6 &amp; sugar <span class="right">keep out</span></h2><div id="badBox"></div></div>
     <div class="card"><h2>Anti-nutrients <span class="right">daily limit</span></h2><div id="antiBox"></div></div>
     <div class="card"><h2>Micronutrients <span class="right" id="microScore"></span></h2><div id="microBox"></div></div>
     <div class="card"><h2>Meals</h2><div id="mealList" class="muted">Nothing logged yet.</div></div>
     <div class="card"><h2>This week’s gaps <span class="right">7-day average</span></h2><div id="gapBox"></div></div>
+    <div class="card"><details class="fold rules"><summary>How Lock In grades food</summary><div class="fb">
+      <div class="rcol good"><b>Build every meal on</b><ul><li>Beef, lamb and other ruminant meat</li><li>Eggs — whole, yolks included</li><li>Liver and other organs, 100–200 g a week</li><li>Wild fish and shellfish</li><li>Full-fat dairy, butter, ghee, tallow</li><li>Ripe fruit, honey, maple syrup</li></ul></div>
+      <div class="rcol bad"><b>Keep out</b><ul><li>Seed oils — canola, sunflower, soybean, corn, “vegetable oil”, margarine</li><li>Fried and restaurant food cooked in them</li><li>Refined sugar and syrups</li><li>Ultra-processed food and refined flour</li><li>Alcohol and artificial sweeteners</li></ul></div>
+      <div class="rcol amber"><b>Minimise</b><ul><li>Grains, legumes, nuts and seeds — plant defence chemicals that block minerals</li><li>Raw leafy greens and soy</li><li>Chicken skin and pork fat (omega-6)</li></ul></div>
+      <p class="tiny" style="margin-top:8px">Every meal you log gets graded against these rules, with warnings and what to eat next.</p>
+    </div></details></div>
   </section>
 
   <!-- PROGRESS -->
@@ -908,7 +982,7 @@ input.done-in.pressed{transform:scale(.85)}
     </div>
     <div class="card">
       <h2>Nutrition goals</h2>
-      <p class="tiny" style="margin-bottom:10px">Macros and micros are goals — going over is fine, no warnings. Anti-nutrients are limits — the app warns you when a day goes over.</p>
+      <p class="tiny" style="margin-bottom:10px">Macros and micros are goals — going over is fine, no warnings. Seed oils, omega-6, refined sugar and anti-nutrients are limits — the app warns you when a day goes over.</p>
       <div class="grid3">
         <div class="field"><label class="f">Protein g</label><input id="t-protein" type="number" inputmode="numeric"></div>
         <div class="field"><label class="f">Carbs g</label><input id="t-carbs" type="number" inputmode="numeric"></div>
@@ -916,7 +990,7 @@ input.done-in.pressed{transform:scale(.85)}
       </div>
       <div class="row wrapr"><button class="btn btn-ghost btn-sm" id="macroSuggest">Suggest from my stats</button><button class="btn btn-ok btn-sm" id="macroSave">Save macros</button></div>
       <details class="fold"><summary>Micronutrient goals</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Defaults are the official daily recommendations for your age and sex. Blank = default.</p><div class="tgtgrid" id="microTgt"></div></div></details>
-      <details class="fold"><summary>Anti-nutrient limits</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Strict defaults: oxalates 40 mg (clinical low-oxalate diet), phytates 400 mg (keeps zinc absorbing well), solanine 0.1 mg/kg and cyanide 0.02 mg/kg bodyweight (EU food-safety thresholds); the rest are set at low everyday intakes. Blank = default.</p><div class="tgtgrid" id="antiTgt"></div></div></details>
+      <details class="fold"><summary>Limits: seed oils, omega-6, sugar &amp; anti-nutrients</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Seed oils stay at zero. Omega-6 (linoleic acid) 7 g and refined sugar 15 g a day. Oxalates 40 mg (clinical low-oxalate diet), phytates 400 mg (keeps zinc absorbing well), solanine 0.1 mg/kg and cyanide 0.02 mg/kg bodyweight (EU food-safety thresholds); the rest are set at low everyday intakes. Blank = default.</p><div class="tgtgrid" id="antiTgt"></div></div></details>
       <div class="row wrapr" style="margin-top:10px"><button class="btn btn-ok btn-sm" id="tgtSave">Save goals &amp; limits</button><button class="btn btn-ghost btn-sm" id="tgtReset">Reset to defaults</button></div>
     </div>
     <div class="card">
@@ -1029,6 +1103,7 @@ const NUT=[
  ['calcium','Calcium','mg','min'],['iron','Iron','mg','min'],['magnesium','Magnesium','mg','min'],['phosphorus','Phosphorus','mg','min'],['potassium','Potassium','mg','min'],
  ['sodium','Sodium','mg','min'],['zinc','Zinc','mg','min'],['copper','Copper','µg','min'],['manganese','Manganese','mg','min'],['selenium','Selenium','µg','min'],
  ['iodine','Iodine','µg','min'],['chromium','Chromium','µg','min'],['molybdenum','Molybdenum','µg','min'],
+ ['seedoil','Seed oils','g','bad'],['la','Omega-6 (linoleic acid)','g','bad'],['addsugar','Refined sugar','g','bad'],
  ['phytate','Phytic acid (phytates)','mg','anti'],['oxalate','Oxalates','mg','anti'],['tannins','Tannins','mg','anti'],['lectins','Lectins (active)','mg','anti'],
  ['saponins','Saponins','mg','anti'],['goitrogens','Goitrogens (glucosinolates)','mg','anti'],['protease','Protease / trypsin inhibitors','mg','anti'],
  ['isoflavones','Phytoestrogens (isoflavones)','mg','anti'],['glycoalkaloids','Glycoalkaloids (solanine)','mg','anti'],['cyanogenic','Cyanogenic glycosides (as HCN)','mg','anti']
@@ -1045,14 +1120,14 @@ function antiDefaults(){
   /* strict daily limits: oxalate = clinical low-oxalate diet (<40-50 mg); phytate keeps phytate:zinc molar ratio ~5
      (good zinc absorption); glycoalkaloids = EFSA LOAEL 1 mg/kg bw with a x10 margin; cyanide = EFSA ARfD 20 µg/kg bw;
      the rest sit at or below ordinary low intakes, since there is no official safe level */
-  return {phytate:400,oxalate:40,tannins:300,lectins:5,saponins:50,goitrogens:50,protease:50,isoflavones:25,
+  return {seedoil:0,la:7,addsugar:15,phytate:400,oxalate:40,tannins:300,lectins:5,saponins:50,goitrogens:50,protease:50,isoflavones:25,
     glycoalkaloids:Math.round(bw*0.1*10)/10,cyanogenic:Math.round(bw*0.02*10)/10};
 }
 function microDefault(k){const r=RDA[k];if(!r)return 0;const s=S.settings;const teen=(s.age||25)<19;return r[(s.sex==='f'?2:0)+(teen?0:1)];}
 function goalFor(k){
   const g=NMAP[k].g,T=S.targets;
   if(g==='mac')return T[k]||0;
-  if(g==='anti'){const o=T.anti&&T.anti[k];return o>0?o:antiDefaults()[k];}
+  if(g==='anti'||g==='bad'){const o=T.anti&&T.anti[k];return o>0?o:antiDefaults()[k];}
   const o=T.micro&&T.micro[k];return o>0?o:microDefault(k);
 }
 const GOALS={cut:'Cut',recomp:'Recomp',bulk:'Lean bulk',maintain:'Maintain'};
@@ -1334,7 +1409,7 @@ async function bgSync(){
     const after=JSON.stringify(merged);
     if(after!==before){S=merged;migrate();dataVer++;writeLocal();quietRefresh();}
     if(!cloud||!cloud.sharded||after!==JSON.stringify(cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
-    processQueue();
+    processQueue();setTimeout(runPendingAnalyses,4000);
   }finally{syncing=false;renderSync();}
 }
 /* re-render with the merged data without yanking the user out of what they're doing */
@@ -1479,14 +1554,16 @@ function dayTotals(date){
   (S.food[date]||[]).forEach(e=>{const m=e.mult||1;NK.forEach(k=>{t[k]+=(+((e.n||{})[k])||0)*m;});});
   return t;
 }
-function antiOver(date){const t=dayTotals(date);return NUT.filter(n=>n[3]==='anti'&&t[n[0]]>goalFor(n[0])).map(n=>({k:n[0],v:t[n[0]],g:goalFor(n[0])}));}
+function limTxt(k,v){return k==='seedoil'?fmtNum(v)+' g':fmtNum(v)+'/'+fmtNum(goalFor(k))+' '+NMAP[k].u;}
+function isLimit(k){const g=NMAP[k].g;return g==='anti'||g==='bad';}
+function antiOver(date){const t=dayTotals(date);return NUT.filter(n=>(n[3]==='anti'||n[3]==='bad')&&t[n[0]]>goalFor(n[0])+(n[0]==='seedoil'?0.4:0)).map(n=>({k:n[0],v:t[n[0]],g:goalFor(n[0])}));}
 function microHits(date){const t=dayTotals(date);const ks=NUT.filter(n=>['vit','min','oth'].includes(n[3])).map(n=>n[0]);return {hit:ks.filter(k=>t[k]>=goalFor(k)).length,of:ks.length};}
 function renderToday(){
   const t=todayStr(),pd=plannedDay(t),gym=S.gyms.find(g=>g.id===S.activeGym);
   const today=Object.values(S.workouts).filter(w=>w.date===t&&woHasData(w));
   const cur=curWO(),active=cur&&!cur.ended&&woHasData(cur);
   const over=antiOver(t);
-  $('todayAlert').innerHTML=(over.length?'<div class="alert">⚠ <b>Anti-nutrient limit passed today:</b> '+over.map(o=>esc(NMAP[o.k].n)+' '+fmtNum(o.v)+'/'+fmtNum(o.g)+' '+NMAP[o.k].u).join(' · ')+'</div>':'');
+  $('todayAlert').innerHTML=(over.length?'<div class="alert">⚠ <b>Over your limits today:</b> '+over.map(o=>esc(NMAP[o.k].n)+' '+limTxt(o.k,o.v)).join(' · ')+'</div>':'');
   let main='';
   if(active){
     main='<div class="card hero-card"><svg class="deco" viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg><div class="kicker"><i class="dot"></i>Workout in progress</div><h3>'+esc(cur.dayName)+'</h3><p class="muted">'+countSets(cur)+' sets logged · '+esc(gym?gym.name:'')+'</p><div style="margin-top:12px"><button class="btn btn-primary" onclick="show(\'workout\')">Continue workout</button></div></div>';
@@ -1504,13 +1581,16 @@ function renderToday(){
   const mac='<div class="rings">'+ring(tt.protein,goalFor('protein'),'Protein','#6ea6ff')+ring(tt.carbs,goalFor('carbs'),'Carbs','#ffd166')+ring(tt.fat,goalFor('fat'),'Fat','#3ecf8e')+'</div>';
   const lastPR=latestPR(),bw=latestBody(),nextW=nextWorkoutTxt();
   $('todayHub').innerHTML=
-    '<div class="hub" style="grid-column:1/-1" onclick="show(\'diet\')"><div class="k">Nutrition today</div>'+mac+'<div class="statchips">'+(n?'<span>'+n+' meal'+(n>1?'s':'')+'</span><span class="'+(mh.hit>=mh.of*0.75?'good':'')+'">Micros '+mh.hit+'/'+mh.of+'</span><span class="'+(over.length?'badc':'good')+'">Anti-nutrients '+(over.length?over.length+' over':'OK')+'</span>':'<span>Nothing logged yet — snap your first meal</span>')+'</div>'+
+    '<div class="hub" style="grid-column:1/-1" onclick="show(\'diet\')"><div class="k">Nutrition today</div>'+mac+'<div class="statchips">'+(n?'<span>'+n+' meal'+(n>1?'s':'')+'</span>'+lastGradeChip(t)+'<span class="'+(mh.hit>=mh.of*0.75?'good':'')+'">Micros '+mh.hit+'/'+mh.of+'</span>'+
+      ((tt.seedoil||0)>0.4?'<span class="badc">Seed oils '+fmtNum(tt.seedoil)+' g</span>':'<span class="good">No seed oils</span>')+
+      (over.filter(o=>o.k!=='seedoil').length?'<span class="badc">'+over.filter(o=>o.k!=='seedoil').length+' over limit</span>':''):'<span>Nothing logged yet — snap your first meal</span>')+streakChip()+'</div>'+nextTip(t)+
     '<div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm grow" onclick="event.stopPropagation();$(\'camIn\').click()">📷 Snap a meal</button><button class="btn btn-ghost btn-sm grow" onclick="event.stopPropagation();show(\'diet\');openDescribe()">✍️ Describe</button></div></div>'+
     '<div class="hub" onclick="show(\'workout\')"><div class="k">Lift</div><div class="v"><span data-count="'+liftsThisWeek()+'" data-ck="lifts">0</span><small> this week</small></div><div class="s">'+esc(nextW)+'</div></div>'+
     '<div class="hub" onclick="show(\'progress\')"><div class="k">Progress</div><div class="v">'+(bw?'<span data-count="'+bw.w+'" data-ck="bw" data-dec="'+(String(bw.w).includes('.')?1:0)+'">0</span><small> kg</small>':'—')+'</div><div class="s">'+(lastPR?'Latest PR: '+esc(lastPR):'Log bodyweight & photos')+'</div></div>';
   let html='';const L=['S','M','T','W','T','F','S'];
   for(let i=6;i>=0;i--){const d=addDays(t,-i);const l=Object.values(S.workouts).some(w=>w.date===d&&woHasData(w));const f=(S.food[d]||[]).length>0;
-    html+='<div class="wd'+(d===t?' today':'')+'" style="--j:'+(6-i)+'"><div class="dots"><i class="'+(l?'l':'')+'"></i><i class="'+(f?'f':'')+'"></i></div>'+L[parseD(d).getDay()]+'</div>';}
+    const dg=dayGrade(d);
+    html+='<div class="wd'+(d===t?' today':'')+'" style="--j:'+(6-i)+'"><div class="dots"><i class="'+(l?'l':'')+'"></i><i class="'+(f?'f':'')+'"></i></div>'+L[parseD(d).getDay()]+(dg?'<b class="wg g-'+dg+'">'+dg+'</b>':'<b class="wg none"></b>')+'</div>';}
   $('todayWeek').innerHTML=html;
 }
 function liftsThisWeek(){const t=todayStr();let n=0;for(const k in S.workouts){const w=S.workouts[k];if(w.date>addDays(t,-7)&&w.date<=t&&woHasData(w))n++;}return n;}
@@ -2068,52 +2148,65 @@ function applyAi(){if(!aiProposal)return;draft=aiProposal;aiProposal=null;$('aiS
 let dDate=todayStr(),pendingImg=null,MD=null;
 /* what each nutrient does — shown behind the ⓘ badges */
 const INFO={
- vitA:{g:'Vision (especially in low light), immune defence, skin and the lining of your gut and lungs.',s:'Liver, egg yolks, butter/ghee, carrots, sweet potato, spinach, kale.',x:'Too much from supplements or liver every day can be toxic; food amounts are fine.'},
- vitC:{g:'Collagen for tendons, ligaments and skin, immune function, and it boosts iron absorption from plants.',s:'Peppers, kiwi, citrus, strawberries, broccoli, potatoes.'},
- vitD:{g:'Calcium absorption and strong bones, muscle function and immunity. Hard to get from food — mostly made from sunlight.',s:'Sun on skin, fatty fish (salmon, sardines), egg yolks, fortified milk, cod liver oil.',x:'In Slovak winters most people are low — worth a blood test.'},
- vitE:{g:'Antioxidant that protects cell membranes, including muscle cells after hard training.',s:'Sunflower seeds, almonds, hazelnuts, olive & sunflower oil, avocado.'},
- vitK:{g:'Blood clotting and getting calcium into bones (K2) instead of arteries.',s:'Leafy greens, broccoli, natto, hard cheese, egg yolks.'},
- b1:{g:'Turns carbs into energy; nerves and muscle contraction.',s:'Pork, whole grains, oats, legumes, sunflower seeds.'},
- b2:{g:'Energy production in every cell, healthy eyes and skin.',s:'Milk, yogurt, eggs, meat, mushrooms, almonds.'},
- b3:{g:'Energy metabolism, DNA repair, healthy skin and digestion.',s:'Chicken, tuna, beef, peanuts, mushrooms.'},
- b5:{g:'Building coenzyme A — needed to burn fat and carbs and make hormones.',s:'Chicken, beef, eggs, mushrooms, avocado, whole grains.'},
- b6:{g:'Protein metabolism (more protein = more B6 needed), red blood cells, brain chemicals.',s:'Chicken, fish, potatoes, bananas, chickpeas.'},
- b7:{g:'Biotin: fat and carb metabolism, hair, skin and nails.',s:'Egg yolks (cooked), liver, nuts, seeds, salmon.',x:'Raw egg whites contain avidin, which blocks biotin — cook your eggs.'},
- b9:{g:'Folate: making DNA and new cells, red blood cells. Important while you are still growing.',s:'Leafy greens, lentils, chickpeas, asparagus, avocado, liver.'},
- b12:{g:'Nerves, red blood cells and energy. Only reliably found in animal foods.',s:'Meat, fish, eggs, dairy, liver, shellfish.'},
- choline:{g:'Cell membranes, liver health, and acetylcholine for brain and muscle signalling.',s:'Egg yolks (best source), liver, beef, fish, chicken.'},
- calcium:{g:'Bones and teeth (you are still building peak bone mass), muscle contraction, nerves.',s:'Milk, yogurt, cheese, sardines with bones, tofu set with calcium.',x:'Oxalates and phytates bind it — spinach calcium is barely absorbed.'},
- iron:{g:'Carries oxygen in blood (haemoglobin) and muscle (myoglobin) — low iron = tired, weak training.',s:'Red meat, liver, mussels; plant iron from lentils/spinach is absorbed far less.',x:'Tea/coffee (tannins) and phytates block absorption; vitamin C helps.'},
- magnesium:{g:'300+ enzymes: muscle contraction and relaxation, sleep, energy, protein building.',s:'Pumpkin seeds, dark chocolate, almonds, spinach, black beans, whole grains.'},
- phosphorus:{g:'Bones, and ATP — the energy molecule your muscles burn.',s:'Meat, fish, dairy, eggs, nuts, legumes.'},
- potassium:{g:'Muscle contraction, nerve signals, fluid balance and blood pressure; offsets sodium.',s:'Potatoes, bananas, beans, avocado, spinach, yogurt, salmon.'},
- sodium:{g:'Fluid balance, nerve signals and muscle contraction; you lose a lot in sweat.',s:'Salt, cheese, bread, cured meats, sauces.',x:'The goal is a minimum, not a limit — most people get far more.'},
- zinc:{g:'Immune system, wound healing, testosterone and growth, taste and smell.',s:'Oysters, beef, pumpkin seeds, cheese, chickpeas.',x:'Phytates in grains and legumes bind zinc.'},
- copper:{g:'Making red blood cells and collagen, iron metabolism, energy.',s:'Liver, shellfish, cashews, dark chocolate, mushrooms.'},
- manganese:{g:'Bone formation, cartilage, and the antioxidant enzyme that protects mitochondria.',s:'Oats, brown rice, nuts, tea, mussels, pineapple.'},
- selenium:{g:'Thyroid hormones and antioxidant defence.',s:'Brazil nuts (1–2 cover a day), fish, eggs, chicken.',x:'More than a few Brazil nuts daily can be too much.'},
- iodine:{g:'Thyroid hormones that set your metabolism and growth.',s:'Iodized salt, fish, seaweed, dairy, eggs.',x:'Goitrogens (raw cruciferous veg, soy) matter most when iodine is low.'},
- chromium:{g:'Helps insulin move sugar into cells.',s:'Broccoli, whole grains, meat, potatoes, green beans.'},
- molybdenum:{g:'Enzymes that break down certain amino acids and toxins.',s:'Legumes, whole grains, nuts, liver.'},
- phytate:{a:'Phytic acid — the storage form of phosphorus in grains, legumes, nuts and seeds.',r:'Binds zinc, iron and calcium in the same meal so you absorb less of them.',s:'Bran, whole grains, oats, beans, lentils, nuts, seeds, soy.',f:'Soak, sprout or ferment: sourdough, soaked oats and properly soaked beans cut it a lot.'},
- oxalate:{a:'Oxalic acid, made by many plants. It is excreted by the kidneys and is not needed by the body at all.',r:'Binds calcium (and magnesium) in your gut and is the main component of most kidney stones.',s:'Spinach, beet greens, rhubarb, almonds, cashews, cocoa, sweet potato, black tea, buckwheat.',f:'Boil high-oxalate greens and discard the water, eat calcium in the same meal, drink plenty of water.'},
- tannins:{a:'Bitter polyphenols in tea, coffee, red wine, some fruits and legumes.',r:'Block iron absorption (by up to 60% when drunk with a meal) and can bind protein.',s:'Black and green tea, coffee, cocoa, red beans, pomegranate, unripe fruit.',f:'Drink tea/coffee at least an hour away from iron-rich meals.'},
- lectins:{a:'Carbohydrate-binding proteins in raw legumes and grains.',r:'Active lectins (raw/undercooked kidney beans) cause vomiting and gut damage; can block nutrient absorption.',s:'Raw or undercooked beans, raw soy, raw wheat germ.',f:'Soak and boil beans properly (10+ min at a full boil) — that destroys almost all of them. Slow-cookers alone don’t.'},
- saponins:{a:'Soap-like compounds in legumes, quinoa and some vegetables.',r:'Bitter, can irritate the gut lining and lower nutrient absorption in high amounts.',s:'Quinoa (unrinsed), chickpeas, soy, oats, asparagus.',f:'Rinse quinoa and soak legumes.'},
- goitrogens:{a:'Glucosinolates from cruciferous vegetables and compounds in soy and millet.',r:'Can interfere with the thyroid’s use of iodine when intake is high and iodine is low.',s:'Raw kale, cabbage, broccoli, Brussels sprouts, cauliflower, bok choy, soy, millet.',f:'Cook crucifers (steaming/boiling cuts them a lot) and keep iodine intake up.'},
- protease:{a:'Trypsin/protease inhibitors that block the enzymes digesting protein.',r:'Lower protein digestion — matters if you rely on legumes/soy for protein.',s:'Raw or lightly processed soy, legumes, raw egg white.',f:'Thorough cooking and fermentation (tempeh, miso) deactivate most of them.'},
- isoflavones:{a:'Plant oestrogens (phytoestrogens) found mainly in soy.',r:'Weak oestrogen-like activity; very high intakes may affect hormones and thyroid — keep it moderate while you are growing.',s:'Soy milk, tofu, edamame, soy protein, tempeh, miso.',f:'Mix soy with other protein sources instead of relying on it every meal.'},
- glycoalkaloids:{a:'Solanine and chaconine — natural potato toxins.',r:'Gut upset, headache and nausea at higher doses; they concentrate in the skin, green parts and sprouts.',s:'Potatoes (especially green, sprouting or the peel), tomatoes when green, aubergine.',f:'Store potatoes dark and cool, cut away green parts and sprouts, peel older potatoes.'},
- cyanogenic:{a:'Compounds that release cyanide (HCN) when the plant is crushed or chewed.',r:'Cyanide blocks cell energy production — dangerous in larger amounts.',s:'Bitter apricot kernels, raw cassava, raw flaxseed (large amounts), bamboo shoots, bitter almonds.',f:'Never eat bitter apricot kernels; cook cassava properly; keep raw flax to a tablespoon or two.'},
- protein:{g:'Builds and repairs muscle — the main driver of a recomp together with training.',s:'Meat, fish, eggs, dairy, legumes.'},
- carbs:{g:'Fuel for hard training and recovery; refills muscle glycogen.',s:'Rice, potatoes, oats, bread, fruit.'},
- fat:{g:'Hormones (including testosterone), fat-soluble vitamins A, D, E, K, and cell membranes.',s:'Eggs, meat, fish, butter/ghee, olive oil, nuts.'}
+ protein:{g:'Builds and repairs muscle — the main driver of a recomp together with training. Animal protein is complete and the easiest to digest and use.',s:'Beef, lamb, eggs, fish and shellfish, organ meats, Greek yogurt, cheese, milk.',x:'Aim for 30–50 g at every meal.'},
+ carbs:{g:'Fuel for hard training and skiing; refills muscle glycogen.',s:'Ripe fruit (berries, citrus, kiwi, bananas, mango), honey, maple syrup, milk.',x:'Fruit is the least defended part of a plant — the cleanest carb there is. Refined sugar and flour are not.'},
+ fat:{g:'Hormones (including testosterone), the fat-soluble vitamins A, D, E and K, and cell membranes.',s:'Beef fat and tallow, butter, ghee, egg yolks, cheese, fatty fish, coconut oil.',x:'Get your fat from animals — never from seed oils.'},
+ vitA:{g:'Vision, immunity, skin and the lining of your gut and lungs; supports growth and testosterone.',s:'Beef liver (by far the richest), egg yolks, butter and ghee, cheese, cod liver oil.',x:'Animal retinol is used directly — plant beta-carotene (carrots, sweet potato) converts poorly. Liver is that potent: 100–200 g a week is plenty.'},
+ vitC:{g:'Collagen for tendons, ligaments and skin, immunity, and it helps you absorb iron.',s:'Kiwi, oranges and other citrus, berries, papaya, mango, pineapple; fresh liver has some too.',x:'Two pieces of fruit a day cover it.'},
+ vitD:{g:'Bones, muscle function, immunity and testosterone. Your body makes it from sunlight.',s:'Midday sun on bare skin, fatty fish (salmon, sardines, mackerel), egg yolks, liver, cod liver oil.',x:'Slovak winters give almost no usable sun — eat fatty fish and egg yolks often and get your level checked.'},
+ vitE:{g:'Antioxidant that protects cell membranes, including muscle cells after hard training.',s:'Egg yolks, salmon and trout, shellfish, butter, avocado, kiwi, mango.',x:'The more polyunsaturated fat (seed oils) you eat, the more vitamin E you burn protecting it — without seed oils your need drops.'},
+ vitK:{g:'Blood clotting, and K2 sends calcium into bones and teeth instead of arteries.',s:'K2: egg yolks, hard and aged cheese, butter and ghee from grass-fed cows, chicken liver. K1: leafy greens.'},
+ b1:{g:'Turns carbs into energy; nerves and muscle contraction.',s:'Pork, salmon and trout, mussels, beef, liver, eggs.',x:'Your need rises with carbs and hard training.'},
+ b2:{g:'Energy production in every cell, healthy eyes and skin.',s:'Beef liver, milk, yogurt, cheese, eggs, beef.'},
+ b3:{g:'Energy metabolism, DNA repair, healthy skin and digestion.',s:'Beef, chicken, tuna, salmon, liver.'},
+ b5:{g:'Builds coenzyme A — needed to burn fat and carbs and to make hormones.',s:'Liver, egg yolks, beef, chicken, salmon, avocado.'},
+ b6:{g:'Protein metabolism (more protein = more B6 needed), red blood cells, brain chemicals.',s:'Liver, salmon, tuna, beef, chicken, bananas.'},
+ b7:{g:'Biotin: fat and carb metabolism, hair, skin and nails.',s:'Cooked egg yolks, liver, salmon, beef.',x:'Raw egg whites block biotin — cook your eggs.'},
+ b9:{g:'Folate: making DNA, new cells and red blood cells — important while you are still growing.',s:'Beef and chicken liver (richest), egg yolks, oranges, papaya, mango, avocado.',x:'Liver gives you the natural form directly; processed flour is fortified with synthetic folic acid instead.'},
+ b12:{g:'Nerves, red blood cells and energy. Only found in animal foods.',s:'Beef liver, clams and oysters, beef, lamb, salmon, eggs, dairy.'},
+ choline:{g:'Cell membranes, liver health and acetylcholine for brain and muscle signalling.',s:'Egg yolks (3–4 eggs cover most of a day), beef liver, beef, fish.'},
+ calcium:{g:'Bones and teeth (you are still building peak bone mass), muscle contraction, nerves.',s:'Milk, kefir, yogurt, cheese, sardines with bones.',x:'Oxalates and phytates in plants lock calcium up — spinach calcium is barely absorbed.'},
+ iron:{g:'Carries oxygen in blood and muscle — low iron means tired, weak training.',s:'Red meat, beef liver and heart, oysters and mussels.',x:'Heme iron from meat absorbs several times better than plant iron; phytates and tea/coffee tannins block absorption.'},
+ magnesium:{g:'300+ enzymes: muscle contraction and relaxation, sleep, energy, protein building.',s:'Magnesium-rich mineral water (e.g. Magnesia), salmon and mackerel, dairy, beef, avocado, bananas.',x:'The hardest mineral to cover from animal foods — a glass or two of magnesium-rich mineral water fixes it.'},
+ phosphorus:{g:'Bones, and ATP — the energy molecule your muscles burn.',s:'Meat, fish, dairy, eggs.'},
+ potassium:{g:'Muscle contraction, nerve signals and fluid balance; offsets sodium.',s:'Beef, salmon, milk and yogurt, bananas, oranges, kiwi, avocado, coconut water.'},
+ sodium:{g:'Fluid balance, nerve signals and muscle contraction; you lose a lot in sweat.',s:'Salt your food to taste, cheese, bone broth.',x:'This is a minimum, not a limit — training hard on whole foods you need more salt, not less.'},
+ zinc:{g:'Immunity, healing, testosterone and growth, taste and smell.',s:'Oysters (one covers the day), beef, lamb, liver, cheese.',x:'Phytates in grains and legumes block zinc absorption.'},
+ copper:{g:'Red blood cells, collagen, iron metabolism, energy.',s:'Beef liver (a little covers it), oysters, shellfish.'},
+ manganese:{g:'Bone formation, cartilage, and an antioxidant enzyme that protects your mitochondria.',s:'Mussels, pineapple, blueberries and other berries.'},
+ selenium:{g:'Thyroid hormones and antioxidant defence.',s:'Beef kidney, seafood (tuna, sardines, shrimp), eggs, beef.'},
+ iodine:{g:'Thyroid hormones that set your metabolism and growth.',s:'Seafood (cod, shrimp), eggs, dairy.',x:'Unrefined sea salt has almost no iodine — get it from seafood, eggs and dairy.'},
+ chromium:{g:'Helps insulin move sugar into your cells.',s:'Beef, eggs, cheese, apples, bananas.'},
+ molybdenum:{g:'Enzymes that break down certain amino acids and toxins.',s:'Liver (richest), eggs, dairy.'},
+ seedoil:{a:'Industrial oils pressed and chemically refined from seeds: canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran — plus anything labelled “vegetable oil”, margarine and shortening.',r:'They are the most heavily processed fats in food: solvent-extracted, bleached and deodorised, and mostly unstable omega-6 that oxidises when heated — worst of all in re-used frying oil. They have no place in your diet.',s:'Fried and fast food, restaurant cooking, chips and crackers, mayo, dressings and sauces, hummus, pastries and biscuits, roasted nuts, protein bars, “healthy” spreads.',f:'Cook with tallow, butter, ghee or coconut oil. Ask restaurants what they fry in, and read labels — “vegetable oil” means seed oil.'},
+ la:{a:'Linoleic acid — the main omega-6 fat. Seed oils are 20–70% linoleic acid.',r:'Too much pushes your omega-6 to omega-3 balance far off, and it gets stored in your body fat for years. Keep it low.',s:'Seed oils, nuts and seeds, chicken skin and fat, pork fat from grain-fed pigs, mayo.',f:'Pick beef, lamb and fish over chicken and pork, cook in tallow/butter/ghee, skip nuts and seed snacks.'},
+ addsugar:{a:'Table sugar, high-fructose corn syrup, glucose syrup and dextrose added to processed food. Fruit, honey and maple syrup don’t count here.',r:'Empty carbs with no vitamins or minerals — and they usually come packaged with seed oils and refined flour.',s:'Soda and juice drinks, candy, pastries, cereal and granola, flavoured yogurt, ketchup and sauces, energy drinks.',f:'Swap to fruit, honey or maple syrup, and check labels for hidden syrups.'},
+ phytate:{a:'Phytic acid — a plant defence compound that stores phosphorus in grains, legumes, nuts and seeds.',r:'It grabs zinc, iron and calcium in the same meal so you absorb far less of them.',s:'Bran and whole grains, oats, beans and lentils, nuts, seeds, soy.',f:'Get your minerals from meat, seafood and dairy. If you do eat grains or legumes, choose sourdough, soaked or sprouted versions.'},
+ oxalate:{a:'Oxalic acid — sharp crystals many plants make to defend themselves. Your body has no use for it.',r:'Binds calcium and magnesium in your gut, irritates tissues, and is the main component of most kidney stones.',s:'Spinach, beet greens, rhubarb, almonds, cashews, cocoa and dark chocolate, sweet potato, black tea, buckwheat.',f:'Skip high-oxalate “superfoods” (spinach smoothies, almond flour), have dairy with any plant meal, drink plenty of water.'},
+ tannins:{a:'Bitter defensive polyphenols in tea, coffee, red wine, some fruits and legumes.',r:'Block iron absorption by up to 60% when taken with a meal, and bind protein.',s:'Black and green tea, coffee, cocoa, red beans, pomegranate, unripe fruit.',f:'Keep tea and coffee at least an hour away from your meat meals.'},
+ lectins:{a:'Defence proteins in seeds, grains and legumes that latch onto your gut lining.',r:'Active lectins (raw or undercooked beans) cause vomiting and gut damage and block nutrient absorption.',s:'Raw or undercooked beans, raw soy, raw wheat germ, peanuts.',f:'Avoid legumes — or soak and boil/pressure-cook them properly; slow-cookers alone don’t destroy lectins.'},
+ saponins:{a:'Soap-like defence compounds in legumes, quinoa and some vegetables.',r:'They irritate and loosen the gut lining and cut nutrient absorption.',s:'Quinoa, chickpeas, soy, oats, asparagus.',f:'Avoid them, or rinse quinoa and soak legumes well.'},
+ goitrogens:{a:'Glucosinolates from cruciferous vegetables, plus compounds in soy and millet.',r:'They interfere with your thyroid’s use of iodine.',s:'Raw kale, cabbage, broccoli, Brussels sprouts, cauliflower, bok choy, soy, millet.',f:'Cook crucifers well or skip them, and get iodine from seafood, eggs and dairy.'},
+ protease:{a:'Trypsin/protease inhibitors — they block the enzymes that digest protein.',r:'Lower protein digestion; it matters if you lean on legumes or soy for protein.',s:'Raw or lightly processed soy, legumes, raw egg white.',f:'Get your protein from meat, eggs and dairy, and cook your eggs.'},
+ isoflavones:{a:'Plant oestrogens, mainly from soy.',r:'They act like weak oestrogen in your body — keep them out while you are growing and building muscle.',s:'Soy milk, tofu, edamame, soy protein, tempeh, miso, many protein bars.',f:'Skip soy products and check labels for soy protein.'},
+ glycoalkaloids:{a:'Solanine and chaconine — the nightshade family’s built-in pesticides.',r:'Gut irritation, headache and nausea at higher doses; they concentrate in skins, green parts and sprouts.',s:'Potatoes (especially green, sprouting or the peel), green tomatoes, aubergine.',f:'Peel potatoes, cut away green parts and sprouts, store them dark and cool.'},
+ cyanogenic:{a:'Compounds that release cyanide (HCN) when the plant is crushed or chewed.',r:'Cyanide blocks your cells’ energy production — dangerous in larger amounts.',s:'Bitter apricot kernels, raw cassava, raw flaxseed (large amounts), bamboo shoots, bitter almonds.',f:'Never eat bitter apricot kernels; cook cassava properly; keep flax to a tablespoon or two.'}
 };
 /* cooking fats per tablespoon (what soaked into the food) */
-const FATS={olive:['Olive oil',13.5,{fat:13.5,vitE:1.9,vitK:8.1}],sunflower:['Sunflower oil',13.6,{fat:13.6,vitE:5.6,vitK:0.7}],rapeseed:['Rapeseed / canola oil',14,{fat:14,vitE:2.4,vitK:10}],
- coconut:['Coconut oil',13.6,{fat:13.5}],butter:['Butter',14.2,{fat:11.5,protein:0.12,vitA:97,vitE:0.32,vitK:1,calcium:3,sodium:91}],ghee:['Ghee',12.8,{fat:12.7,vitA:108,vitE:0.36,vitK:1.1}],
- tallow:['Beef tallow',12.8,{fat:12.8,vitE:0.35,selenium:0.03}],lard:['Lard',12.8,{fat:12.8,vitD:0.3,vitE:0.08}],duck:['Duck fat',12.8,{fat:12.8,vitE:0.35}]};
+const FATS={tallow:['Beef tallow',12.8,{fat:12.8,vitE:0.35,selenium:0.03,la:0.4}],butter:['Butter',14.2,{fat:11.5,protein:0.12,vitA:97,vitE:0.32,vitK:1,calcium:3,sodium:91,la:0.31}],
+ ghee:['Ghee',12.8,{fat:12.7,vitA:108,vitE:0.36,vitK:1.1,la:0.32}],coconut:['Coconut oil',13.6,{fat:13.5,la:0.23}],olive:['Extra-virgin olive oil',13.5,{fat:13.5,vitE:1.9,vitK:8.1,la:1.3}],
+ avocado:['Avocado oil',14,{fat:14,vitE:1.8,la:1.7}],lard:['Lard',12.8,{fat:12.8,vitD:0.3,vitE:0.08,la:1.3}],duck:['Duck fat',12.8,{fat:12.8,vitE:0.35,la:1.6}],
+ sunflower:['Sunflower oil (seed oil)',13.6,{fat:13.6,vitE:5.6,vitK:0.7,la:8.9,seedoil:13.6},1],rapeseed:['Rapeseed / canola oil (seed oil)',14,{fat:14,vitE:2.4,vitK:10,la:2.6,seedoil:14},1],
+ vegetable:['“Vegetable oil” blend (seed oil)',13.6,{fat:13.6,vitE:1.1,vitK:3,la:6.8,seedoil:13.6},1],corn:['Corn oil (seed oil)',13.6,{fat:13.6,vitE:1.9,la:7.2,seedoil:13.6},1],
+ margarine:['Margarine / spread (seed oils)',14,{fat:11.3,vitA:115,vitE:1.2,sodium:100,la:3.2,seedoil:11},1]};
+function seedRow(v,date){
+  const ok=v<=0.4,src=ok?[]:sourcesOf('seedoil',date||dDate);
+  return '<div class="nrow seedrow '+(ok?'ok':'no')+'" onclick="openInfo(\'seedoil\')"><div class="tgtline"><span class="nlab">Seed oils <i class="ib">i</i></span><span>'+
+    (ok?'<b class="sok">None ✓</b>':'<b style="color:var(--bad)">'+fmtNum(v)+' g</b>')+'</span></div>'+
+    (ok?'<div class="tiny">No canola, sunflower, soybean or “vegetable oil” today.</div>':'<div class="tiny" style="color:#ff9d8c">From '+esc(src.slice(0,3).map(x=>x.name).join(', '))+' — the one thing to cut first.</div>')+'</div>';
+}
 function nutRow(k,tot,anti){
+  if(k==='seedoil')return seedRow(tot[k]);
   const n=NMAP[k],g=goalFor(k),v=tot[k];const p=g?v/g*100:0;
   const cls=anti?(p>100?'over':p>=80?'near':''):(p>=100?'full':'');
   return '<div class="nrow"><div class="tgtline"><span class="nlab" onclick="openInfo(\''+k+'\')">'+esc(n.n)+' <i class="ib">i</i></span><span><b'+(anti&&p>100?' style="color:var(--bad)"':'')+'>'+fmtNum(v)+'</b> / '+fmtNum(g)+' '+n.u+'<span class="pct"> '+Math.round(p)+'%</span></span></div><div class="bar"><i class="'+cls+'" data-k="n'+k+'" data-p="'+Math.min(100,p).toFixed(1)+'"></i></div></div>';
@@ -2124,14 +2217,15 @@ function renderDiet(){
   const tot=dayTotals(dDate),meals=S.food[dDate]||[];
   $('dietCount').textContent=meals.length?meals.length+' meal'+(meals.length>1?'s':''):'';
   $('macroBox').innerHTML=['protein','carbs','fat'].map(k=>nutRow(k,tot)).join('');
+  $('badBox').innerHTML=NUT.filter(n=>n[3]==='bad').map(n=>nutRow(n[0],tot,true)).join('');
   $('antiBox').innerHTML=NUT.filter(n=>n[3]==='anti').map(n=>nutRow(n[0],tot,true)).join('')+'<p class="tiny" style="margin-top:10px">Tap any name to see what it does and where today’s amount came from.</p>';
   const mh=microHits(dDate);$('microScore').textContent=mh.hit+'/'+mh.of+' goals hit';
   $('microBox').innerHTML='<div class="nsec">Vitamins</div>'+NUT.filter(n=>n[3]==='vit').map(n=>nutRow(n[0],tot)).join('')+
     '<div class="nsec">Minerals</div>'+NUT.filter(n=>n[3]==='min').map(n=>nutRow(n[0],tot)).join('');
   const over=antiOver(dDate),hadAlert=!!$('dietAlert').querySelector('.alert');
-  $('dietAlert').innerHTML=(over.length?'<div class="alert">⚠ <b>Over your anti-nutrient limit:</b> '+over.map(o=>'<span style="text-decoration:underline;cursor:pointer" onclick="openInfo(\''+o.k+'\')">'+esc(NMAP[o.k].n)+'</span> '+fmtNum(o.v)+'/'+fmtNum(o.g)+' '+NMAP[o.k].u).join(' · ')+'<br><span style="font-size:12px">Tap one to see which foods caused it.</span></div>':'')+queueCard();
+  $('dietAlert').innerHTML=(over.length?'<div class="alert">⚠ <b>Over your limits:</b> '+over.map(o=>'<span style="text-decoration:underline;cursor:pointer" onclick="openInfo(\''+o.k+'\')">'+esc(NMAP[o.k].n)+'</span> '+limTxt(o.k,o.v)).join(' · ')+'<br><span style="font-size:12px">Tap one to see which foods caused it.</span></div>':'')+queueCard();
   $('mealList').innerHTML=meals.length?meals.slice().reverse().map(e=>mealHTML(e)).join(''):'<span class="muted">Nothing logged for this day yet.</span>';
-  renderGaps();animBars($('view-diet'),enteringView==='diet');
+  renderGaps();animBars($('view-diet'),enteringView==='diet');renderAnCard();
   const al=$('dietAlert').querySelector('.alert');if(al&&!hadAlert&&!enteringView)anim(al,[{opacity:0,transform:'translate3d(0,-8px,0) scale(.98)'},{opacity:1,transform:'none'}],{duration:520,easing:SPR_SOFT});
 }
 /* ---------- info badge + where it came from ---------- */
@@ -2143,26 +2237,26 @@ function sourcesOf(k,date){
   return out.sort((a,b)=>b.v-a.v);
 }
 function openInfo(k){
-  const n=NMAP[k],I=INFO[k]||{},anti=n.g==='anti';
+  const n=NMAP[k],I=INFO[k]||{},anti=n.g==='anti'||n.g==='bad';
   const tot=dayTotals(dDate)[k],goal=goalFor(k);
   const src=sourcesOf(k,dDate);
-  let h='<div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:'+(anti?'var(--warn)':'var(--sky)')+'">'+(anti?'Anti-nutrient · daily limit '+fmtNum(goal)+' '+n.u:(n.g==='mac'?'Macro':'Micronutrient')+' · daily goal '+fmtNum(goal)+' '+n.u)+'</div>';
+  let h='<div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:'+(anti?'var(--warn)':'var(--sky)')+'">'+(anti?(k==='seedoil'?'Keep out completely':(n.g==='bad'?'Keep it low':'Anti-nutrient')+' · daily limit '+fmtNum(goal)+' '+n.u):(n.g==='mac'?'Macro':'Micronutrient')+' · daily goal '+fmtNum(goal)+' '+n.u)+'</div>';
   if(anti){
-    h+='<p class="muted" style="margin:8px 0"><b style="color:var(--navy)">What it is:</b> '+esc(I.a||'')+'</p><p class="muted" style="margin-bottom:8px"><b style="color:var(--bad)">Why limit it:</b> '+esc(I.r||'')+'</p>'+
-      '<p class="muted" style="margin-bottom:8px"><b style="color:var(--navy)">Main sources:</b> '+esc(I.s||'')+'</p><p class="muted"><b style="color:var(--ok)">How to cut it:</b> '+esc(I.f||'')+'</p>';
+    h+='<p class="muted" style="margin:8px 0"><b style="color:var(--navy)">What it is:</b> '+esc(I.a||'')+'</p><p class="muted" style="margin-bottom:8px"><b style="color:var(--bad)">'+(k==='seedoil'?'Why it stays out:':'Why limit it:')+'</b> '+esc(I.r||'')+'</p>'+
+      '<p class="muted" style="margin-bottom:8px"><b style="color:var(--navy)">Main sources:</b> '+esc(I.s||'')+'</p><p class="muted"><b style="color:var(--ok)">'+(k==='seedoil'?'What to use instead:':'How to cut it:')+'</b> '+esc(I.f||'')+'</p>';
   }else{
     h+='<p class="muted" style="margin:8px 0"><b style="color:var(--ok)">Good for:</b> '+esc(I.g||'')+'</p><p class="muted"><b style="color:var(--navy)">Best sources:</b> '+esc(I.s||'')+'</p>'+(I.x?'<p class="muted" style="margin-top:8px"><b style="color:var(--warn)">Note:</b> '+esc(I.x)+'</p>':'');
   }
-  h+='<div class="nsec" style="margin-top:16px">'+(dDate===todayStr()?'Today':fmtD(dDate))+': '+fmtNum(tot)+' / '+fmtNum(goal)+' '+n.u+'</div>';
+  h+='<div class="nsec" style="margin-top:16px">'+(dDate===todayStr()?'Today':fmtD(dDate))+': '+(k==='seedoil'?fmtNum(tot)+' g':fmtNum(tot)+' / '+fmtNum(goal)+' '+n.u)+'</div>';
   h+=src.length?'<table>'+src.map(s=>'<tr><td>'+esc(s.name)+(s.meal&&s.meal!==s.name?'<br><span class="tiny">in '+esc(s.meal)+'</span>':'')+'</td><td style="text-align:right;white-space:nowrap"><b>'+fmtNum(s.v)+' '+n.u+'</b><br><span class="tiny">'+Math.round(s.v/Math.max(tot,1e-9)*100)+'%</span></td></tr>').join('')+'</table>':'<p class="tiny">Nothing logged with '+esc(n.n.toLowerCase())+' '+(dDate===todayStr()?'today':'that day')+'.</p>';
-  if(anti&&src.length)h+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:12px" id="swapBtn" onclick="aiSwaps(\''+k+'\')">Ask AI for lower-'+esc(n.n.split(' ')[0].toLowerCase())+' swaps</button><div id="swapOut"></div>';
+  if(anti&&src.length)h+='<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:12px" id="swapBtn" onclick="aiSwaps(\''+k+'\')">'+(k==='seedoil'?'Show me what to swap':'Ask AI for lower-'+esc(n.n.split(' ')[0].toLowerCase())+' swaps')+'</button><div id="swapOut"></div>';
   openSheet(n.n,h);
 }
 async function aiSwaps(k){
   const n=NMAP[k],src=sourcesOf(k,dDate).slice(0,5);
   const b=$('swapBtn');b.disabled=true;b.innerHTML='Thinking<span class="tdots"><i></i><i></i><i></i></span>';
   let t='';
-  try{t=await ai('A lifter (needs '+goalFor('protein')+' g protein/day) went over a daily limit of '+goalFor(k)+' '+n.u+' '+n.n+'. Biggest sources today: '+src.map(s=>s.name+' ('+fmtNum(s.v)+' '+n.u+')').join(', ')+'.\nGive 3-4 concrete swaps or preparation changes that cut '+n.n+' while keeping protein and micronutrients. Plain text, short lines starting with "• ", no intro, under 90 words.');}catch(e){}
+  try{t=await ai('You are the nutrition coach inside the Lock In app.\n'+FOOD_RULES+'\n\nA '+whoLine()+' went over a daily limit of '+goalFor(k)+' '+n.u+' '+n.n+'. Biggest sources today: '+src.map(s=>s.name+' ('+fmtNum(s.v)+' '+n.u+')').join(', ')+'.\nGive 3-4 concrete swaps that follow the principles above and keep protein and micronutrients up. Plain text, short lines starting with "• ", no intro, under 90 words.');}catch(e){}
   b.disabled=false;b.textContent='Ask again';
   $('swapOut').innerHTML='<div class="insight" style="white-space:pre-wrap">'+esc(t||'Couldn’t reach the AI — check your connection.')+'</div>';
 }
@@ -2178,40 +2272,204 @@ function renderGaps(){
   el.innerHTML='<p class="tiny" style="margin-bottom:8px">Average of the '+days.length+' days you logged in the last week.</p>'+
     (low.length?low.map(r=>'<div class="nrow"><div class="tgtline"><span class="nlab" onclick="openInfo(\''+r.k+'\')">'+esc(NMAP[r.k].n)+' <i class="ib">i</i></span><span><b>'+Math.round(r.p)+'%</b> of goal</span></div><div class="bar"><i class="'+(r.p<40?'over':'near')+'" data-k="g'+r.k+'" data-p="'+Math.min(100,r.p).toFixed(1)+'"></i></div><div class="tiny" style="margin-top:3px">Try: '+esc((INFO[r.k]||{}).s||'')+'</div></div>').join(''):'<div class="okline" style="margin:0">Every vitamin and mineral averaged at least 75% of its goal this week. 💪</div>');
 }
+
+/* ================= MEAL ANALYSIS: every meal graded against the app's food rules ================= */
+const FOOD_RULES='Nutrition principles of this app. State them as plain fact; never mention any person, influencer, study or "some say", and never hedge:\n'+
+ '1. Animal foods are the base: ruminant meat (beef, lamb, bison), eggs, organ meats (beef liver 1–2 times a week, heart, kidney), wild fish and shellfish, full-fat pasteurized dairy (milk, kefir, yogurt, cheese), butter, ghee and tallow.\n'+
+ '2. Carbs come from ripe fruit, honey and maple syrup — the least defended plant foods.\n'+
+ '3. Seed oils (canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran, "vegetable oil", margarine) are harmful and always get called out, including hidden sources: fried and restaurant food, chips, sauces, dressings, mayo, hummus, pastries, roasted nuts, protein bars. Cook with tallow, butter, ghee or coconut oil.\n'+
+ '4. Keep omega-6 linoleic acid low (under ~7 g a day): seed oils, nuts, seeds, chicken skin and pork fat are the big sources; ruminant fat is low.\n'+
+ '5. Grains, legumes, nuts, seeds and most vegetables carry plant defence chemicals (oxalates, phytates, lectins, goitrogens) that block minerals and irritate the gut — minimise them; if eaten, soak, ferment, peel and cook them well.\n'+
+ '6. Avoid ultra-processed food, refined sugar and syrups, refined flour, artificial sweeteners, emulsifiers and gums, and alcohol.\n'+
+ '7. Protein at every meal (30–50 g), mostly animal protein. Eat enough to grow, train and recover — never suggest eating less, skipping meals or fasting.\n'+
+ '8. Liver is the most nutrient-dense food, but keep it to 100–200 g a week (vitamin A).\n'+
+ '9. Dairy is pasteurized — never recommend raw or unpasteurized milk or dairy.\n'+
+ '10. Magnesium is the usual gap: magnesium-rich mineral water fixes it. Vitamin D comes from sun, fatty fish and egg yolks.';
+function whoLine(){const s=S.settings;return (s.age?s.age+'-year-old ':'')+(s.sex==='f'?'female':'male')+' lifter'+(s.height?', '+s.height+' cm':'')+(s.weight?', '+s.weight+' kg':'')+', training for body recomposition and expert-level skiing'+((s.age||25)<19?', still growing':'');}
+function mealFlags(e){
+  const out=new Set();(e.parts||[]).forEach(p=>(p.flags||[]).forEach(f=>out.add(f)));
+  const m=e.mult||1,n=e.n||{};if((+n.seedoil||0)*m>0.4)out.add('seed_oil');if((+n.addsugar||0)*m>8)out.add('refined_sugar');
+  return [...out].filter(f=>FLAGS[f]);
+}
+function flagChips(fl,inline){if(!fl||!fl.length)return '';return (inline?'':'<div class="flags">')+fl.map(f=>'<span class="flagchip'+(f==='seed_oil'||f==='fried'?'':' amber')+'">'+FLAGS[f]+'</span>').join('')+(inline?'':'</div>');}
+const anBusy=new Set();let anFocus=null;
+function gradePill(e){const a=e.an;if(anBusy.has(e.id))return '<span class="gpill busy" id="gp_'+e.id+'"><i></i></span>';return a?'<span class="gpill g-'+a.grade+'" id="gp_'+e.id+'">'+a.grade+'</span>':'<span class="gpill none" id="gp_'+e.id+'"></span>';}
+function firstSources(k){const xs=((INFO[k]||{}).s||'').replace(/\(.*?\)/g,'').split(/[,;.]/).map(x=>x.replace(/^\s*k[12]:\s*/i,'').trim().toLowerCase()).filter(x=>x&&!/sun|salt your/.test(x));return xs[0]||'';}
+function microPct(t){return NUT.filter(x=>x[3]==='vit'||x[3]==='min').map(x=>({k:x[0],p:goalFor(x[0])?t[x[0]]/goalFor(x[0])*100:100}));}
+/* rule-based verdict: instant, works offline, and keeps the AI grade honest */
+function localAnalysis(e,date){
+  const m=e.mult||1,v=k=>(+((e.n||{})[k])||0)*m,fl=mealFlags(e);
+  let sc=72;const good=[],bad=[],low=[];
+  const P=v('protein');if(P>=30){sc+=10;good.push(Math.round(P)+' g protein — solid');}else if(P<15){sc-=10;}
+  const so=v('seedoil');if(so>0.4){sc-=35;const src=(e.parts||[]).filter(p=>(+(p.n||{}).seedoil||0)>0.2||(p.flags||[]).includes('seed_oil')).map(p=>p.name.toLowerCase());bad.push('Seed oils ~'+fmtNum(so)+' g'+(src.length?' ('+src.slice(0,2).join(', ')+')':''));}
+  const la=v('la');if(la>4){sc-=10;bad.push('High omega-6: '+fmtNum(la)+' g linoleic acid');}
+  const su=v('addsugar');if(su>8){sc-=15;bad.push('Refined sugar: '+fmtNum(su)+' g');}
+  ['ultra_processed','refined_grain','artificial_sweetener','alcohol','additives'].forEach(f=>{if(fl.includes(f)){sc-=8;bad.push(FLAGS[f]);}});
+  if(fl.includes('fried')&&so<=0.4){sc-=5;}
+  NUT.filter(x=>x[3]==='anti').filter(x=>goalFor(x[0])&&v(x[0])>goalFor(x[0])*0.5).forEach(x=>{sc-=8;bad.push(x[1]+' '+fmtNum(v(x[0]))+' '+x[2]+' — half the day’s limit');});
+  const dense=NUT.filter(x=>x[3]==='vit'||x[3]==='min').filter(x=>goalFor(x[0])&&v(x[0])>=goalFor(x[0])*0.3).map(x=>x[1].split(' ')[0]);
+  if(dense.length>=6){sc+=8;good.push('Nutrient dense: '+dense.slice(0,4).join(', ')+(dense.length>4?'…':''));}
+  if(!bad.length&&good.length<2)good.push('Clean — no seed oils, sugar or processed food');
+  const t=dayTotals(date),late=date!==todayStr()||new Date().getHours()>=17||(S.food[date]||[]).length>=3;
+  microPct(t).filter(o=>o.p<(late?60:25)).sort((a,b)=>a.p-b.p).slice(0,3).forEach(o=>low.push(NMAP[o.k].n+' — '+firstSources(o.k)));
+  if(so>0.4)sc=Math.min(sc,62);
+  sc=Math.max(5,Math.min(100,Math.round(sc)));
+  const grade=sc>=85?'A':sc>=70?'B':sc>=55?'C':sc>=40?'D':'F';
+  const headline=so>0.4?'Seed oils dragged this one down':bad.length?'Good base, a few things to fix':sc>=85?'Clean, nutrient-dense meal':'Clean meal';
+  return {grade,score:sc,headline,good:good.slice(0,2),bad:bad.slice(0,3),low,next:low.length?'Add '+[...new Set(low.map(x=>x.split(' — ')[1]).filter(Boolean))].slice(0,2).join(' and ')+' to your next meal.':'',local:1,ts:Date.now()};
+}
+function mealFacts(e){
+  const m=e.mult||1,v=k=>(+((e.n||{})[k])||0)*m;
+  const foods=(e.parts&&e.parts.length?e.parts:[{name:e.name,g:null}]).map(p=>'- '+p.name+(p.g?' ('+Math.round(p.g*m)+' g)':'')+(p.flags&&p.flags.length?' ['+p.flags.join(', ')+']':'')).join('\n');
+  const key=['protein','carbs','fat','seedoil','la','addsugar'].map(k=>NMAP[k].n+' '+fmtNum(v(k))+' '+NMAP[k].u).join(', ');
+  const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0).map(x=>x[1]+' '+fmtNum(v(x[0]))+' '+x[2]).join(', ');
+  const cover=NUT.filter(x=>x[3]==='vit'||x[3]==='min').map(x=>({n:x[1],p:goalFor(x[0])?v(x[0])/goalFor(x[0])*100:0})).filter(o=>o.p>=20).sort((a,b)=>b.p-a.p).slice(0,8).map(o=>o.n+' '+Math.round(o.p)+'%').join(', ');
+  return 'Foods:\n'+foods+'\nThis meal: '+key+(anti?'\nAnti-nutrients: '+anti:'')+(cover?'\nShare of daily goals covered by this meal: '+cover:'');
+}
+function dayFacts(date){
+  const t=dayTotals(date);
+  const lim=NUT.filter(x=>(x[3]==='bad'||x[3]==='anti')&&t[x[0]]>0).map(x=>x[1]+' '+fmtNum(t[x[0]])+'/'+fmtNum(goalFor(x[0]))+' '+x[2]).join(', ');
+  const low=microPct(t).filter(o=>o.p<60).sort((a,b)=>a.p-b.p).map(o=>NMAP[o.k].n+' '+Math.round(o.p)+'%').join(', ');
+  const pd=plannedDay(date);
+  return 'Day so far: protein '+Math.round(t.protein)+'/'+goalFor('protein')+' g, carbs '+Math.round(t.carbs)+'/'+goalFor('carbs')+' g, fat '+Math.round(t.fat)+'/'+goalFor('fat')+' g'+
+    (lim?'\nLimits (eaten/limit): '+lim:'')+(low?'\nStill under 60% of the daily goal: '+low:'')+
+    '\nMeals logged: '+(S.food[date]||[]).length+(date===todayStr()?', time now '+new Date().toTimeString().slice(0,5):' (a past day, '+fmtD(date)+')')+'. Training: '+(pd?pd.name:'rest day')+'.';
+}
+function anPrompt(e,date){
+  return 'You are the nutrition coach inside the Lock In app, judging one meal for a '+whoLine()+'.\n'+FOOD_RULES+
+    '\n\nMEAL: '+e.name+'\n'+mealFacts(e)+'\n\n'+dayFacts(date)+
+    '\n\nReturn ONLY JSON: {"grade":"A|B|C|D|F","score":0-100,"headline":"verdict, max 8 words","good":["0-2 short points"],"bad":["0-3 warnings about bad things in THIS meal — seed oils, sugar, processed food, plant toxins, too much liver; empty if clean"],"low":["0-3 nutrients still low today as \'Nutrient — best food fix\'; leave out gaps that are normal this early in the day"],"next":"one concrete next-meal suggestion that fixes the biggest gap, max 16 words"}\n'+
+    'Grade strictly: any seed oil caps the grade at C; refined sugar or ultra-processed food caps it at B. Use only the numbers given — never invent amounts. Every item under 14 words, plain words, no emojis.';
+}
+function arr(a,n){return (Array.isArray(a)?a:[]).map(x=>String(x).trim()).filter(Boolean).slice(0,n);}
+async function analyzeMeal(id,quiet){
+  const f=findMeal(id);if(!f)return;
+  if(!quiet)anFocus=id;
+  if(!online()){f.e.an=localAnalysis(f.e,f.d);f.e.anPending=1;save();renderAnCard(true);updateMealPill(id);return;}
+  anBusy.add(id);renderAnCard();updateMealPill(id);
+  let r=null;try{r=parseJSON(await ai(anPrompt(f.e,f.d)));}catch(err){}
+  anBusy.delete(id);
+  const g=findMeal(id);if(!g)return;
+  const gr=String((r&&r.grade)||'').trim().toUpperCase().charAt(0),ok=/[ABCDF]/.test(gr);
+  const loc=localAnalysis(g.e,g.d);
+  g.e.an=ok?{grade:gr,score:Math.max(0,Math.min(100,Math.round(+r.score||loc.score))),headline:String(r.headline||loc.headline).slice(0,90),good:arr(r.good,2),bad:arr(r.bad,3),low:arr(r.low,3),next:String(r.next||'').slice(0,160),ts:Date.now()}:loc;
+  if(ok)delete g.e.anPending;else g.e.anPending=1;
+  save();renderAnCard(true);updateMealPill(id);
+  if(!quiet&&!$('view-diet').classList.contains('active'))toast('Meal graded '+g.e.an.grade+' — '+g.e.an.headline,g.e.an.grade>'C'?'warn':'ok');
+  if(!quiet)gradeFx(g.e.an);
+  if($('view-today').classList.contains('active'))quietRefresh();
+}
+let pendBusy=false;
+async function runPendingAnalyses(){
+  if(pendBusy||!online())return;pendBusy=true;
+  const ids=[];for(let i=0;i<3;i++){(S.food[addDays(todayStr(),-i)]||[]).forEach(e=>{if(e.anPending)ids.push(e.id);});}
+  for(const id of ids.slice(0,6))await analyzeMeal(id,true);
+  pendBusy=false;
+}
+function updateMealPill(id){const el=$('gp_'+id),f=findMeal(id);if(!el||!f)return;const t=document.createElement('div');t.innerHTML=gradePill(f.e);const n=t.firstChild;el.replaceWith(n);if(f.e.an&&!anBusy.has(id))anim(n,[{transform:'scale(0)'},{transform:'scale(1)'}],{duration:500,easing:SPR_BOUNCE});}
+function ringHTML(a,size){const r=size==='s'?17:26,c=(2*Math.PI*r).toFixed(1),vb=size==='s'?40:60,ctr=vb/2;
+  return '<div class="gring '+(size==='s'?'sm ':'')+'g-'+a.grade+'"><svg viewBox="0 0 '+vb+' '+vb+'"><circle class="bg" cx="'+ctr+'" cy="'+ctr+'" r="'+r+'"/><circle class="fg" cx="'+ctr+'" cy="'+ctr+'" r="'+r+'" stroke-dasharray="'+c+'" stroke-dashoffset="'+c+'" data-off="'+(c*(1-Math.max(4,a.score||0)/100)).toFixed(1)+'"/></svg><b>'+a.grade+'</b></div>';}
+function anList(a){
+  const li=(cls,ic,t)=>'<li class="'+cls+'"><i>'+ic+'</i><span>'+esc(t)+'</span></li>';
+  return '<ul class="anlist">'+(a.bad||[]).map(t=>li('bad','!',t)).join('')+(a.good||[]).map(t=>li('good','✓',t)).join('')+(a.low||[]).map(t=>li('low','↓',t)).join('')+'</ul>'+(a.next?'<div class="annext"><b>Next</b> '+esc(a.next.replace(/^next meal:\s*/i,''))+'</div>':'');
+}
+function anMini(e){const a=e.an;if(!a)return '';return '<div class="anmini">'+ringHTML(a,'s')+'<div class="grow"><div class="anh">'+esc(a.headline||'')+'</div>'+anList(a)+'</div></div>';}
+function renderAnCard(fresh){
+  const box=$('anCard');if(!box)return;
+  const meals=S.food[dDate]||[];let e=anFocus&&meals.find(x=>x.id===anFocus);if(!e)e=meals[meals.length-1];
+  if(!e){box.style.display='none';box.innerHTML='';return;}
+  const busy=anBusy.has(e.id),a=e.an,was=box.style.display!=='none'&&box.innerHTML;
+  box.style.display='';
+  let h;
+  if(!a&&busy)h='<div class="anhead"><div class="gring skelring"></div><div class="grow"><div class="kicker">Analysing '+esc(e.name)+'<span class="tdots"><i></i><i></i><i></i></span></div><div class="skel" style="width:70%"></div></div></div><div class="skel"></div><div class="skel" style="width:86%"></div><div class="skel" style="width:60%"></div>';
+  else if(!a)h='<div class="anhead"><div class="grow"><div class="kicker">'+esc(e.name)+'</div><h3 class="anh">Not graded yet</h3></div></div><button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="analyzeMeal(\''+e.id+'\')">Grade this meal</button>';
+  else h='<div class="anhead">'+ringHTML(a)+'<div class="grow"><div class="kicker">'+(busy?'Updating':'Meal grade')+' · '+esc(e.name)+(busy?'<span class="tdots"><i></i><i></i><i></i></span>':'')+'</div><h3 class="anh">'+esc(a.headline||'')+'</h3></div></div>'+anList(a)+
+    '<div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-sm grow" onclick="dayCheck()">Check my whole day</button><button class="btn btn-ghost btn-sm" onclick="analyzeMeal(\''+e.id+'\')" aria-label="Grade again">↻</button></div>';
+  box.innerHTML=h;
+  if(a){const fg=box.querySelector('.gring .fg');const b=box.querySelector('.gring b');
+    if(fresh||!was){if(!RM){b.classList.add('pop');box.querySelectorAll('.anlist li,.annext').forEach((x,i)=>{x.style.animationDelay=(180+i*55)+'ms';x.classList.add('li-in');});}
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{fg.style.strokeDashoffset=fg.dataset.off;}));}
+    else fg.style.strokeDashoffset=fg.dataset.off;}
+  if(!was)anim(box,[{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}],{duration:450,easing:EASE_OUT});
+}
+function gradeFx(a){
+  if(!a||!$('view-diet').classList.contains('active'))return;
+  setTimeout(()=>{const ring=document.querySelector('#anCard .gring');if(!ring)return;const r=ring.getBoundingClientRect();
+    if(a.grade==='A'){burst(r.left+r.width/2,r.top+r.height/2,'#3ecf8e',true);haptic('success');}
+    else if(a.grade==='D'||a.grade==='F'||(a.bad||[]).some(x=>/seed oil/i.test(x))){const c=$('anCard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');haptic('heavy');}},450);
+}
+/* whole-day check */
+function dayPrompt(date){
+  const meals=(S.food[date]||[]).map(e=>'• '+e.name+': '+((e.parts&&e.parts.length?e.parts:[{name:e.name}]).map(p=>p.name+(p.g?' '+Math.round(p.g*(e.mult||1))+' g':'')+(p.flags&&p.flags.length?' ['+p.flags.join(', ')+']':'')).join(', '))).join('\n');
+  const t=dayTotals(date);
+  return 'You are the nutrition coach inside the Lock In app, reviewing a full day of eating for a '+whoLine()+'.\n'+FOOD_RULES+
+    '\n\nMEALS '+(date===todayStr()?'TODAY':'ON '+fmtD(date))+':\n'+meals+'\n\n'+dayFacts(date)+'\nAll vitamins and minerals (% of daily goal): '+microPct(t).map(o=>NMAP[o.k].n+' '+Math.round(o.p)+'%').join(', ')+
+    '\n\nReturn ONLY JSON: {"grade":"A|B|C|D|F","score":0-100,"headline":"max 9 words","wins":["0-3"],"warnings":["0-4 — bad things eaten today, worst first"],"missing":["0-4 deficiencies as \'Nutrient — exact food fix\'"],"tomorrow":["2-3 concrete food moves"]}\n'+
+    'Every item under 16 words, plain words, no emojis. Use only the numbers given.';
+}
+async function dayCheck(){
+  const date=dDate;if(!(S.food[date]||[]).length){toast('Log a meal first');return;}
+  openSheet(date===todayStr()?'Today’s food check':'Food check · '+fmtD(date),'<div id="dcBox"><div class="anhead"><div class="gring skelring"></div><div class="grow"><div class="kicker">Checking your day<span class="tdots"><i></i><i></i><i></i></span></div><div class="skel" style="width:70%"></div></div></div><div class="skel"></div><div class="skel" style="width:80%"></div><div class="skel" style="width:55%"></div><div class="skel" style="width:75%"></div></div>');
+  let r=null;if(online()){try{r=parseJSON(await ai(dayPrompt(date)));}catch(e){}}
+  const box=$('dcBox');if(!box)return;
+  const gr=String((r&&r.grade)||'').trim().toUpperCase().charAt(0);
+  let a;
+  if(/[ABCDF]/.test(gr))a={grade:gr,score:+r.score||70,headline:String(r.headline||''),bad:arr(r.warnings,4),good:arr(r.wins,3),low:arr(r.missing,4),tomorrow:arr(r.tomorrow,3)};
+  else{const meals=S.food[date]||[];const sc=Math.round(meals.reduce((s2,e)=>s2+((e.an&&e.an.score)||localAnalysis(e,date).score),0)/meals.length);const loc=localAnalysis({n:{},parts:[],mult:1},date);
+    a={grade:sc>=85?'A':sc>=70?'B':sc>=55?'C':sc>=40?'D':'F',score:sc,headline:online()?'Couldn’t reach the coach — quick check instead':'Offline — quick check',bad:dayBad(date),good:[],low:loc.low,tomorrow:[]};}
+  box.innerHTML='<div class="anhead">'+ringHTML(a)+'<div class="grow"><div class="kicker">Whole day</div><h3 class="anh">'+esc(a.headline)+'</h3></div></div>'+anList({bad:a.bad,good:a.good,low:a.low})+
+    (a.tomorrow.length?'<div class="nsec" style="margin-top:14px">Tomorrow</div><ul class="anlist">'+a.tomorrow.map(t=>'<li class="next"><i>→</i><span>'+esc(t)+'</span></li>').join('')+'</ul>':'');
+  const fg=box.querySelector('.gring .fg');box.querySelector('.gring b').classList.add('pop');
+  box.querySelectorAll('.anlist li').forEach((x,i)=>{x.style.animationDelay=(160+i*50)+'ms';x.classList.add('li-in');});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{fg.style.strokeDashoffset=fg.dataset.off;}));
+}
+function dayBad(date){const t=dayTotals(date),out=[];if(t.seedoil>0.4)out.push('Seed oils '+fmtNum(t.seedoil)+' g today');if(t.la>goalFor('la'))out.push('Omega-6 '+fmtNum(t.la)+' g — over '+goalFor('la')+' g');if(t.addsugar>goalFor('addsugar'))out.push('Refined sugar '+fmtNum(t.addsugar)+' g');
+  NUT.filter(x=>x[3]==='anti'&&t[x[0]]>goalFor(x[0])).forEach(x=>out.push(x[1]+' over the limit'));return out.slice(0,4);}
+/* Today: last meal grade, seed-oil-free streak, next-meal tip */
+function dayGrade(date){const ms=(S.food[date]||[]).filter(e=>e.an);if(!ms.length)return '';const sc=ms.reduce((a,e)=>a+(e.an.score||0),0)/ms.length;const so=dayTotals(date).seedoil>0.4;const g=sc>=85?'A':sc>=70?'B':sc>=55?'C':sc>=40?'D':'F';return so&&g<'C'?'C':g;}
+function lastGradeChip(date){const ms=(S.food[date]||[]).filter(e=>e.an);const e=ms[ms.length-1];return e?'<span class="gchip g-'+e.an.grade+'">Last meal '+e.an.grade+'</span>':'';}
+function seedStreak(){let n=0;for(let i=0;i<400;i++){const d=addDays(todayStr(),-i),ms=S.food[d]||[];if(!ms.length){if(i===0)continue;break;}if(ms.some(e=>!e.q))break;if(ms.reduce((a,e)=>a+(+(e.n||{}).seedoil||0)*(e.mult||1),0)>0.4)break;n++;}return n;}
+const FLAME='<svg viewBox="0 0 24 26"><path fill="#ff9d3c" d="M12 1c1 4.5 6 6.8 6 13.2A6 6 0 0 1 6 14.6c0-2.4 1-4 2.6-5.3-.2 2 .6 3.4 2 3.9C10.1 9.3 10.6 4.6 12 1z"/><path fill="#ffd166" d="M12 12.5c.5 2 3 3 3 5.6a3 3 0 0 1-6 .2c0-1.2.6-2.1 1.5-2.7.1 1 .6 1.6 1.2 1.8-.5-1.8-.3-3.5.3-4.9z"/></svg>';
+function streakChip(){const n=seedStreak();return n>=1?'<span class="good streak">'+FLAME+n+'-day seed-oil free</span>':'';}
+function nextTip(date){if(date!==todayStr())return '';const ms=(S.food[date]||[]).filter(e=>e.an&&e.an.next);const e=ms[ms.length-1];return e?'<div class="nexttip"><b>Next meal</b> '+esc(e.an.next.replace(/^next meal:\s*/i,''))+'</div>':'';}
+
 /* ---------- meals list ---------- */
 function mealHTML(e){
   const m=e.mult||1,n=e.n||{};
   const v=k=>(+(n[k])||0)*m;
-  const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0);
+  const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0),fl=mealFlags(e);
   const desc=e.parts&&e.parts.length?e.parts.map(p=>p.name+(p.g?' '+Math.round(p.g)+' g':'')).join(', '):(e.items||'');
-  return '<div class="meal" id="m_'+e.id+'" data-fk="'+e.id+'"><div class="top" onclick="this.parentNode.classList.toggle(\'open\')"><div class="grow"><div class="nm">'+esc(e.name)+(m!==1?' <span class="tiny">×'+m+'</span>':'')+(e.src==='barcode'?' <span class="tiny">· barcode</span>':e.src==='queued'?' <span class="tiny">· analyzed later</span>':'')+'</div>'+
-    '<div class="mm">P '+Math.round(v('protein'))+' g · C '+Math.round(v('carbs'))+' g · F '+Math.round(v('fat'))+' g'+(anti.length?' · '+anti.length+' anti-nutrient'+(anti.length>1?'s':''):'')+'</div></div>'+
+  return '<div class="meal'+(fl.includes('seed_oil')?' hasbad':'')+'" id="m_'+e.id+'" data-fk="'+e.id+'"><div class="top" onclick="this.parentNode.classList.toggle(\'open\')"><div class="grow"><div class="nm">'+gradePill(e)+esc(e.name)+(m!==1?' <span class="tiny">×'+m+'</span>':'')+(e.src==='barcode'?' <span class="tiny">· barcode</span>':e.src==='queued'?' <span class="tiny">· analyzed later</span>':'')+'</div>'+
+    '<div class="mm">P '+Math.round(v('protein'))+' g · C '+Math.round(v('carbs'))+' g · F '+Math.round(v('fat'))+' g'+(anti.length?' · '+anti.length+' anti-nutrient'+(anti.length>1?'s':''):'')+'</div>'+flagChips(fl)+'</div>'+
     '<div class="t">'+new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'+
-    '<div class="det">'+(desc?'<p class="tiny" style="margin-bottom:6px">'+esc(desc)+'</p>':'')+
-    '<div class="ngrid">'+NUT.map(x=>'<div class="'+(x[3]==='anti'&&v(x[0])>0?'bad':'')+'"><span>'+esc(x[1])+'</span><b>'+fmtNum(v(x[0]))+' '+x[2]+'</b></div>').join('')+'</div>'+
+    '<div class="det">'+anMini(e)+(desc?'<p class="tiny" style="margin-bottom:6px">'+esc(desc)+'</p>':'')+
+    '<div class="ngrid">'+NUT.map(x=>'<div class="'+((x[3]==='anti'&&v(x[0])>0)||(x[0]==='seedoil'&&v(x[0])>0.4)||(x[0]==='addsugar'&&v(x[0])>8)||(x[0]==='la'&&v(x[0])>4)?'bad':'')+'"><span>'+esc(x[1])+'</span><b>'+fmtNum(v(x[0]))+' '+x[2]+'</b></div>').join('')+'</div>'+
     '<div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm grow" onclick="editMeal(\''+e.id+'\')">Edit foods</button><button class="btn btn-ghost btn-sm grow" onclick="relog(\''+e.id+'\')">Log again today</button><button class="btn btn-danger btn-sm" onclick="delMeal(\''+e.id+'\')">Delete</button></div></div></div>';
 }
 function findMeal(id){for(const d in S.food){const e=(S.food[d]||[]).find(x=>x.id===id);if(e)return {d,e};}return null;}
-function delMeal(id){const f=findMeal(id);if(!f||!confirm('Delete '+f.e.name+'?'))return;S.food[f.d]=S.food[f.d].filter(x=>x.id!==id);if(!S.food[f.d].length)delete S.food[f.d];S.tomb[id]=Date.now();save();closeSheet();flip($('mealList'),renderDiet);toast('Deleted');}
+function delMeal(id){const f=findMeal(id);if(!f||!confirm('Delete '+f.e.name+'?'))return;if(anFocus===id)anFocus=null;S.food[f.d]=S.food[f.d].filter(x=>x.id!==id);if(!S.food[f.d].length)delete S.food[f.d];S.tomb[id]=Date.now();save();closeSheet();flip($('mealList'),renderDiet);toast('Deleted');}
 function mealParts(e){return e.parts&&e.parts.length?clone(e.parts):[{name:e.name||'Meal',g:null,n:clone(e.n||{})}];}
 function relog(id){const f=findMeal(id);if(!f)return;saveMeal({name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:'again'},todayStr());}
 function relogTo(id){const f=findMeal(id);if(!f)return;saveMeal({name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:'again'},dDate);}
 function partsTotal(parts){const t={};(parts||[]).forEach(p=>{for(const k in (p.n||{})){const v=+p.n[k];if(v>0)t[k]=(t[k]||0)+v;}});for(const k in t)t[k]=Math.round(t[k]*100)/100;return t;}
+const FLAGS={seed_oil:'Seed oil',fried:'Fried',ultra_processed:'Ultra-processed',refined_sugar:'Refined sugar',refined_grain:'Refined flour',artificial_sweetener:'Sweetener',additives:'Additives',alcohol:'Alcohol'};
+function cleanFlags(f,n){const out=(Array.isArray(f)?f:[]).map(x=>String(x).toLowerCase().replace(/[^a-z_]/g,'')).filter(x=>FLAGS[x]);if(n&&+n.seedoil>0.3&&!out.includes('seed_oil'))out.push('seed_oil');return out.length?[...new Set(out)]:undefined;}
 function cleanN(n){const o={};NK.forEach(k=>{const v=+((n||{})[k]);if(v>0)o[k]=Math.round(v*1000)/1000;});return o;}
 /* save a meal draft {id?,name,parts,mult,src} to a date (new or update) */
 function saveMeal(md,date){
   const d=date||dDate;
-  const parts=(md.parts||[]).map(p=>({name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined}));
-  let e=md.id?findMeal(md.id):null;
-  if(e){Object.assign(e.e,{name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,ts:e.e.ts});delete e.e.items;}
+  const parts=(md.parts||[]).map(p=>({name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined,flags:p.flags&&p.flags.length?p.flags:undefined}));
+  let e=md.id?findMeal(md.id):null,mid;
+  if(e){Object.assign(e.e,{name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,ts:e.e.ts,q:1});delete e.e.items;delete e.e.an;mid=e.e.id;}
   else{
-    const ne={id:uid('f'),ts:Date.now(),name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,src:md.src||'ai'};
+    const ne={id:uid('f'),ts:Date.now(),name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,src:md.src||'ai',q:1};mid=ne.id;
     if(d!==todayStr()){const now=new Date();const dd=parseD(d);dd.setHours(now.getHours(),now.getMinutes());ne.ts=dd.getTime();}
     (S.food[d]=S.food[d]||[]).push(ne);
   }
   save();dDate=md.id&&e?e.d:d;closeSheet();
   if(!$('view-diet').classList.contains('active'))show('diet');else flip($('mealList'),renderDiet);
   const over=antiOver(dDate);toast(over.length?(md.id?'Saved':'Logged')+' — ⚠ '+NMAP[over[0].k].n+' over your limit':(md.id?'Saved ':'Logged ')+(md.name||'meal'));
+  anFocus=mid;analyzeMeal(mid);
 }
 /* ---------- meal editor: foods, grams, cooking fat, add ingredients ---------- */
 function editMeal(id){const f=findMeal(id);if(!f)return;openMealEditor({id,name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:f.e.src},'Edit meal');}
@@ -2225,12 +2483,14 @@ function drawMD(){
     (MD.note?'<p class="tiny" style="margin:-4px 0 8px">'+esc(MD.note)+'</p>':'')+
     '<label class="f">Foods in this meal</label>'+
     MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><input type="number" inputmode="decimal" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value)"><span>g</span></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
-      '<div class="pm">P '+fmtNum(p.n.protein||0)+' · C '+fmtNum(p.n.carbs||0)+' · F '+fmtNum(p.n.fat||0)+' g</div></div>').join('')+
+      '<div class="pm">P '+fmtNum(p.n.protein||0)+' · C '+fmtNum(p.n.carbs||0)+' · F '+fmtNum(p.n.fat||0)+' g'+(p.flags&&p.flags.length?' '+flagChips(p.flags,1):'')+'</div></div>').join('')+
     '<div class="row" style="margin:10px 0 4px"><input id="mdAdd" class="grow" placeholder="Add a food or ingredient, e.g. 2 tbsp peanut butter"><button class="btn btn-ghost btn-sm" id="mdAddBtn" onclick="addPart()">Add</button></div>'+
     '<details class="fold" id="cookFold"'+(MD.cookOpen?' open':'')+' ontoggle="MD.cookOpen=this.open"><summary>How was it cooked? (adds the fat it took up)</summary><div class="fb" id="cookBox"></div></details>'+
     '<div class="multrow" style="margin-top:10px"><span class="tiny" style="align-self:center">Whole meal ×</span>'+[0.5,0.75,1,1.25,1.5,2].map(q=>'<button class="chip sm'+(q===m?' on':'')+'" onclick="MD.mult='+q+';drawMD()">'+q+'</button>').join('')+'</div>'+
     '<div class="est"><div class="tgtline" style="margin-top:0"><span>Protein <b>'+Math.round(v('protein'))+' g</b></span><span>Carbs <b>'+Math.round(v('carbs'))+' g</b></span><span>Fat <b>'+Math.round(v('fat'))+' g</b></span></div>'+
-      (anti.length?'<p class="tiny" style="margin-top:8px">Anti-nutrients: '+anti.map(x=>esc(x[1])+' '+fmtNum(v(x[0]))+' '+x[2]).join(' · ')+'</p>':'<p class="tiny" style="margin-top:8px">No notable anti-nutrients.</p>')+
+      (v('seedoil')>0.4?'<p class="tiny" style="margin-top:8px;color:#ff9d8c;font-weight:700">⚠ Seed oils: '+fmtNum(v('seedoil'))+' g — this will cost the meal its grade.</p>':'<p class="tiny" style="margin-top:8px;color:#7ee2b1;font-weight:700">✓ No seed oils</p>')+
+      '<p class="tiny" style="margin-top:4px">Omega-6 '+fmtNum(v('la'))+' g · refined sugar '+fmtNum(v('addsugar'))+' g</p>'+
+      (anti.length?'<p class="tiny" style="margin-top:4px">Anti-nutrients: '+anti.map(x=>esc(x[1])+' '+fmtNum(v(x[0]))+' '+x[2]).join(' · ')+'</p>':'<p class="tiny" style="margin-top:4px">No notable anti-nutrients.</p>')+
       '<details class="fold" style="margin-top:8px"><summary>All nutrients</summary><div class="fb"><div class="ngrid">'+NUT.map(x=>'<div><span>'+esc(x[1])+'</span><b>'+fmtNum(v(x[0]))+' '+x[2]+'</b></div>').join('')+'</div></div></details></div>'+
     '<button class="btn btn-primary" style="margin-top:12px" onclick="if(!MD.parts.length){toast(\'Add at least one food\');return;}saveMeal(MD)">'+(MD.id?'Save changes':'Log '+(dDate===todayStr()?'meal':'to '+fmtD(dDate)))+'</button>'+
     (MD.id?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:8px" onclick="delMeal(\''+MD.id+'\')">Delete meal</button>':'');
@@ -2252,7 +2512,7 @@ function drawCook(){
   const el=$('cookBox');if(!el)return;
   const c=COOK[MD.cm||'pan_light'];const foods=MD.parts.map((p,i)=>({i,p})).filter(x=>x.p.g>0&&!x.p.fat);
   let h='<label class="f">Method</label><select onchange="MD.cm=this.value;drawCook()">'+Object.keys(COOK).map(k=>'<option value="'+k+'"'+(k===(MD.cm||'pan_light')?' selected':'')+'>'+COOK[k].n+'</option>').join('')+'</select>'+
-    '<p class="tiny" style="margin:4px 0 8px">'+esc(c.h)+'</p><label class="f">Fat</label><select onchange="MD.cf=this.value;drawCook()">'+Object.keys(FATS).map(k=>'<option value="'+k+'"'+(k===(MD.cf||'olive')?' selected':'')+'>'+FATS[k][0]+'</option>').join('')+'</select>';
+    '<p class="tiny" style="margin:4px 0 8px">'+esc(c.h)+'</p><label class="f">Fat</label><select onchange="MD.cf=this.value;drawCook()">'+Object.keys(FATS).map(k=>'<option value="'+k+'"'+(k===(MD.cf||'butter')?' selected':'')+'>'+FATS[k][0]+'</option>').join('')+'</select>';
   let g=0;
   if(c.by==='food'){
     if(!foods.length){el.innerHTML=h+'<p class="tiny" style="margin-top:8px">Give the food its grams first — the fat it takes up depends on how much food there is.</p>';return;}
@@ -2262,17 +2522,18 @@ function drawCook(){
   }else{
     const amt=MD.camt||1;
     h+='<label class="f" style="margin-top:8px">Fat you used</label><select onchange="MD.camt=+this.value;drawCook()">'+[[0.33,'1 tsp'],[0.5,'½ tbsp'],[1,'1 tbsp'],[2,'2 tbsp'],[3,'3 tbsp'],[4,'¼ cup']].map(a=>'<option value="'+a[0]+'"'+(a[0]===amt?' selected':'')+'>'+a[1]+'</option>').join('')+'</select>';
-    g=FATS[MD.cf||'olive'][1]*amt*c.f;
+    g=FATS[MD.cf||'butter'][1]*amt*c.f;
   }
   MD.cg=g;
-  el.innerHTML=h+'<div class="okline" style="margin:10px 0 8px">≈ <b>'+fmtNum(g)+' g</b> of '+esc(FATS[MD.cf||'olive'][0].toLowerCase())+' ends up in the food</div><button class="btn btn-ghost btn-sm" style="width:100%" onclick="addCooking()">Add to meal</button>';
+  const sf=FATS[MD.cf||'butter'];
+  el.innerHTML=h+'<div class="'+(sf[3]?'alert':'okline')+'" style="margin:10px 0 8px">≈ <b>'+fmtNum(g)+' g</b> of '+esc(sf[0].replace(/ \(seed oils?\)/,'').toLowerCase())+' ends up in the food'+(sf[3]?' — <b>seed oil</b>, this will count against today':'')+'</div><button class="btn btn-ghost btn-sm" style="width:100%" onclick="addCooking()">Add to meal</button>';
 }
 function addCooking(){
-  const c=COOK[MD.cm||'pan_light'],f=FATS[MD.cf||'olive'],g=MD.cg||0;if(!(g>0))return;
+  const c=COOK[MD.cm||'pan_light'],f=FATS[MD.cf||'butter'],g=MD.cg||0;if(!(g>0))return;
   const per100={};for(const k in f[2])per100[k]=f[2][k]/f[1]*100;
   const n={};for(const k in per100)n[k]=per100[k]*g/100;
   const what=c.by==='food'&&MD.parts[MD.cfood]?' — '+MD.parts[MD.cfood].name.toLowerCase():'';
-  MD.parts.push({name:f[0]+' ('+c.n.toLowerCase()+what+')',g,n,per100,fat:1});MD.cookOpen=false;drawMD();toast('Added '+fmtNum(g)+' g '+f[0].toLowerCase());
+  MD.parts.push({name:f[0].replace(/ \(seed oils?\)/,'')+' ('+c.n.toLowerCase()+what+')',g,n,per100,fat:1,flags:f[3]?['seed_oil']:undefined});MD.cookOpen=false;drawMD();toast('Added '+fmtNum(g)+' g '+f[0].replace(/ \(seed oils?\)/,'').toLowerCase(),f[3]?'warn':'ok');
 }
 function setPartG(i,val){
   const p=MD.parts[i],g=parseFloat(val);if(!(g>0))return;
@@ -2293,7 +2554,7 @@ async function addPart(){
 }
 function toParts(r){
   if(!r)return [];
-  if(Array.isArray(r.items)&&r.items.length&&typeof r.items[0]==='object')return r.items.map(it=>({name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n)}));
+  if(Array.isArray(r.items)&&r.items.length&&typeof r.items[0]==='object')return r.items.map(it=>({name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),flags:cleanFlags(it.flags,it.n)}));
   if(r.n)return [{name:r.name||'Meal',g:null,n:cleanN(r.n)}];
   return [];
 }
@@ -2320,13 +2581,16 @@ function openDescribe(){
   openSheet('Describe a meal','<div class="field"><label class="f">What did you eat?</label><textarea id="mealHint" rows="3" placeholder="e.g. 3 eggs fried in ghee, 2 slices sourdough, a banana, black coffee"></textarea></div><button class="btn btn-primary" id="anBtn" onclick="analyze(false)">Estimate nutrients</button><div id="estBox"></div>');
   setTimeout(()=>{const h=$('mealHint');if(h)h.focus();},120);
 }
+const SEEDRULES='seedoil = grams of industrial seed oil in the item (canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran, "vegetable oil", margarine, shortening). Fried, restaurant, takeaway, fast-food and packaged foods are made with seed oils unless clearly stated otherwise — estimate the oil absorbed or added. Butter, ghee, tallow, lard, duck fat, coconut, olive and avocado oil are NOT seed oils. '+
+  'la = linoleic acid (omega-6, 18:2) in grams from every source. addsugar = grams of refined/added sugar (table sugar, HFCS, glucose syrup, dextrose) — fruit, honey, maple syrup and milk sugar do NOT count. '+
+  '"flags" per item: any of seed_oil, fried, ultra_processed, refined_sugar, refined_grain, artificial_sweetener, additives, alcohol that apply (empty array if none).';
 function nutrientPrompt(hint,photo){
   return 'You are a precise nutritionist with food-composition database knowledge (USDA FoodData Central, Phenol-Explorer, published anti-nutrient data). '+
     (photo?'Identify every food and drink in this photo, estimate realistic portion sizes from visual cues (plate ~26 cm, utensils), and include cooking fats and sauces as their own items.':'Estimate the food described below with realistic default portions where none are given.')+
     (hint?'\nUser notes: '+hint:'')+
-    '\n\nReturn ONLY JSON: {"name":"short meal name","confidence":"low|medium|high","items":[{"name":"food","g":grams,"n":{nutrient:value}}]} — one entry per separate food or ingredient, each with its OWN nutrients for that portion. '+
+    '\n\nReturn ONLY JSON: {"name":"short meal name","confidence":"low|medium|high","items":[{"name":"food","g":grams,"n":{nutrient:value},"flags":[]}]} — one entry per separate food or ingredient, each with its OWN nutrients for that portion. '+
     'Nutrient keys and units: '+NUT.map(x=>x[0]+' ('+x[2]+')').join(', ')+'. Omit a key when it is 0. '+
-    'Anti-nutrients: phytate=phytic acid, oxalate=total oxalates, tannins, lectins=ACTIVE lectins only (≈0 when properly cooked), saponins, goitrogens=glucosinolates, protease=trypsin/protease inhibitors (mostly destroyed by cooking), isoflavones, glycoalkaloids=solanine+chaconine, cyanogenic=as mg HCN. Do not include chloride or fluoride.';
+    'Anti-nutrients: phytate=phytic acid, oxalate=total oxalates, tannins, lectins=ACTIVE lectins only (≈0 when properly cooked), saponins, goitrogens=glucosinolates, protease=trypsin/protease inhibitors (mostly destroyed by cooking), isoflavones, glycoalkaloids=solanine+chaconine, cyanogenic=as mg HCN. Do not include chloride or fluoride. '+SEEDRULES;
 }
 async function analyze(photo){
   const hint=($('mealHint')&&$('mealHint').value.trim())||'';
@@ -2368,13 +2632,13 @@ async function processQueue(manual){
   for(const item of q){
     let r=null;try{r=parseJSON(await ai(nutrientPrompt(item.hint,true),item.img));}catch(e){}
     const parts=toParts(r);if(!parts.length)continue;
-    const parts2=parts.map(p=>({name:p.name,g:p.g,n:cleanN(p.n)}));
-    const e={id:uid('f'),ts:item.ts,name:r.name||'Meal',parts:parts2,n:partsTotal(parts2),mult:1,src:'queued'};
+    const parts2=parts.map(p=>({name:p.name,g:p.g,n:cleanN(p.n),flags:p.flags}));
+    const e={id:uid('f'),ts:item.ts,name:r.name||'Meal',parts:parts2,n:partsTotal(parts2),mult:1,src:'queued',q:1,anPending:1};
     (S.food[item.date]=S.food[item.date]||[]).push(e);
     setQ(getQ().filter(x=>x.id!==item.id));done++;
   }
   qBusy=false;
-  if(done){save();toast(done+' saved photo'+(done>1?'s':'')+' analyzed and logged');if($('view-diet').classList.contains('active'))renderDiet();}
+  if(done){save();toast(done+' saved photo'+(done>1?'s':'')+' analyzed and logged');if($('view-diet').classList.contains('active'))renderDiet();runPendingAnalyses();}
   else if(manual)toast('Couldn’t analyze yet — try again in a moment');
 }
 /* ---------- barcode scanner (Open Food Facts) ---------- */
@@ -2423,13 +2687,15 @@ async function lookupBarcode(code){
   const name=[p.product_name,p.brands&&p.brands.split(',')[0]].filter(Boolean).join(' · ')||('Product '+code);
   const g=+p.serving_quantity>0?+p.serving_quantity:100;
   const mk=()=>{const n={};for(const k in per100)n[k]=per100[k]*g/100;return n;};
-  const md={name:p.product_name||name,parts:[{name,g,n:mk(),per100:Object.assign({},per100)}],mult:1,src:'barcode',
+  const SEEDRX=/\b(canola|rapeseed|sunflower|soy(?:bean|a)? oil|corn oil|cottonseed|safflower|grapeseed|rice bran|vegetable (?:oil|fat)|margarine|shortening|olej (?:slne|repk|rastlin)|rastlinn)/i;
+  const md={name:p.product_name||name,parts:[{name,g,n:mk(),per100:Object.assign({},per100),flags:SEEDRX.test(p.ingredients_text||'')?['seed_oil','ultra_processed']:undefined}],mult:1,src:'barcode',
     note:'Label values for '+label.length+' nutrient'+(label.length===1?'':'s')+' from Open Food Facts. Set how many grams you ate.'};
   openMealEditor(md,'Scanned food');
   if(online()){ /* fill everything the label doesn't list (micros + anti-nutrients) */
     const missing=NK.filter(k=>!(k in per100));
     try{
-      const r=parseJSON(await ai('Estimate per 100 g of this packaged food the nutrients its label does not list. Product: '+name+'. Ingredients: '+(p.ingredients_text||'unknown')+'. Label per 100 g: '+JSON.stringify(per100)+'.\nReturn ONLY JSON {"n":{...}} with these keys (units): '+missing.map(k=>k+' ('+NMAP[k].u+')').join(', ')+'. Omit keys that are 0. lectins = ACTIVE lectins only. No chloride or fluoride.'));
+      const r=parseJSON(await ai('Estimate per 100 g of this packaged food the nutrients its label does not list. Product: '+name+'. Ingredients: '+(p.ingredients_text||'unknown')+'. Label per 100 g: '+JSON.stringify(per100)+'.\nReturn ONLY JSON {"n":{...},"flags":[]} with these keys (units): '+missing.map(k=>k+' ('+NMAP[k].u+')').join(', ')+'. Omit keys that are 0. lectins = ACTIVE lectins only. No chloride or fluoride. '+SEEDRULES));
+      if(r&&MD===md){const fl=cleanFlags(r.flags,r.n);if(fl)md.parts[0].flags=fl;}
       if(r&&r.n&&MD===md){const part=md.parts[0];const add=cleanN(r.n);for(const k in add)if(!(k in part.per100))part.per100[k]=add[k];part.n={};for(const k in part.per100)part.n[k]=part.per100[k]*part.g/100;
         md.note='Label values from Open Food Facts; the '+Object.keys(add).length+' other nutrients and anti-nutrients are AI estimates. Set how many grams you ate.';drawMD();}
     }catch(e){}
@@ -2572,7 +2838,7 @@ function renderSettings(){
   $('t-protein').value=S.targets.protein||'';$('t-carbs').value=S.targets.carbs||'';$('t-fat').value=S.targets.fat||'';
   const AD=antiDefaults();
   $('microTgt').innerHTML=NUT.filter(n=>['vit','min','oth'].includes(n[3])).map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-mi="'+n[0]+'" placeholder="'+microDefault(n[0])+'" value="'+((S.targets.micro||{})[n[0]]||'')+'">').join('');
-  $('antiTgt').innerHTML=NUT.filter(n=>n[3]==='anti').map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-an="'+n[0]+'" placeholder="'+AD[n[0]]+'" value="'+((S.targets.anti||{})[n[0]]||'')+'">').join('');
+  $('antiTgt').innerHTML=NUT.filter(n=>n[3]==='bad'||n[3]==='anti').map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-an="'+n[0]+'" placeholder="'+AD[n[0]]+'" value="'+((S.targets.anti||{})[n[0]]||'')+'">').join('');
   renderGyms();
 }
 function renderGyms(){
