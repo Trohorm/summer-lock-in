@@ -461,6 +461,7 @@ nav button:active svg{transform:scale(.82)}
       <div class="field"><label class="f">Gym name</label><input id="wz-gym" maxlength="30" placeholder="e.g. Fitness Trnava"></div>
       <label class="checkline" style="margin-bottom:14px"><input type="checkbox" id="wz-ai" checked> AI coach feedback after each workout</label>
       <button class="btn btn-primary" id="wzSaveBtn">Start</button>
+      <div class="okline" style="margin-top:14px" id="wzImport">Used Lock In before? <span class="linkbtn" onclick="importFromOld()">Bring over all your data</span> — workouts, splits, food and photos.</div>
       <div class="wizerr" id="wzErr"></div>
     </div>
   </section>
@@ -639,7 +640,7 @@ nav button:active svg{transform:scale(.82)}
     <div class="card">
       <h2>Install</h2>
       <p class="tiny"><b>iPhone home screen:</b> Safari → Share → Add to Home Screen.<br><b>App (SideStore):</b> add this source in SideStore → Sources → +</p>
-      <div class="row" style="margin-top:8px"><input id="srcUrl" readonly value="https://raw.githubusercontent.com/Trohorm/summer-lock-in/main/source.json"><button class="btn btn-ghost btn-sm" id="srcCopy">Copy</button></div>
+      <div class="row" style="margin-top:8px"><input id="srcUrl" readonly value="https://ipa.lockin-app.online"><button class="btn btn-ghost btn-sm" id="srcCopy">Copy</button></div>
     </div>
     <div class="card">
       <h2>Account &amp; data</h2>
@@ -650,6 +651,7 @@ nav button:active svg{transform:scale(.82)}
         <label class="btn btn-ghost btn-sm" for="importFile">Import backup</label>
         <input type="file" id="importFile" accept=".json" style="display:none">
       </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" id="oldImportBtn" onclick="importFromOld()">Import from the old address (summer-lock-in.puter.site)</button>
       <hr class="sep">
       <div class="grid2"><button class="btn btn-ghost btn-sm" id="signOutBtn">Sign out</button><button class="btn btn-danger btn-sm" id="eraseBtn">Erase all data</button></div>
     </div>
@@ -757,7 +759,9 @@ function suggestMacros(w,goal){
   return {protein:Math.round(w*2.2),carbs:Math.round(w*({cut:3,recomp:4,bulk:5,maintain:4}[goal]||4)),fat:Math.round(w*({cut:0.8,bulk:1.1}[goal]||1))};
 }
 const KV_KEY='state_v1',PDIR='photos',AI_MODEL='claude-sonnet-4-6';
-const LIVE='https://summer-lock-in.puter.site/';
+const OLD_ORIGIN='https://summer-lock-in.puter.site',NEW_ORIGIN='https://web.lockin-app.online';
+const IS_OLD=location.origin===OLD_ORIGIN;
+const EXPORT_MODE=IS_OLD&&/[?&]export=1/.test(location.search)&&!!window.opener;
 
 /* ================= STATE ================= */
 let S=null,user=null,dirty=false,pushT=null,lastSync=null,offlineMode=false,pushed={};
@@ -960,7 +964,7 @@ async function boot(){
   S=merge(fresh(),loaded);
   if(reached&&(!cloud||!cloud.sharded||JSON.stringify(loaded)!==JSON.stringify(cloud)))pushSoon();
   renderSync();
-  if(!S.settings.setupDone){openWizard();return;}
+  if(!S.settings.setupDone){if(EXPORT_MODE){sendExport();return;}openWizard();return;}
   enterApp();
 }
 async function resync(){
@@ -970,7 +974,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();offlineMode=false;await pushNow();refreshCurrent();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){migrate();save();document.body.classList.add('authed');show('today');loadPhotos();setTimeout(()=>processQueue(),1500);}
+function enterApp(){migrate();save();document.body.classList.add('authed');show('today');loadPhotos();setTimeout(()=>processQueue(),1500);if(EXPORT_MODE)sendExport();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -978,7 +982,7 @@ function openWizard(){
   $('wz-sex').value=S.settings.sex||'m';$('wz-gym').value=(S.gyms[0]&&S.gyms[0].name)||'';
   wzGoal=S.settings.goal||'recomp';
   const pick=g=>{wzGoal=g;renderGoalChips('wz-goal',wzGoal,pick);};renderGoalChips('wz-goal',wzGoal,pick);
-  $('wz-ai').checked=S.settings.aiAuto!==false;show('wizard');
+  $('wz-ai').checked=S.settings.aiAuto!==false;$('wzImport').style.display=IS_OLD?'none':'';show('wizard');
 }
 function renderGoalChips(elId,cur,onPick){
   $(elId).innerHTML=Object.keys(GOALS).map(g=>'<button type="button" class="chip'+(g===cur?' on':'')+'" data-g="'+g+'">'+GOALS[g]+'</button>').join('');
@@ -1056,7 +1060,7 @@ function renderToday(){
   const today=Object.values(S.workouts).filter(w=>w.date===t&&woHasData(w));
   const cur=curWO(),active=cur&&!cur.ended&&woHasData(cur);
   const over=antiOver(t);
-  $('todayAlert').innerHTML=over.length?'<div class="alert">⚠ <b>Anti-nutrient limit passed today:</b> '+over.map(o=>esc(NMAP[o.k].n)+' '+fmtNum(o.v)+'/'+fmtNum(o.g)+' '+NMAP[o.k].u).join(' · ')+'</div>':'';
+  $('todayAlert').innerHTML=(IS_OLD&&!EXPORT_MODE?'<div class="card hero-card" style="border-color:rgba(62,207,142,.35)"><div class="kicker">New address</div><h3 style="font-size:20px">Lock In moved to web.lockin-app.online</h3><p class="muted">Open it and tap “Bring over all your data” — everything comes with you.</p><a class="btn btn-primary" style="margin-top:12px" href="'+NEW_ORIGIN+'/">Open the new Lock In</a></div>':'')+(over.length?'<div class="alert">⚠ <b>Anti-nutrient limit passed today:</b> '+over.map(o=>esc(NMAP[o.k].n)+' '+fmtNum(o.v)+'/'+fmtNum(o.g)+' '+NMAP[o.k].u).join(' · ')+'</div>':'');
   let main='';
   if(active){
     main='<div class="card hero-card"><svg class="deco" viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg><div class="kicker"><i class="dot"></i>Workout in progress</div><h3>'+esc(cur.dayName)+'</h3><p class="muted">'+countSets(cur)+' sets logged · '+esc(gym?gym.name:'')+'</p><div style="margin-top:12px"><button class="btn btn-primary" onclick="show(\'workout\')">Continue workout</button></div></div>';
@@ -1994,6 +1998,7 @@ function addPhotos(files){
 /* ================= SETUP ================= */
 let setGoal='recomp';
 function renderSettings(){
+  $('oldImportBtn').style.display=IS_OLD?'none':'';
   $('acctLine').textContent=user?'Signed in as @'+user.username:'—';renderSync();
   const s=S.settings;
   $('set-name').value=s.name;$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-age').value=s.age||'';$('set-sex').value=s.sex||'m';
@@ -2035,6 +2040,39 @@ async function eraseAll(){
 }
 
 /* ================= INIT ================= */
+/* ================= MOVE TO THE NEW ADDRESS ================= */
+function blobToDataURL(b){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>r(null);f.readAsDataURL(b);});}
+let exportSent=false;
+async function sendExport(){
+  if(!EXPORT_MODE||exportSent||!S)return;exportSent=true;
+  const ov=document.createElement('div');ov.id='splash';ov.innerHTML='<div style="text-align:center"><div class="lg-mark" style="margin:0 auto"><svg viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg></div><p class="muted" id="exMsg" style="margin-top:22px">Packing up your data…</p></div>';document.body.appendChild(ov);
+  const ph=[];
+  try{const items=await puter.fs.readdir(PDIR);for(const f of items){if(f.is_dir||!/\.jpg$/.test(f.name))continue;try{const b=await puter.fs.read(f.path);ph.push({name:f.name,data:await blobToDataURL(b)});}catch(e){}}}catch(e){}
+  $('exMsg').textContent='Sending '+Object.keys(S.workouts).length+' workouts and '+ph.length+' photos…';
+  window.opener.postMessage({type:'lockin-export',state:JSON.parse(JSON.stringify(S)),photos:ph},NEW_ORIGIN);
+  setTimeout(()=>{$('exMsg').textContent='Done — you can close this window.';try{window.close();}catch(e){}},1500);
+}
+let importWin=null;
+function importFromOld(){
+  if(IS_OLD){toast('Open web.lockin-app.online to import');return;}
+  importWin=window.open(OLD_ORIGIN+'/?export=1','lockinExport');
+  if(!importWin){toast('Allow pop-ups for this site and try again');return;}
+  openSheet('Bringing over your data','<p class="muted"><span class="spin"></span>Your old Lock In is opening. If it asks, sign in with the same account — everything copies over automatically.</p>');
+}
+window.addEventListener('message',async e=>{
+  if(e.origin!==OLD_ORIGIN||!e.data||e.data.type!=='lockin-export'||IS_OLD)return;
+  const d=e.data,old=d.state||{};
+  old.updatedAt=Math.max(old.updatedAt||0,(S&&S.updatedAt)||0)+1;   /* the old app's splits/settings win over a fresh install */
+  S=merge(fresh(),mergeStates(old,S||fresh()));
+  if(old.settings&&old.settings.setupDone)S.settings.setupDone=true;
+  migrate();save();
+  let n=0;
+  for(const p of (d.photos||[])){try{const b=await (await fetch(p.data)).blob();await puter.fs.write(PDIR+'/'+p.name,b,{createMissingParents:true});n++;}catch(err){}}
+  try{importWin&&importWin.close();}catch(err){}
+  closeSheet();enterApp();
+  toast('Imported '+Object.keys(old.workouts||{}).length+' workouts, '+Object.values(old.food||{}).reduce((a,x)=>a+x.length,0)+' meals, '+n+' photos');
+});
+
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','settings'];
 let curView='';
