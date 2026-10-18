@@ -1,10 +1,41 @@
 import UIKit
 import WebKit
+import UserNotifications
 
 let LIVE_URL = URL(string: "https://summer-lock-in.puter.site")!
 
 // MARK: - Main view controller (thin shell around the live site)
-final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
+/// Bridge for the page: window.webkit.messageHandlers.lockin.postMessage({action:'notify'|'cancel'|'auth', ...})
+final class NotifyBridge: NSObject, WKScriptMessageHandler {
+    func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any], let action = body["action"] as? String else { return }
+        let center = UNUserNotificationCenter.current()
+        switch action {
+        case "auth":
+            center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        case "cancel":
+            center.removePendingNotificationRequests(withIdentifiers: ["rest"])
+        case "notify":
+            let secs = max(1.0, (body["secs"] as? Double) ?? Double((body["secs"] as? Int) ?? 0))
+            let content = UNMutableNotificationContent()
+            content.title = (body["title"] as? String) ?? "Rest is over"
+            content.body = (body["body"] as? String) ?? "Time for your next set"
+            content.sound = .default
+            if #available(iOS 15.0, *) { content.interruptionLevel = .timeSensitive }
+            let req = UNNotificationRequest(identifier: "rest", content: content,
+                                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: secs, repeats: false))
+            center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                guard granted else { return }
+                center.removePendingNotificationRequests(withIdentifiers: ["rest"])
+                center.add(req)
+            }
+        default: break
+        }
+    }
+}
+
+final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UNUserNotificationCenterDelegate {
+    private let bridge = NotifyBridge()
     private var webView: WKWebView!
     private var retryView: UIView?
     private var popupNav: UINavigationController?
@@ -20,6 +51,8 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         config.websiteDataStore = .default()
         // No app-bound domains: they blocked the offline copy (and service workers never ran in sideloaded builds).
 
+        config.userContentController.add(bridge, name: "lockin")
+        UNUserNotificationCenter.current().delegate = self
         webView = makeWebView(config)
         view.addSubview(webView)
         load()
@@ -91,6 +124,12 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         wv.backgroundColor = bg
         wv.scrollView.backgroundColor = bg
         return wv
+    }
+
+    // App open: the page already beeps and shows the timer, so don't double up with a banner.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([])
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
