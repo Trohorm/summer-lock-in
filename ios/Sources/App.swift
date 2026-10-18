@@ -2,7 +2,7 @@ import UIKit
 import WebKit
 import UserNotifications
 
-let LIVE_URL = URL(string: "https://summer-lock-in.puter.site")!
+let LIVE_URL = URL(string: "https://web.lockin-app.online")!
 
 // MARK: - Main view controller (thin shell around the live site)
 /// Bridge for the page: window.webkit.messageHandlers.lockin.postMessage({action:'notify'|'cancel'|'auth', ...})
@@ -185,7 +185,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     // MARK: Navigation — keep app domains inside, open the rest in Safari
     private func isAllowed(_ host: String) -> Bool {
-        let allowed = ["puter.site", "puter.com", "cloudflare.com"]
+        let allowed = ["lockin-app.online", "puter.site", "puter.com", "cloudflare.com"]
         return allowed.contains { host == $0 || host.hasSuffix("." + $0) }
     }
 

@@ -7,7 +7,7 @@ between them with Export/Import backup in Setup.
 
 ## Install (SideStore)
 1. SideStore → Sources → **Add Source**:
-   `https://summer-lock-in.puter.site/source.json` (or `https://raw.githubusercontent.com/Trohorm/summer-lock-in/main/source.json`)
+   `https://ipa.lockin-app.online`
 2. Install **Lock In** from the source.
 3. Updates appear in SideStore automatically whenever a new version is released here.
 

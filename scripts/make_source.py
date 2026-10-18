@@ -25,7 +25,7 @@ src = {
         "localizedDescription": ("Custom gym splits with 2,000+ exercises and animated demos, per-gym progressive overload, "
                                  "AI split builder, and a diet tracker that estimates every macro, micronutrient and "
                                  "anti-nutrient from a photo of your meal. Syncs with Lock In on the web."),
-        "iconURL": "https://summer-lock-in.puter.site/icon-512.png",
+        "iconURL": "https://web.lockin-app.online/icon-512.png",
         "tintColor": "5b93ff",
         "versions": [],
     }],
