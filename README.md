@@ -1,4 +1,4 @@
-# Summer Lock In — offline iOS app
+# Lock In — iOS app
 
 Offline gym tracker (UL/PPL, progressive overload 8→10, check-ins, cardio, progress photos).
 All data lives on the phone. No account, no internet needed.
@@ -7,8 +7,8 @@ between them with Export/Import backup in Setup.
 
 ## Install (SideStore)
 1. SideStore → Sources → **Add Source**:
-   `https://raw.githubusercontent.com/OWNER/REPO/main/source.json`
-2. Install **Summer Lock In** from the source.
+   `https://summer-lock-in.puter.site/source.json` (or `https://raw.githubusercontent.com/Trohorm/summer-lock-in/main/source.json`)
+2. Install **Lock In** from the source.
 3. Updates appear in SideStore automatically whenever a new version is released here.
 
 ## Release a new version

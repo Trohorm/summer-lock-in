@@ -57,7 +57,7 @@ jobs:
         run: |
           gh release create "v${{ github.event.inputs.version }}" SummerLockIn.ipa \
             --title "v${{ github.event.inputs.version }}" \
-            --notes "Summer Lock In ${{ github.event.inputs.version }} (unsigned IPA for SideStore)" \
+            --notes "Lock In ${{ github.event.inputs.version }} (unsigned IPA for SideStore)" \
           || gh release upload "v${{ github.event.inputs.version }}" SummerLockIn.ipa --clobber
 
       - name: Update SideStore source

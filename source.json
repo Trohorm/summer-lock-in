@@ -1,20 +1,20 @@
 {
- "name": "Summer Lock In",
+ "name": "Lock In",
  "identifier": "com.summerlockin.source",
  "apps": [
   {
-   "name": "Summer Lock In",
+   "name": "Lock In",
    "bundleIdentifier": "com.summerlockin.app",
-   "developerName": "Summer Lock In crew",
-   "subtitle": "Offline gym tracker",
-   "localizedDescription": "UL/PPL gym tracker: set-by-set logging with automatic progressive overload (8\u219210), rest timers, daily check-ins, weight trend, cardio log and progress photos. Fully offline \u2014 all data stays on your phone.",
+   "developerName": "Lock In crew",
+   "subtitle": "Gym splits + full-nutrient tracker",
+   "localizedDescription": "Custom gym splits with 2,000+ exercises and animated demos, per-gym progressive overload, AI split builder, and a diet tracker that estimates every macro, micronutrient and anti-nutrient from a photo of your meal. Syncs with Lock In on the web.",
    "iconURL": "https://summer-lock-in.puter.site/icon-512.png",
    "tintColor": "5b93ff",
    "versions": [
     {
      "version": "2.1.0",
      "date": "2026-07-08",
-     "localizedDescription": "Summer Lock In 2.1.0",
+     "localizedDescription": "Lock In 2.1.0",
      "downloadURL": "https://github.com/Trohorm/summer-lock-in/releases/download/v2.1.0/SummerLockIn.ipa",
      "size": 66412,
      "minOSVersion": "15.0"
@@ -22,7 +22,7 @@
     {
      "version": "1.2.0",
      "date": "2026-07-07",
-     "localizedDescription": "Summer Lock In 1.2.0",
+     "localizedDescription": "Lock In 1.2.0",
      "downloadURL": "https://github.com/Trohorm/summer-lock-in/releases/download/v1.2.0/SummerLockIn.ipa",
      "size": 76763,
      "minOSVersion": "15.0"
@@ -30,7 +30,7 @@
     {
      "version": "1.1.0",
      "date": "2026-07-04",
-     "localizedDescription": "Summer Lock In 1.1.0",
+     "localizedDescription": "Lock In 1.1.0",
      "downloadURL": "https://github.com/Trohorm/summer-lock-in/releases/download/v1.1.0/SummerLockIn.ipa",
      "size": 61049,
      "minOSVersion": "15.0"
@@ -38,7 +38,7 @@
     {
      "version": "1.0.1",
      "date": "2026-07-04",
-     "localizedDescription": "Summer Lock In 1.0.1",
+     "localizedDescription": "Lock In 1.0.1",
      "downloadURL": "https://github.com/Trohorm/summer-lock-in/releases/download/v1.0.1/SummerLockIn.ipa",
      "size": 60974,
      "minOSVersion": "15.0"
@@ -46,7 +46,7 @@
     {
      "version": "1.0.0",
      "date": "2026-07-03",
-     "localizedDescription": "Summer Lock In 1.0.0",
+     "localizedDescription": "Lock In 1.0.0",
      "downloadURL": "https://github.com/Trohorm/summer-lock-in/releases/download/v1.0.0/SummerLockIn.ipa",
      "size": 60077,
      "minOSVersion": "15.0"
