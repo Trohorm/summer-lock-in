@@ -413,10 +413,86 @@ nav button:active svg{transform:scale(.82)}
 .spin{border-top-color:#8fb7ff}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
+/* ============ v2: liquid glass, stable header, swipe, reveal ============ */
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+body{background:var(--ice)}
+.ambient{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.ambient i{position:absolute;border-radius:50%;opacity:.5;will-change:transform}
+.ambient i:nth-child(1){width:70vmax;height:70vmax;right:-30vmax;top:-35vmax;background:radial-gradient(circle,rgba(79,124,247,.30),transparent 62%);animation:amb1 22s ease-in-out infinite alternate}
+.ambient i:nth-child(2){width:60vmax;height:60vmax;left:-30vmax;bottom:-25vmax;background:radial-gradient(circle,rgba(123,108,255,.22),transparent 62%);animation:amb2 26s ease-in-out infinite alternate}
+.ambient i:nth-child(3){width:45vmax;height:45vmax;left:30%;top:40%;background:radial-gradient(circle,rgba(47,191,127,.10),transparent 62%);animation:amb1 30s ease-in-out infinite alternate-reverse}
+@keyframes amb1{to{transform:translate(-8vmax,10vmax) scale(1.15)}}@keyframes amb2{to{transform:translate(10vmax,-8vmax) scale(1.1)}}
+#scroller{position:relative;z-index:1}
+/* large title scrolls with content; compact glass bar fades in on top (no layout change → no jumping) */
+.hero{position:relative;top:auto;background:none!important;border:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:calc(14px + env(safe-area-inset-top)) 18px 8px}
+.hero .hrow{transform-origin:left bottom;will-change:transform,opacity}
+.hero.scrolled h1{font-size:30px}.hero.scrolled .sub{opacity:1;height:auto;margin:0 0 2px}.hero.scrolled .brand{transform:none}
+#topbar{position:absolute;left:0;right:0;top:0;z-index:40;height:calc(46px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:center;
+  background:rgba(14,17,22,.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.08);
+  opacity:0;transform:translateY(-8px);transition:opacity .28s var(--ease),transform .35s var(--ease);pointer-events:none}
+#topbar.show{opacity:1;transform:none}
+#topbar span{font-size:16px;font-weight:800;letter-spacing:-.01em}
+body.prelogin #topbar{display:none}
+/* liquid-glass floating tab bar */
+nav{position:absolute!important;z-index:50;left:max(12px,calc(50% - 270px));right:max(12px,calc(50% - 270px));bottom:calc(10px + env(safe-area-inset-bottom));
+  border-radius:32px;padding:6px!important;border:1px solid rgba(255,255,255,.16)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 45%,rgba(255,255,255,.05)),rgba(22,26,34,.38)!important;
+  backdrop-filter:blur(24px) saturate(200%) brightness(1.1)!important;-webkit-backdrop-filter:blur(24px) saturate(200%) brightness(1.1)!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(255,255,255,.06);touch-action:none;user-select:none;-webkit-user-select:none}
+nav::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 50% -20%,rgba(255,255,255,.22),transparent 55%);mix-blend-mode:screen}
+nav .pill{top:6px!important;height:calc(100% - 12px)!important;border-radius:26px!important;
+  background:radial-gradient(130% 90% at 50% 0%,rgba(255,255,255,.30),rgba(255,255,255,.08) 55%,rgba(255,255,255,.04))!important;
+  border:1px solid rgba(255,255,255,.28)!important;box-shadow:inset 0 1px 1px rgba(255,255,255,.45),inset 0 -2px 6px rgba(110,166,255,.18),0 6px 18px rgba(0,0,0,.3);
+  backdrop-filter:blur(4px) saturate(220%) brightness(1.15);-webkit-backdrop-filter:blur(4px) saturate(220%) brightness(1.15);
+  transition:transform .55s var(--spring),width .55s var(--spring),scale .3s var(--spring)!important}
+nav .pill.drag{transition:width .3s var(--spring)!important;scale:1.08 1.12}
+nav .pill.squish{animation:squish .55s var(--ease)}
+@keyframes squish{30%{scale:1.22 .86}60%{scale:.95 1.06}100%{scale:1 1}}
+nav button{height:52px!important;color:rgba(233,236,241,.55)!important;font-size:10px!important;gap:3px!important}
+nav button.on{color:#fff!important;text-shadow:0 0 12px rgba(110,166,255,.6)}
+nav button.on svg{animation:iconpop .5s var(--spring)}
+@keyframes iconpop{0%{transform:scale(.7)}60%{transform:scale(1.18) translateY(-2px)}100%{transform:scale(1.08) translateY(-1px)}}
+.wrap{padding-bottom:24px!important}
+footer{padding-bottom:calc(110px + env(safe-area-inset-bottom))!important}
+#timerSheet{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+#toast{bottom:calc(100px + env(safe-area-inset-bottom))!important}
+/* swipe between tabs */
+.view.dragging{transition:none!important}
+.view.snapback{transition:transform .45s var(--spring),opacity .3s!important}
+/* scroll-reveal */
+.rv{opacity:0;transform:translateY(30px) scale(.97);transition:opacity .6s var(--ease),transform .7s var(--spring)}
+.rv.in{opacity:1;transform:none}
+.view.enter .rv{animation:none!important}
+/* press ripple + lift */
+.btn,.hub,.addbtn,.chip,.libitem,.restbtn{position:relative;overflow:hidden}
+.ripple{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,0) 70%);transform:scale(0);animation:ripple .65s var(--ease) forwards}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+.card{transition:transform .3s var(--spring),box-shadow .3s}
+.addbtn{transition:transform .25s var(--spring),background .2s}.addbtn:active{transform:scale(.94)}
+.addbtn svg{transition:transform .4s var(--spring)}.addbtn:active svg{transform:scale(1.2) rotate(-6deg)}
+/* animated glow border on hero cards */
+.hero-card::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from var(--ang),transparent 0 60%,rgba(110,166,255,.9) 75%,rgba(123,108,255,.9) 85%,transparent 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:spinang 6s linear infinite}
+@keyframes spinang{to{--ang:360deg}}
+.hero-card .deco{animation:decofloat 7s ease-in-out infinite}
+@keyframes decofloat{50%{transform:rotate(-12deg) translateY(-6px)}}
+/* shimmer on primary buttons */
+.btn-primary::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);animation:sheen 5.5s ease-in-out infinite}
+@keyframes sheen{0%,70%{left:-60%}100%{left:130%}}
+/* glass sheets & toasts */
+.sheet .panel{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01) 30%),rgba(20,23,29,.82)!important;backdrop-filter:blur(30px) saturate(170%);-webkit-backdrop-filter:blur(30px) saturate(170%);border:1px solid rgba(255,255,255,.12)!important}
+#timerSheet{background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.03)),rgba(22,26,34,.5)!important;backdrop-filter:blur(24px) saturate(200%)!important;-webkit-backdrop-filter:blur(24px) saturate(200%)!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 16px 44px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.25)}
+.setrow.flash{animation:rowflash .7s var(--ease)}
+@keyframes rowflash{0%{background:rgba(62,207,142,.25)}100%{background:transparent}}
+.setrow{border-radius:12px}
+
 </style>
 </head>
 <body>
 
+<div class="ambient"><i></i><i></i><i></i></div>
+<div id="topbar"><span id="topTitle">Lock In</span></div>
 <div id="scroller">
 <header class="hero"><div class="hrow"><div><div class="sub" id="heroSub"></div><h1 id="heroTitle">Lock In</h1></div><div class="brand"><svg viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg></div></div></header>
 
@@ -1021,6 +1097,7 @@ function show(v){
   renderHeader();wakeLock(v==='workout');
   $('scroller').scrollTo({top:0});
   animateView(v);countUp($('view-'+v));fillRings($('view-'+v));requestAnimationFrame(movePill);
+  onScroll();requestAnimationFrame(()=>setupReveal($('view-'+v)));
 }
 function activeSplit(){return S.splits[S.activeSplit];}
 /* which day of the active split is today: weekly schedule, or next in rotation if no schedule */
@@ -1036,7 +1113,7 @@ function renderHeader(){
   const d=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
   const a=document.querySelector('.view.active'),v=a?a.id.replace('view-',''):'today';
   const T={today:greeting()+(S&&S.settings.name?', '+S.settings.name.split(' ')[0]:''),workout:'Lift',diet:'Diet',progress:'Progress',settings:'Setup',editor:'Edit split'};
-  $('heroTitle').textContent=T[v]||'Lock In';
+  $('heroTitle').textContent=T[v]||'Lock In';$('topTitle').textContent=v==='today'?'Today':(T[v]||'Lock In');
   if(!S||!S.settings.setupDone){$('heroSub').textContent=d;return;}
   const pd=plannedDay(todayStr());
   $('heroSub').textContent=d+' · '+(pd?pd.name:'Rest day');
@@ -1221,7 +1298,7 @@ function woButtons(){const w=curWO();$('saveWoBtn').textContent=(w&&w.ended)?'Up
 function markDone(cb,i){
   syncWorkout();
   const card=$('exc_'+i);card.classList.toggle('exdone',[...card.querySelectorAll('.done-in')].every(b=>b.checked));
-  if(cb.checked)haptic('medium');
+  if(cb.checked){haptic('medium');const row=cb.closest('.setrow');if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}}
   if(cb.checked&&S.settings.autoRest!==false){const w=curWO();const it=w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
 }
 function syncWorkout(){
@@ -2040,7 +2117,9 @@ let curView='';
 function haptic(s){nat({action:'haptic',style:s||'light'});}
 function movePill(){
   const nav=$('mainNav'),on=nav.querySelector('button.on'),pill=nav.querySelector('.pill');if(!on||!pill)return;
-  pill.style.width=on.offsetWidth+'px';pill.style.transform='translateX('+on.offsetLeft+'px)';
+  const nx='translateX('+on.offsetLeft+'px)';
+  if(pill.style.transform&&pill.style.transform!==nx){pill.classList.remove('squish');void pill.offsetWidth;pill.classList.add('squish');}
+  pill.style.width=on.offsetWidth+'px';pill.style.transform=nx;
 }
 function animateView(v){
   const el=$('view-'+v);if(!el)return;
@@ -2078,7 +2157,7 @@ function greeting(){const h=new Date().getHours();return h<5?'Good night':h<12?'
 function initUI(){
   const nav=$('mainNav');const p=document.createElement('div');p.className='pill';nav.prepend(p);
   window.addEventListener('resize',movePill);
-  const sc=$('scroller');sc.addEventListener('scroll',()=>{document.querySelector('.hero').classList.toggle('scrolled',sc.scrollTop>14);},{passive:true});
+
   /* drag the sheet down to close */
   const panel=document.querySelector('#sheet .panel'),head=document.querySelector('#sheet .phead');let y0=null,dy=0;
   head.addEventListener('touchstart',e=>{y0=e.touches[0].clientY;dy=0;panel.classList.add('dragging');},{passive:true});
@@ -2089,8 +2168,76 @@ function initUI(){
 }
 function hideSplash(){const s=$('splash');if(s&&!s.classList.contains('gone')){s.classList.add('gone');setTimeout(()=>s.remove(),600);}}
 
+/* ================= v2 UI: compact bar, nav scrub, page swipe, reveal, ripple ================= */
+let revealObs=null;
+function setupReveal(root){
+  if(!('IntersectionObserver' in window))return;
+  if(!revealObs)revealObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revealObs.unobserve(e.target);}}),{root:$('scroller'),rootMargin:'0px 0px -6% 0px'});
+  const H=$('scroller').clientHeight;
+  root.querySelectorAll('.card,.hub,.excard,.meal,.histitem').forEach(el=>{
+    if(el.closest('.sheet'))return;
+    const r=el.getBoundingClientRect();
+    if(r.top>H*0.92){el.classList.add('rv');el.classList.remove('in');revealObs.observe(el);}
+  });
+}
+function onScroll(){
+  const st=$('scroller').scrollTop,h=document.querySelector('.hero .hrow');
+  $('topbar').classList.toggle('show',st>52);
+  if(h){const p=Math.min(1,Math.max(0,st/90));h.style.opacity=String(1-p*0.9);h.style.transform='translateY('+(st*0.35).toFixed(1)+'px) scale('+(1-p*0.06).toFixed(3)+')';}
+}
+function initGlass(){
+  $('scroller').addEventListener('scroll',onScroll,{passive:true});
+  /* drag/scrub across the tab bar: the glass pill follows your finger */
+  const nav=$('mainNav'),pill=nav.querySelector('.pill');let down=null,moved=false;
+  const btns=()=>[...nav.querySelectorAll('button')];
+  const nearest=x=>{let best=null,bd=1e9;btns().forEach(b=>{const c=b.offsetLeft+b.offsetWidth/2,d=Math.abs(c-x);if(d<bd){bd=d;best=b;}});return best;};
+  nav.addEventListener('pointerdown',e=>{down={x:e.clientX};moved=false;});
+  nav.addEventListener('pointermove',e=>{
+    if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>8)moved=true;if(!moved)return;
+    const r=nav.getBoundingClientRect(),x=e.clientX-r.left,b=nearest(x);
+    pill.classList.add('drag');pill.style.transform='translateX('+Math.max(6,Math.min(r.width-b.offsetWidth-6,x-b.offsetWidth/2))+'px)';pill.style.width=b.offsetWidth+'px';
+    if(nav._hover!==b){nav._hover=b;haptic('selection');btns().forEach(x=>x.style.color=x===b?'#fff':'');}
+  });
+  const end=e=>{
+    if(!down)return;pill.classList.remove('drag');btns().forEach(x=>x.style.color='');
+    if(moved&&nav._hover){const v=nav._hover.dataset.v;nav._hover=null;down=null;show(v);return;}
+    down=null;nav._hover=null;movePill();
+  };
+  nav.addEventListener('pointerup',end);nav.addEventListener('pointercancel',end);
+  nav.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);
+  /* swipe left/right on a page to move between tabs */
+  const sc=$('scroller');let t0=null;
+  sc.addEventListener('touchstart',e=>{
+    const el=e.target;const v=document.querySelector('.view.active');
+    if(!v||!VIEWORDER.includes(v.id.replace('view-',''))||$('sheet').classList.contains('show')||el.closest('input,select,textarea,.chipbar,.vargrid,.musbar,.setrow,.exchips,.rings,nav')){t0=null;return;}
+    t0={x:e.touches[0].clientX,y:e.touches[0].clientY,v,lock:null};
+  },{passive:true});
+  sc.addEventListener('touchmove',e=>{
+    if(!t0)return;const dx=e.touches[0].clientX-t0.x,dy=e.touches[0].clientY-t0.y;
+    if(t0.lock===null&&(Math.abs(dx)>10||Math.abs(dy)>10))t0.lock=Math.abs(dx)>Math.abs(dy)*1.6?'x':'y';
+    if(t0.lock!=='x')return;
+    const i=VIEWORDER.indexOf(t0.v.id.replace('view-','')),edge=(i===0&&dx>0)||(i===VIEWORDER.length-1&&dx<0);
+    const d=edge?dx*0.25:dx;t0.d=d;t0.v.classList.add('dragging');t0.v.style.transform='translateX('+d+'px)';t0.v.style.opacity=String(1-Math.min(.35,Math.abs(d)/900));
+  },{passive:true});
+  sc.addEventListener('touchend',()=>{
+    if(!t0||t0.lock!=='x'){t0=null;return;}
+    const v=t0.v,d=t0.d||0,i=VIEWORDER.indexOf(v.id.replace('view-',''));v.classList.remove('dragging');
+    const ni=d<-70?i+1:d>70?i-1:i;
+    if(ni!==i&&ni>=0&&ni<VIEWORDER.length){v.style.transform='';v.style.opacity='';haptic('light');show(VIEWORDER[ni]);}
+    else{v.classList.add('snapback');v.style.transform='';v.style.opacity='';setTimeout(()=>v.classList.remove('snapback'),460);}
+    t0=null;
+  });
+  /* ripple from the touch point */
+  document.addEventListener('pointerdown',e=>{
+    const b=e.target.closest('.btn,.hub,.addbtn,.chip,.libitem,.restbtn');if(!b||b.disabled)return;
+    const r=b.getBoundingClientRect(),s=Math.max(r.width,r.height)*2.2,sp=document.createElement('span');
+    sp.className='ripple';sp.style.width=sp.style.height=s+'px';sp.style.left=(e.clientX-r.left-s/2)+'px';sp.style.top=(e.clientY-r.top-s/2)+'px';
+    b.appendChild(sp);setTimeout(()=>sp.remove(),700);
+  },{passive:true});
+}
+
 function init(){
-  initUI();
+  initUI();initGlass();
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
   $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);
   $('splitSel').addEventListener('change',e=>{S.activeSplit=e.target.value;const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}save();renderWorkout();renderHeader();});
