@@ -12,7 +12,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>window.addEventListener("error",function(e){window.__lastErr=(e.message||"error")+" @"+(e.lineno||"")});</script>
-<script src="https://js.puter.com/v2/"></script>
+<script>window.puterReady=new Promise(function(res){window.__puterRes=res;setTimeout(res,9000);});</script>
+<script async src="https://js.puter.com/v2/" onload="window.__puterRes()" onerror="window.__puterRes()"></script>
 <style>
 :root{
   color-scheme:dark;
@@ -866,7 +867,7 @@ function suggestMacros(w,goal){
 const KV_KEY='state_v1',PDIR='photos',AI_MODEL='claude-sonnet-4-6';
 
 /* ================= STATE ================= */
-let S=null,user=null,dirty=false,pushT=null,lastSync=null,offlineMode=false,pushed={};
+let S=null,user=null,dirty=false,pushT=null,lastSync=null,offlineMode=false,pushed={},cloudReady=false,pushing=false,needsSignIn=false,localT=null,syncing=false,lastPull=0;
 let photos=[],selPhotos=[];
 function fresh(){return {v:2,settings:{name:'',goal:'recomp',weight:null,height:null,age:null,sex:'m',aiAuto:true,autoRest:true,wake:false,setupDone:false},
   targets:{protein:0,carbs:0,fat:0,micro:{},anti:{}},splits:{},activeSplit:'',gyms:[],activeGym:'',exNotes:{},custom:{},libcache:{},alias:{},
@@ -905,8 +906,11 @@ function migrate(){
 }
 /* ---------- persistence: core state + monthly shards for workouts & food (keeps every KV value small) ---------- */
 function cacheKey(){return 'rtcache_'+(user?user.username:'anon');}
-function save(){if(S)S.updatedAt=Date.now();try{localStorage.setItem(cacheKey(),JSON.stringify(S));}catch(e){}pushSoon();}
-function pushSoon(){dirty=true;renderSync();clearTimeout(pushT);pushT=setTimeout(pushNow,900);}
+function save(){if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),250);pushSoon();}
+function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;try{localStorage.setItem(cacheKey(),JSON.stringify(S));}catch(e){}}
+function idle(fn){if(window.requestIdleCallback)requestIdleCallback(fn,{timeout:600});else setTimeout(fn,0);}
+function flushAll(){if(localT)writeLocal();if(dirty&&cloudReady)pushNow();}
+function pushSoon(){const was=dirty;dirty=true;if(!was)renderSync();clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1500);}
 function shards(){
   const out={};
   for(const id in S.workouts){const w=S.workouts[id];if(!w)continue;const m='wo_'+(w.date||'0000-00').slice(0,7);(out[m]=out[m]||{})[id]=w;}
@@ -915,15 +919,19 @@ function shards(){
 }
 function core(){const c=Object.assign({},S);delete c.workouts;delete c.food;delete c.checkins;delete c.cardio;c.sharded=true;return c;}
 async function pushNow(){
-  if(!user||!S)return;
-  if(typeof puter==='undefined'||!puter.auth||!puter.auth.isSignedIn()){dirty=true;renderSync();return;}
+  if(!user||!S||!cloudReady)return;
+  if(pushing){clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1200);return;}
+  if(typeof puter==='undefined'||!puter.auth||!puter.auth.isSignedIn()||!navigator.onLine){dirty=true;renderSync();return;}
+  pushing=true;const stamp=S.updatedAt;
   try{
-    const sh=shards();
-    for(const k in sh){const js=JSON.stringify(sh[k]);if(pushed[k]!==js){await puter.kv.set(k,js);pushed[k]=js;}}
-    for(const k in pushed){if(!sh[k]&&pushed[k]!=='{}'){await puter.kv.set(k,'{}');pushed[k]='{}';}}
-    await puter.kv.set(KV_KEY,JSON.stringify(core()));
-    dirty=false;offlineMode=false;lastSync=new Date();renderSync();
+    const sh=shards(),jobs=[],done={};
+    for(const k in sh){const js=JSON.stringify(sh[k]);if(pushed[k]!==js){jobs.push(puter.kv.set(k,js));done[k]=js;}}
+    for(const k in pushed){if(!sh[k]&&pushed[k]!=='{}'){jobs.push(puter.kv.set(k,'{}'));done[k]='{}';}}
+    jobs.push(puter.kv.set(KV_KEY,JSON.stringify(core())));
+    await Promise.all(jobs);Object.assign(pushed,done);
+    if(S.updatedAt===stamp)dirty=false;offlineMode=false;lastSync=new Date();renderSync();
   }catch(e){dirty=true;renderSync();}
+  pushing=false;
 }
 async function loadCloud(){
   const raw=await puter.kv.get(KV_KEY);
@@ -945,6 +953,8 @@ async function loadCloud(){
 }
 function renderSync(){
   const el=$('syncInfo');if(!el)return;
+  if(needsSignIn){el.innerHTML='Not signed in — your data is safe on this device. <a href="#" onclick="doSignIn();return false">Sign in to sync</a>';return;}
+  if(!cloudReady&&!offlineMode){el.textContent=syncing?'Syncing with your account…':'Saved on this device.';return;}
   if(offlineMode||!navigator.onLine){el.textContent=dirty?'Offline — changes saved on this device, they sync when you reconnect.':'Offline — using data saved on this device.';return;}
   el.textContent=dirty?'Syncing…':(lastSync?'Synced to your account at '+lastSync.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'.':'Synced to your account.');
 }
@@ -1032,9 +1042,15 @@ function imgFallback(el){
 function imgTag(img,cls,lazy){
   if(!img)return '<div class="'+(cls||'')+' ph">no demo</div>';
   const f=img.replace('*','')[0]==='f';
-  return '<img class="'+(cls||'')+(f?' flip':'')+'" '+(lazy!==false?'loading="lazy" ':'')+'alt="" src="'+imgSrc(img)+'" onerror="imgFallback(this)">';
+  return '<img class="'+(cls||'')+(f?' flip':'')+'" decoding="async" '+(lazy!==false?'loading="lazy" ':'')+'alt="" src="'+imgSrc(img)+'" onerror="imgFallback(this)">';
 }
-setInterval(()=>{document.querySelectorAll('img.flip').forEach(el=>{if(!el.offsetParent)return;el.src=el.src.endsWith('/0.jpg')?el.src.replace(/\/0\.jpg$/,'/1.jpg'):el.src.replace(/\/1\.jpg$/,'/0.jpg');});},1100);
+const flipVis=new Set();
+const flipIO='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)flipVis.add(e.target);else flipVis.delete(e.target);})):null;
+let flipScanQ=false;
+new MutationObserver(()=>{if(flipScanQ||!flipIO)return;flipScanQ=true;requestAnimationFrame(()=>{flipScanQ=false;
+  document.querySelectorAll('img.flip:not([data-fo])').forEach(el=>{el.dataset.fo=1;flipIO.observe(el);});
+  flipVis.forEach(el=>{if(!el.isConnected){flipVis.delete(el);flipIO.unobserve(el);}});});}).observe(document.documentElement,{childList:true,subtree:true});
+setInterval(()=>{if(document.hidden||!flipVis.size)return;flipVis.forEach(el=>{if(!el.isConnected){flipVis.delete(el);return;}el.src=el.src.endsWith('/0.jpg')?el.src.replace(/\/0\.jpg$/,'/1.jpg'):el.src.replace(/\/1\.jpg$/,'/0.jpg');});},1100);
 function demoBlock(x){
   if(!x.img)return '<div class="nodemo">No verified demo for this one yet — follow the cue below.</div>';
   const approx=x.img.endsWith('*');
@@ -1056,6 +1072,9 @@ function loadLocal(){try{const c=localStorage.getItem(cacheKey());if(c)return JS
 function runLocalOnly(){S=merge(fresh(),loadLocal());offlineMode=true;dirty=true;renderSync();if(!S.settings.setupDone){openWizard();return;}enterApp();}
 async function boot(){
   const lastUser=localStorage.getItem('rt_lastuser');
+  if(lastUser&&!S){user={username:lastUser};const local=loadLocal();
+    if(local){S=merge(fresh(),local);if(S.settings.setupDone){enterApp();bgSync();return;}}}
+  await window.puterReady;
   if(lastUser&&(!navigator.onLine||typeof puter==='undefined'||window.__offlineCopy)){user={username:lastUser};runLocalOnly();return;}
   if(typeof puter==='undefined'){
     if(lastUser){user={username:lastUser};runLocalOnly();return;}
@@ -1070,7 +1089,7 @@ async function boot(){
   const local=loadLocal();
   let cloud=null,reached=false;
   try{cloud=await loadCloud();reached=true;}catch(e){}
-  let loaded;
+  let loaded;cloudReady=reached;
   if(reached){loaded=mergeStates(cloud,local);offlineMode=false;}
   else{loaded=local;offlineMode=true;dirty=true;}
   S=merge(fresh(),loaded);
@@ -1079,14 +1098,43 @@ async function boot(){
   if(!S.settings.setupDone){openWizard();return;}
   enterApp();
 }
+/* background sync after an instant local start: pull, merge, quietly refresh, push */
+async function bgSync(){
+  if(syncing)return;syncing=true;renderSync();
+  try{
+    await window.puterReady;
+    if(typeof puter==='undefined'||!navigator.onLine||window.__offlineCopy){offlineMode=true;dirty=true;return;}
+    if(!puter.auth.isSignedIn()){needsSignIn=true;return;}
+    needsSignIn=false;
+    let u=null;try{u=await puter.auth.getUser();}catch(e){}
+    if(u&&user&&u.username!==user.username){location.reload();return;}
+    if(u){user=u;localStorage.setItem('rt_lastuser',u.username);}
+    let cloud;try{cloud=await loadCloud();}catch(e){offlineMode=true;dirty=true;return;}
+    const before=JSON.stringify(S);
+    const merged=merge(fresh(),mergeStates(cloud,S));
+    cloudReady=true;offlineMode=false;lastPull=Date.now();
+    const after=JSON.stringify(merged);
+    if(after!==before){S=merged;migrate();writeLocal();quietRefresh();}
+    if(!cloud||!cloud.sharded||after!==JSON.stringify(cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
+    processQueue();
+  }finally{syncing=false;renderSync();}
+}
+/* re-render with the merged data without yanking the user out of what they're doing */
+let refreshPending=false;
+function quietRefresh(){
+  const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');
+  const busy=v==='editor'||$('sheet').classList.contains('show')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+  if(busy){refreshPending=true;return;}
+  const sc=$('scroller'),y=sc.scrollTop;renderView(v);sc.scrollTop=y;renderHeader();
+}
 async function resync(){
   if(typeof puter==='undefined'||!puter.auth||!puter.auth.isSignedIn()||!S)return;
   try{if(!user)user=await puter.auth.getUser();}catch(e){}
   let cloud=null;try{cloud=await loadCloud();}catch(e){return;}
-  S=merge(fresh(),mergeStates(cloud,S));migrate();offlineMode=false;await pushNow();refreshCurrent();processQueue();
+  S=merge(fresh(),mergeStates(cloud,S));migrate();cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){migrate();save();document.body.classList.add('authed');show('today');loadPhotos();setTimeout(()=>processQueue(),1500);}
+function enterApp(){migrate();idle(writeLocal);document.body.classList.add('authed');show('today');loadPhotos();setTimeout(()=>processQueue(),1500);}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -1121,19 +1169,20 @@ async function doSignOut(){
 }
 
 /* ================= ROUTER ================= */
+function renderView(v){
+  if(v==='today')renderToday();
+  if(v==='workout')renderWorkout();
+  if(v==='diet')renderDiet();
+  if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
+  if(v==='settings')renderSettings();
+}
 function show(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   $('view-'+v).classList.add('active');
   const navv=v==='editor'?'workout':v;
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===navv));
   document.body.classList.toggle('prelogin',v==='login'||v==='wizard');hideSplash();
-  if(S&&S.settings.setupDone){
-    if(v==='today')renderToday();
-    if(v==='workout')renderWorkout();
-    if(v==='diet')renderDiet();
-    if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
-    if(v==='settings')renderSettings();
-  }
+  refreshPending=false;if(S&&S.settings.setupDone)renderView(v);
   renderHeader();wakeLock(v==='workout');
   $('scroller').scrollTo({top:0});
   animateView(v);countUp($('view-'+v));fillRings($('view-'+v));requestAnimationFrame(movePill);
@@ -2368,8 +2417,10 @@ function init(){
   $('importFile').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value='';});
   $('eraseBtn').addEventListener('click',eraseAll);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&$('view-workout').classList.contains('active'))wakeLock(true);});
-  window.addEventListener('online',()=>{if(typeof puter==='undefined'){const s=document.createElement('script');s.src='https://js.puter.com/v2/';s.onload=resync;document.head.appendChild(s);}else resync();});
+  window.addEventListener('online',()=>{if(typeof puter==='undefined'){const s=document.createElement('script');s.src='https://js.puter.com/v2/';s.onload=()=>{window.puterReady=Promise.resolve();bgSync();};document.head.appendChild(s);}else bgSync();});
   window.addEventListener('offline',()=>{offlineMode=true;renderSync();});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();else if(S&&user&&Date.now()-lastPull>60000)bgSync();});
+  window.addEventListener('pagehide',flushAll);
   if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}catch(e){}}
   boot();
 }
