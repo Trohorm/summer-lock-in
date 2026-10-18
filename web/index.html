@@ -23,8 +23,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--ice);color:var(--navy);min-height:100vh;padding-bottom:84px}
-body.noscroll{overflow:hidden}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--ice);color:var(--navy);display:flex;flex-direction:column;position:fixed;inset:0}
+#scroller{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 .hero{background:var(--snow);border-bottom:1px solid var(--frost);padding:calc(16px + env(safe-area-inset-top)) 18px 12px}
 .hero h1{font-size:19px;letter-spacing:.14em;text-transform:uppercase;font-weight:800}
 .hero h1 span{color:var(--glacier)}
@@ -130,7 +131,7 @@ details.exinfo .body{padding:0 10px 10px;font-size:12.5px;color:var(--slate);lin
 .aibox .ttl{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--sky);font-weight:800;margin-bottom:7px}
 .aibox .txt{font-size:13.5px;line-height:1.6;color:#cfdcf3;white-space:pre-wrap}
 .aibox .txt.thinking{color:var(--mist);font-style:italic}
-#timerSheet{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:60;display:none;background:var(--raised);color:#fff;border-radius:16px;padding:14px 22px;box-shadow:0 10px 30px rgba(0,0,0,.55);text-align:center;min-width:230px}
+#timerSheet{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom));z-index:60;display:none;background:var(--raised);color:#fff;border-radius:16px;padding:14px 22px;box-shadow:0 10px 30px rgba(0,0,0,.55);text-align:center;min-width:230px}
 #timerSheet.show{display:block}
 #timerLabel{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sky);font-weight:700;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #timerLeft{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0 6px}
@@ -247,12 +248,12 @@ td{padding:7px 6px;border-bottom:1px solid #1e232b;color:var(--navy);vertical-al
 .wizhead{font-size:16px;font-weight:800;margin-bottom:4px}
 .wizsub{color:var(--slate);font-size:13px;margin-bottom:16px;line-height:1.5}
 .wizerr{color:var(--bad);font-size:12.5px;margin-top:10px;min-height:16px;font-weight:600}
-nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(14,16,19,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--frost);display:none;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav{position:relative;flex:none;z-index:50;background:rgba(14,16,19,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--frost);display:none;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 body.authed nav{display:flex}
 nav button{background:none;border:none;font-family:inherit;cursor:pointer;color:var(--mist);font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px;border-radius:10px;min-width:56px}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{color:var(--glacier)}
-#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:90px;z-index:90;background:var(--raised);color:#fff;padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:700;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:88vw;text-align:center}
+#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(86px + env(safe-area-inset-bottom));z-index:90;background:var(--raised);color:#fff;padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:700;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:88vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 details.warm{background:#251e10;border:1px solid #453714;border-radius:10px;padding:10px 12px;margin-bottom:12px}
 details.warm summary{font-size:12.5px;font-weight:800;color:#d9a441;cursor:pointer;letter-spacing:.04em}
@@ -271,6 +272,7 @@ footer,footer a{font-size:11px;color:var(--mist)}
 </head>
 <body>
 
+<div id="scroller">
 <header class="hero">
   <h1>Lock <span>In</span></h1>
   <div class="sub" id="heroSub">Loading…</div>
@@ -500,6 +502,7 @@ footer,footer a{font-size:11px;color:var(--mist)}
 </div>
 
 <footer>Lock In · Powered by <a href="https://developer.puter.com" target="_blank" rel="noopener">Puter</a> · Exercise demos: ExerciseDB &amp; free-exercise-db</footer>
+</div>
 
 <!-- generic bottom sheet -->
 <div class="sheet" id="sheet"><div class="panel"><div class="phead"><h3 id="sheetTitle"></h3><button class="btn btn-ghost btn-xs" onclick="closeSheet()">Close</button></div><div class="pbody" id="sheetBody"></div></div></div>
@@ -857,7 +860,7 @@ function show(v){
     if(v==='settings')renderSettings();
   }
   renderHeader();wakeLock(v==='workout');
-  window.scrollTo({top:0});
+  $('scroller').scrollTo({top:0});
 }
 function activeSplit(){return S.splits[S.activeSplit];}
 /* which day of the active split is today: weekly schedule, or next in rotation if no schedule */
@@ -1102,7 +1105,7 @@ function renderHistory(){
       '<span class="tiny" style="color:var(--bad);cursor:pointer" onclick="event.stopPropagation();delWorkout(\''+w.id+'\')">delete</span></div></div>';
   }).join('');
 }
-function openOld(id){const w=S.workouts[id];if(!w)return;const c=curWO();if(c&&!c.ended&&!woHasData(c))delete S.workouts[c.id];S.cur=id;if(S.splits[w.split])S.activeSplit=w.split;save();renderWorkout();window.scrollTo({top:0,behavior:'smooth'});toast('Editing '+w.dayName+' from '+fmtD(w.date));}
+function openOld(id){const w=S.workouts[id];if(!w)return;const c=curWO();if(c&&!c.ended&&!woHasData(c))delete S.workouts[c.id];S.cur=id;if(S.splits[w.split])S.activeSplit=w.split;save();renderWorkout();$('scroller').scrollTo({top:0,behavior:'smooth'});toast('Editing '+w.dayName+' from '+fmtD(w.date));}
 function delWorkout(k){if(!confirm('Delete this workout?'))return;delete S.workouts[k];S.tomb[k]=Date.now();if(S.cur===k)S.cur=null;save();renderWorkout();toast('Deleted');}
 function showAi(text,thinking){$('aiBox').classList.add('show');const t=$('aiTxt');t.textContent=text;t.classList.toggle('thinking',!!thinking);}
 function hideAi(){$('aiBox').classList.remove('show');}
@@ -1157,8 +1160,8 @@ async function wakeLock(on){
 
 /* ================= EXERCISE PICKER (library) ================= */
 let pick=null,pickMus='',pickQ='',pickAll=false;
-function openSheet(title,html){$('sheetTitle').textContent=title;$('sheetBody').innerHTML=html;$('sheet').classList.add('show');document.body.classList.add('noscroll');$('sheetBody').scrollTop=0;}
-function closeSheet(){try{stopScanner();}catch(e){}$('sheet').classList.remove('show');document.body.classList.remove('noscroll');}
+function openSheet(title,html){$('sheetTitle').textContent=title;$('sheetBody').innerHTML=html;$('sheet').classList.add('show');$('sheetBody').scrollTop=0;}
+function closeSheet(){try{stopScanner();}catch(e){}$('sheet').classList.remove('show');}
 function openPicker(opts){
   pick=opts;pickQ='';pickMus='';pickAll=false;
   openSheet('Add exercise','<input id="pkQ" placeholder="Search 2,000+ exercises — e.g. lat pulldown, hip thrust" autocomplete="off">'+
@@ -1325,7 +1328,7 @@ function diffHTML(a,b){
   if(h==='<div class="diff">')h+='<p class="tiny">No changes.</p>';
   return h+'</div>';
 }
-function applyAi(){if(!aiProposal)return;draft=aiProposal;aiProposal=null;$('aiSplitOut').innerHTML='';renderEditor();toast('Applied — review and Save split');window.scrollTo({top:0,behavior:'smooth'});}
+function applyAi(){if(!aiProposal)return;draft=aiProposal;aiProposal=null;$('aiSplitOut').innerHTML='';renderEditor();toast('Applied — review and Save split');$('scroller').scrollTo({top:0,behavior:'smooth'});}
 
 /* ================= DIET ================= */
 let dDate=todayStr(),pendingImg=null,MD=null;
@@ -1463,7 +1466,7 @@ function cleanN(n){const o={};NK.forEach(k=>{const v=+((n||{})[k]);if(v>0)o[k]=M
 /* save a meal draft {id?,name,parts,mult,src} to a date (new or update) */
 function saveMeal(md,date){
   const d=date||dDate;
-  const parts=(md.parts||[]).map(p=>({name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined}));
+  const parts=(md.parts||[]).map(p=>({name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined}));
   let e=md.id?findMeal(md.id):null;
   if(e){Object.assign(e.e,{name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,ts:e.e.ts});delete e.e.items;}
   else{
@@ -1489,15 +1492,52 @@ function drawMD(){
     MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><input type="number" inputmode="decimal" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value)"><span>g</span></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
       '<div class="pm">P '+fmtNum(p.n.protein||0)+' · C '+fmtNum(p.n.carbs||0)+' · F '+fmtNum(p.n.fat||0)+' g</div></div>').join('')+
     '<div class="row" style="margin:10px 0 4px"><input id="mdAdd" class="grow" placeholder="Add a food or ingredient, e.g. 2 tbsp peanut butter"><button class="btn btn-ghost btn-sm" id="mdAddBtn" onclick="addPart()">Add</button></div>'+
-    '<div class="row wrapr" style="margin:8px 0 4px"><span class="tiny">Cooked in:</span><select id="mdFat" style="width:auto;padding:6px">'+Object.keys(FATS).map(k=>'<option value="'+k+'">'+FATS[k][0]+'</option>').join('')+'</select>'+
-      '<select id="mdFatAmt" style="width:auto;padding:6px"><option value="0.5">½ tbsp</option><option value="1" selected>1 tbsp</option><option value="2">2 tbsp</option><option value="3">3 tbsp</option></select><button class="btn btn-ghost btn-sm" onclick="addFat()">Add fat</button></div>'+
-    '<p class="tiny">Count the fat that soaked into the food, not what stayed in the pan.</p>'+
+    '<details class="fold" id="cookFold"'+(MD.cookOpen?' open':'')+' ontoggle="MD.cookOpen=this.open"><summary>How was it cooked? (adds the fat it took up)</summary><div class="fb" id="cookBox"></div></details>'+
     '<div class="multrow" style="margin-top:10px"><span class="tiny" style="align-self:center">Whole meal ×</span>'+[0.5,0.75,1,1.25,1.5,2].map(q=>'<button class="chip sm'+(q===m?' on':'')+'" onclick="MD.mult='+q+';drawMD()">'+q+'</button>').join('')+'</div>'+
     '<div class="est"><div class="tgtline" style="margin-top:0"><span>Protein <b>'+Math.round(v('protein'))+' g</b></span><span>Carbs <b>'+Math.round(v('carbs'))+' g</b></span><span>Fat <b>'+Math.round(v('fat'))+' g</b></span></div>'+
       (anti.length?'<p class="tiny" style="margin-top:8px">Anti-nutrients: '+anti.map(x=>esc(x[1])+' '+fmtNum(v(x[0]))+' '+x[2]).join(' · ')+'</p>':'<p class="tiny" style="margin-top:8px">No notable anti-nutrients.</p>')+
       '<details class="fold" style="margin-top:8px"><summary>All nutrients</summary><div class="fb"><div class="ngrid">'+NUT.map(x=>'<div><span>'+esc(x[1])+'</span><b>'+fmtNum(v(x[0]))+' '+x[2]+'</b></div>').join('')+'</div></div></details></div>'+
     '<button class="btn btn-primary" style="margin-top:12px" onclick="if(!MD.parts.length){toast(\'Add at least one food\');return;}saveMeal(MD)">'+(MD.id?'Save changes':'Log '+(dDate===todayStr()?'meal':'to '+fmtD(dDate)))+'</button>'+
     (MD.id?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:8px" onclick="delMeal(\''+MD.id+'\')">Delete meal</button>':'');
+  drawCook();
+}
+/* how much fat ends up in the food for each cooking method (fraction of the food's weight, or of the fat used) */
+const COOK={
+ pan_light:{n:'Pan-fried, a little fat',by:'food',f:0.03,h:'Thin film of fat in a pan — eggs, a steak, chicken breast.'},
+ pan_generous:{n:'Pan-fried / shallow-fried, lots of fat',by:'food',f:0.07,h:'Fat a few mm deep or spooned over — schnitzel in a pan, fried potatoes.'},
+ deep:{n:'Deep-fried, plain',by:'food',f:0.08,h:'Fully submerged, no coating — fries, plain chicken.'},
+ deep_breaded:{n:'Deep-fried, breaded or battered',by:'food',f:0.13,h:'Coatings soak up the most — fried chicken, fish & chips, doughnuts.'},
+ stir:{n:'Stir-fried / sautéed',by:'food',f:0.04,h:'Wok or sauté pan, keeps moving.'},
+ sauteed_veg:{n:'Sautéed vegetables / mushrooms',by:'food',f:0.06,h:'Veg like mushrooms and aubergine act like sponges.'},
+ roast:{n:'Oven-roasted / baked with fat on top',by:'used',f:0.75,h:'Fat drizzled or rubbed on before the oven — most of it stays on the food.'},
+ grill:{n:'Grilled / pan greased lightly',by:'used',f:0.5,h:'Brushed on the grill or a greased tray.'},
+ binder:{n:'Mixed in — dough, batter, binder, sauce',by:'used',f:1,h:'Melted into a sauce, mash, dough or patties — all of it is eaten.'},
+ topping:{n:'Spread or drizzled on top',by:'used',f:1,h:'Butter on bread or potatoes, oil on a salad.'}};
+function drawCook(){
+  const el=$('cookBox');if(!el)return;
+  const c=COOK[MD.cm||'pan_light'];const foods=MD.parts.map((p,i)=>({i,p})).filter(x=>x.p.g>0&&!x.p.fat);
+  let h='<label class="f">Method</label><select onchange="MD.cm=this.value;drawCook()">'+Object.keys(COOK).map(k=>'<option value="'+k+'"'+(k===(MD.cm||'pan_light')?' selected':'')+'>'+COOK[k].n+'</option>').join('')+'</select>'+
+    '<p class="tiny" style="margin:4px 0 8px">'+esc(c.h)+'</p><label class="f">Fat</label><select onchange="MD.cf=this.value;drawCook()">'+Object.keys(FATS).map(k=>'<option value="'+k+'"'+(k===(MD.cf||'olive')?' selected':'')+'>'+FATS[k][0]+'</option>').join('')+'</select>';
+  let g=0;
+  if(c.by==='food'){
+    if(!foods.length){el.innerHTML=h+'<p class="tiny" style="margin-top:8px">Give the food its grams first — the fat it takes up depends on how much food there is.</p>';return;}
+    const sel=MD.cfood!=null&&foods.some(x=>x.i==MD.cfood)?+MD.cfood:foods[0].i;MD.cfood=sel;
+    h+='<label class="f" style="margin-top:8px">Which food was cooked this way</label><select onchange="MD.cfood=+this.value;drawCook()">'+foods.map(x=>'<option value="'+x.i+'"'+(x.i===sel?' selected':'')+'>'+esc(x.p.name)+' ('+Math.round(x.p.g)+' g)</option>').join('')+'</select>';
+    g=MD.parts[sel].g*c.f;
+  }else{
+    const amt=MD.camt||1;
+    h+='<label class="f" style="margin-top:8px">Fat you used</label><select onchange="MD.camt=+this.value;drawCook()">'+[[0.33,'1 tsp'],[0.5,'½ tbsp'],[1,'1 tbsp'],[2,'2 tbsp'],[3,'3 tbsp'],[4,'¼ cup']].map(a=>'<option value="'+a[0]+'"'+(a[0]===amt?' selected':'')+'>'+a[1]+'</option>').join('')+'</select>';
+    g=FATS[MD.cf||'olive'][1]*amt*c.f;
+  }
+  MD.cg=g;
+  el.innerHTML=h+'<div class="okline" style="margin:10px 0 8px">≈ <b>'+fmtNum(g)+' g</b> of '+esc(FATS[MD.cf||'olive'][0].toLowerCase())+' ends up in the food</div><button class="btn btn-ghost btn-sm" style="width:100%" onclick="addCooking()">Add to meal</button>';
+}
+function addCooking(){
+  const c=COOK[MD.cm||'pan_light'],f=FATS[MD.cf||'olive'],g=MD.cg||0;if(!(g>0))return;
+  const per100={};for(const k in f[2])per100[k]=f[2][k]/f[1]*100;
+  const n={};for(const k in per100)n[k]=per100[k]*g/100;
+  const what=c.by==='food'&&MD.parts[MD.cfood]?' — '+MD.parts[MD.cfood].name.toLowerCase():'';
+  MD.parts.push({name:f[0]+' ('+c.n.toLowerCase()+what+')',g,n,per100,fat:1});MD.cookOpen=false;drawMD();toast('Added '+fmtNum(g)+' g '+f[0].toLowerCase());
 }
 function setPartG(i,val){
   const p=MD.parts[i],g=parseFloat(val);if(!(g>0))return;
@@ -1506,11 +1546,7 @@ function setPartG(i,val){
   else{p.per100={};for(const k in p.n)p.per100[k]=p.n[k]*100/g;/* first time grams set on an unknown-size food: keep its values, record grams */}
   p.g=g;drawMD();
 }
-function addFat(){
-  const f=FATS[$('mdFat').value],q=parseFloat($('mdFatAmt').value);if(!f)return;
-  const n={};for(const k in f[2])n[k]=f[2][k]*q;
-  MD.parts.push({name:f[0]+' (cooking)',g:f[1]*q,n,per100:Object.fromEntries(Object.entries(f[2]).map(([k,v])=>[k,v/f[1]*100]))});drawMD();
-}
+
 async function addPart(){
   const t=$('mdAdd').value.trim();if(!t){toast('Type a food first');return;}
   const b=$('mdAddBtn');b.disabled=true;b.innerHTML='<span class="spin"></span>';
@@ -1537,7 +1573,7 @@ function handlePhoto(file){
     cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);
     pendingImg=cv.toDataURL('image/jpeg',0.75);
     if(!$('view-diet').classList.contains('active'))show('diet');
-    openSheet('Analyze meal','<img class="preview" src="'+pendingImg+'"><div class="field"><label class="f">Anything the photo can\'t show? (optional)</label><input id="mealHint" placeholder="e.g. fried in ghee, 200 g chicken, oat milk"></div>'+
+    openSheet('Analyze meal','<img class="preview" src="'+pendingImg+'"><div class="field"><label class="f">Anything the photo can\'t show? (optional)</label><input id="mealHint" placeholder="e.g. 200 g chicken, oat milk"></div>'+
       (online()?'<button class="btn btn-primary" id="anBtn" onclick="analyze(true)">Estimate nutrients</button><div id="estBox"></div>':
        '<div class="okline">You’re offline. Save the photo and it gets analyzed and logged automatically as soon as you’re back online.</div><button class="btn btn-primary" onclick="queuePhoto()">Save for later</button>'));
   };
