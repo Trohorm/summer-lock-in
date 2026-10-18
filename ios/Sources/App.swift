@@ -48,12 +48,29 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     }
     /// Returns true when an offline copy was available and is now showing.
     @discardableResult private func showOfflineCopy() -> Bool {
-        guard let html = try? String(contentsOf: cacheFile, encoding: .utf8) else { return false }
+        guard var html = try? String(contentsOf: cacheFile, encoding: .utf8), html.count > 1000 else { return false }
         watchdog?.invalidate()
         offlineCopyShown = true
         loaded = true
         retryView?.removeFromSuperview(); retryView = nil
-        webView.loadHTMLString(html, baseURL: LIVE_URL)
+        // Offline: drop the network-only script (it would block rendering while it times out);
+        // the page already runs from on-device data when the Puter SDK is missing.
+        html = html.replacingOccurrences(of: "<script src=\"https://js.puter.com/v2/\"></script>", with: "<script>window.__offlineCopy=1</script>")
+        let bytes = html.utf8.count
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.webView.stopLoading()
+            self.webView.loadHTMLString(html, baseURL: LIVE_URL)
+            // Diagnostics: if the page didn't render, say exactly what happened instead of a blank screen.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+                self?.webView.evaluateJavaScript("[document.readyState, !!document.querySelector('.hero'), (document.querySelector('.view.active')||{}).id||'none', location.href, window.__lastErr||''].join(' | ')") { res, err in
+                    let info = (res as? String) ?? ("eval error: " + (err?.localizedDescription ?? "?"))
+                    if !info.contains("| true |") || info.contains("| none |") {
+                        self?.showRetry("Offline copy (\(bytes) bytes) didn’t start: " + info)
+                    }
+                }
+            }
+        }
         return true
     }
     private func load() {
