@@ -185,7 +185,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     // MARK: Navigation — keep app domains inside, open the rest in Safari
     private func isAllowed(_ host: String) -> Bool {
-        let allowed = ["lockin-app.online", "puter.site", "puter.com", "cloudflare.com"]
+        let allowed = ["lockin-app.online", "puter.com", "cloudflare.com"]
         return allowed.contains { host == $0 || host.hasSuffix("." + $0) }
     }
 
