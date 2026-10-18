@@ -29,13 +29,41 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     private var watchdog: Timer?
     private var loaded = false
+    private var offlineCopyShown = false
+
+    // MARK: Offline copy — saved after every successful online load, opened when there is no connection.
+    private var cacheFile: URL {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("lockin-offline.html")
+    }
+    private func saveOfflineCopy() {
+        var req = URLRequest(url: LIVE_URL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)
+        req.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        URLSession.shared.dataTask(with: req) { [weak self] data, resp, _ in
+            guard let self = self, let data = data, (resp as? HTTPURLResponse)?.statusCode == 200,
+                  let html = String(data: data, encoding: .utf8), html.contains("<html") else { return }
+            try? html.write(to: self.cacheFile, atomically: true, encoding: .utf8)
+        }.resume()
+    }
+    /// Returns true when an offline copy was available and is now showing.
+    @discardableResult private func showOfflineCopy() -> Bool {
+        guard let html = try? String(contentsOf: cacheFile, encoding: .utf8) else { return false }
+        watchdog?.invalidate()
+        offlineCopyShown = true
+        loaded = true
+        retryView?.removeFromSuperview(); retryView = nil
+        webView.loadHTMLString(html, baseURL: LIVE_URL)
+        return true
+    }
     private func load() {
         loaded = false
+        offlineCopyShown = false
         webView.load(URLRequest(url: LIVE_URL, cachePolicy: .reloadRevalidatingCacheData, timeoutInterval: 20))
         watchdog?.invalidate()
         watchdog = Timer.scheduledTimer(withTimeInterval: 25, repeats: false) { [weak self] _ in
             guard let self = self, !self.loaded else { return }
-            self.showRetry("The page took too long to load.")
+            if !self.showOfflineCopy() { self.showRetry("The page took too long to load.") }
         }
     }
 
@@ -105,11 +133,11 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     // MARK: Offline retry screen
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        if webView == self.webView && !loaded { showRetry(error.localizedDescription) }
+        if webView == self.webView && !loaded && !showOfflineCopy() { showRetry(error.localizedDescription) }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        if webView == self.webView && !loaded { showRetry(error.localizedDescription) }
+        if webView == self.webView && !loaded && !showOfflineCopy() { showRetry(error.localizedDescription) }
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
@@ -120,6 +148,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         if webView == self.webView {
             loaded = true
             watchdog?.invalidate()
+            if !offlineCopyShown { saveOfflineCopy() }
             retryView?.removeFromSuperview(); retryView = nil
         }
     }
