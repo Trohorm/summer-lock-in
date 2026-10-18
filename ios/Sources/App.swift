@@ -13,6 +13,17 @@ final class NotifyBridge: NSObject, WKScriptMessageHandler {
         switch action {
         case "auth":
             center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        case "haptic":
+            let style = (body["style"] as? String) ?? "light"
+            DispatchQueue.main.async {
+                switch style {
+                case "success": UINotificationFeedbackGenerator().notificationOccurred(.success)
+                case "selection": UISelectionFeedbackGenerator().selectionChanged()
+                case "medium": UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                case "heavy": UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                default: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+            }
         case "cancel":
             center.removePendingNotificationRequests(withIdentifiers: ["rest"])
         case "notify":
@@ -52,10 +63,46 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         // No app-bound domains: they blocked the offline copy (and service workers never ran in sideloaded builds).
 
         config.userContentController.add(bridge, name: "lockin")
+        // Sign-in popups on puter.com get a dark theme so they match the app (Google/Apple pages follow dark mode themselves).
+        let darkAuth = """
+        (function(){ if (location.hostname !== 'puter.com') return;
+          if (!window.opener && !/sign-in|auth|login|signup/.test(location.pathname + location.search)) return;
+          var s = document.createElement('style');
+          s.textContent = 'html{background:#0e1013!important}body{filter:invert(.92) hue-rotate(180deg)!important;background:#fff!important;min-height:100vh}img,svg,video,canvas,picture,iframe{filter:invert(1) hue-rotate(180deg)!important}';
+          document.documentElement.appendChild(s); })();
+        """
+        config.userContentController.addUserScript(WKUserScript(source: darkAuth, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         UNUserNotificationCenter.current().delegate = self
         webView = makeWebView(config)
+        webView.scrollView.bounces = false
         view.addSubview(webView)
+        showSplash()
         load()
+    }
+
+    // MARK: Launch splash — same mark as the web splash, so the hand-off is seamless
+    private var splash: UIView?
+    private func showSplash() {
+        let v = UIView(frame: view.bounds); v.backgroundColor = bg; v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        let tile = UIView(frame: CGRect(x: 0, y: 0, width: 84, height: 84))
+        let g = CAGradientLayer(); g.frame = tile.bounds; g.cornerRadius = 26
+        g.colors = [UIColor(red: 0.43, green: 0.65, blue: 1, alpha: 1).cgColor, UIColor(red: 0.31, green: 0.49, blue: 0.97, alpha: 1).cgColor, UIColor(red: 0.48, green: 0.42, blue: 1, alpha: 1).cgColor]
+        g.startPoint = CGPoint(x: 0, y: 0); g.endPoint = CGPoint(x: 1, y: 1)
+        tile.layer.addSublayer(g)
+        tile.layer.shadowColor = UIColor(red: 0.31, green: 0.49, blue: 0.97, alpha: 1).cgColor
+        tile.layer.shadowOpacity = 0.45; tile.layer.shadowRadius = 25; tile.layer.shadowOffset = CGSize(width: 0, height: 18)
+        let icon = UIImageView(image: UIImage(systemName: "dumbbell.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 34, weight: .semibold)))
+        icon.tintColor = .white; icon.contentMode = .center; icon.frame = tile.bounds
+        tile.addSubview(icon)
+        tile.center = CGPoint(x: v.bounds.midX, y: v.bounds.midY)
+        tile.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
+        v.addSubview(tile)
+        UIView.animate(withDuration: 1.2, delay: 0, options: [.autoreverse, .repeat, .allowUserInteraction, .curveEaseInOut]) { tile.transform = CGAffineTransform(translationX: 0, y: -6) }
+        view.addSubview(v); splash = v
+    }
+    private func hideSplash() {
+        guard let v = splash else { return }; splash = nil
+        UIView.animate(withDuration: 0.35, delay: 0.15, options: [.curveEaseOut]) { v.alpha = 0 } completion: { _ in v.removeFromSuperview() }
     }
 
     private var watchdog: Timer?
@@ -167,19 +214,41 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         let osv = UIDevice.current.systemVersion.replacingOccurrences(of: ".", with: "_")
         let major = UIDevice.current.systemVersion.split(separator: ".").first.map(String.init) ?? "18"
         popup.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS \(osv) like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/\(major).0 Mobile/15E148 Safari/604.1"
+        popup.isOpaque = false
+        popup.backgroundColor = bg
+        popup.scrollView.backgroundColor = bg
         let vc = UIViewController()
         vc.view.backgroundColor = bg
+        vc.title = "Sign in to Lock In"
         popup.frame = vc.view.bounds
         popup.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         vc.view.addSubview(popup)
-        vc.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(closePopup))
+        // loading state while Puter's secure sign-in page opens
+        let spin = UIView(frame: vc.view.bounds); spin.backgroundColor = bg; spin.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        let ai = UIActivityIndicatorView(style: .large); ai.color = UIColor(red: 0.56, green: 0.72, blue: 1, alpha: 1); ai.startAnimating()
+        let lbl = UILabel(); lbl.text = "Opening secure sign-in…"; lbl.textColor = UIColor(white: 0.65, alpha: 1); lbl.font = .systemFont(ofSize: 14, weight: .medium)
+        let st = UIStackView(arrangedSubviews: [ai, lbl]); st.axis = .vertical; st.spacing = 14; st.alignment = .center
+        st.translatesAutoresizingMaskIntoConstraints = false; spin.addSubview(st)
+        NSLayoutConstraint.activate([st.centerXAnchor.constraint(equalTo: spin.centerXAnchor), st.centerYAnchor.constraint(equalTo: spin.centerYAnchor, constant: -40)])
+        vc.view.addSubview(spin); popupSpinners.append(spin)
+        vc.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closePopup))
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .formSheet
+        nav.modalPresentationStyle = .pageSheet
+        nav.overrideUserInterfaceStyle = .dark
+        let ap = UINavigationBarAppearance(); ap.configureWithOpaqueBackground(); ap.backgroundColor = UIColor(red: 0x17/255.0, green: 0x1a/255.0, blue: 0x20/255.0, alpha: 1)
+        ap.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 16, weight: .bold)]
+        nav.navigationBar.standardAppearance = ap; nav.navigationBar.scrollEdgeAppearance = ap; nav.navigationBar.tintColor = UIColor(red: 0.56, green: 0.72, blue: 1, alpha: 1)
         var top: UIViewController = self
         while let p = top.presentedViewController { top = p }
         top.present(nav, animated: true)
         if popupNav == nil { popupNav = nav }
         return popup
+    }
+
+    private var popupSpinners: [UIView] = []
+    private func hidePopupSpinner() {
+        let list = popupSpinners; popupSpinners = []
+        for v in list { UIView.animate(withDuration: 0.25) { v.alpha = 0 } completion: { _ in v.removeFromSuperview() } }
     }
 
     @objc private func closePopup() { popupNav?.dismiss(animated: true); popupNav = nil }
@@ -199,7 +268,9 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if webView != self.webView { hidePopupSpinner() }
         if webView == self.webView {
+            hideSplash()
             loaded = true
             watchdog?.invalidate()
             if !offlineCopyShown { saveOfflineCopy() }
@@ -208,6 +279,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     }
 
     private func showRetry(_ detail: String = "") {
+        hideSplash()
         guard retryView == nil else { return }
         let v = UIView(frame: view.bounds)
         v.backgroundColor = bg
