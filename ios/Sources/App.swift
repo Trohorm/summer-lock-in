@@ -18,7 +18,9 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.websiteDataStore = .default()
-        if #available(iOS 14.0, *) { config.limitsNavigationsToAppBoundDomains = true }
+        // Domains stay declared in WKAppBoundDomains (needed for the offline service worker), but navigation is not
+        // locked to them: iOS refused the page load with "navigate away from an app-bound domain" when locked.
+        if #available(iOS 14.0, *) { config.limitsNavigationsToAppBoundDomains = false }
 
         webView = makeWebView(config)
         view.addSubview(webView)
@@ -95,7 +97,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     // MARK: Offline retry screen
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        if webView == self.webView { showRetry(error.localizedDescription) }
+        if webView == self.webView && !loaded { showRetry(error.localizedDescription) }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
