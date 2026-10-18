@@ -9,6 +9,16 @@ every macro, micronutrient and anti-nutrient from a meal photo, barcode or descr
   rest-timer notifications and haptics.
 - **SideStore / AltStore source:** https://ipa.lockin-app.online (latest IPA: `/latest`).
 
+## Friends (Cloudflare D1)
+`web/_worker.js` serves `/api/*` for friends: profiles and photos, invites (`/i/<code>` links with
+link previews, QR codes), requests, per-friend privacy, the activity feed, reactions/nudges and shared
+splits (`/s/<code>`). Sign-in is the Puter token, checked server-side with Puter; each friend only ever
+receives the categories you allow them (defaults in Setup, overrides per friend).
+
+It needs one Cloudflare D1 database bound to the Pages project as **`DB`**
+(Workers & Pages → lockin-app → Settings → Bindings → D1). Tables create themselves on first use.
+Without the binding the app works normally and the Friends tab says it's being set up.
+
 ## Install (SideStore)
 1. SideStore → Sources → **Add Source** → `https://ipa.lockin-app.online`
 2. Install **Lock In** from the source. Updates show up there automatically.

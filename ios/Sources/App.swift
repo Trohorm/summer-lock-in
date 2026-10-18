@@ -1,12 +1,34 @@
 import UIKit
 import WebKit
 import UserNotifications
+import LinkPresentation
 
 let LIVE_URL = URL(string: "https://web.lockin-app.online")!
+
+// MARK: - Share sheet item (AirDrop gets the bare link; chat apps get the message + link)
+final class ShareItem: NSObject, UIActivityItemSource {
+    let url: URL
+    let text: String?
+    init(url: URL, text: String?) { self.url = url; self.text = text }
+    func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any { url }
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
+        guard let type = activityType, let text = text, type != .airDrop, type != .copyToPasteboard else { return url }
+        return text + "\n" + url.absoluteString
+    }
+    func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String { "Lock In" }
+    func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController) -> LPLinkMetadata? {
+        let md = LPLinkMetadata()
+        md.originalURL = url
+        md.url = url
+        md.title = text ?? "Lock In"
+        return md
+    }
+}
 
 // MARK: - Main view controller (thin shell around the live site)
 /// Bridge for the page: window.webkit.messageHandlers.lockin.postMessage({action:'notify'|'cancel'|'auth', ...})
 final class NotifyBridge: NSObject, WKScriptMessageHandler {
+    weak var presenter: UIViewController?
     func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let action = body["action"] as? String else { return }
         let center = UNUserNotificationCenter.current()
@@ -23,6 +45,20 @@ final class NotifyBridge: NSObject, WKScriptMessageHandler {
                 case "heavy": UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                 default: UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
+            }
+        case "share":
+            guard let s = body["url"] as? String, let url = URL(string: s) else { return }
+            let text = body["text"] as? String
+            DispatchQueue.main.async { [weak self] in
+                guard let base = self?.presenter else { return }
+                var top: UIViewController = base
+                while let p = top.presentedViewController { top = p }
+                let ac = UIActivityViewController(activityItems: [ShareItem(url: url, text: text)], applicationActivities: nil)
+                if let pop = ac.popoverPresentationController {
+                    pop.sourceView = top.view
+                    pop.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.maxY - 90, width: 1, height: 1)
+                }
+                top.present(ac, animated: true)
             }
         case "cancel":
             center.removePendingNotificationRequests(withIdentifiers: ["rest"])
@@ -63,6 +99,9 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         // No app-bound domains: they blocked the offline copy (and service workers never ran in sideloaded builds).
 
         config.userContentController.add(bridge, name: "lockin")
+        bridge.presenter = self
+        let native = "window.__lockinNative={share:true,links:true,version:'" + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") + "'};"
+        config.userContentController.addUserScript(WKUserScript(source: native, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         // Sign-in popups on puter.com get a dark theme so they match the app (Google/Apple pages follow dark mode themselves).
         let darkAuth = """
         (function(){ if (location.hostname !== 'puter.com') return;
@@ -103,6 +142,27 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     private func hideSplash() {
         guard let v = splash else { return }; splash = nil
         UIView.animate(withDuration: 0.35, delay: 0.15, options: [.curveEaseOut]) { v.alpha = 0 } completion: { _ in v.removeFromSuperview() }
+    }
+
+    // MARK: Deep links — lockin://add/<code> (friend invite) and lockin://split/<code> (shared split)
+    var pendingLink: URL?
+    private static func fragment(for url: URL) -> String? {
+        guard url.scheme?.lowercased() == "lockin", let kind = url.host?.lowercased(), kind == "add" || kind == "split" else { return nil }
+        let code = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard (4...20).contains(code.count), code.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" }), code.allSatisfy({ $0.isASCII }) else { return nil }
+        return "#" + kind + "=" + code
+    }
+    func openDeepLink(_ url: URL) {
+        guard let frag = Self.fragment(for: url) else { return }
+        if loaded { webView.evaluateJavaScript("location.hash='" + frag + "'", completionHandler: nil) }
+        else { pendingLink = url }
+    }
+    private func applyPendingLink() {
+        guard let u = pendingLink, let frag = Self.fragment(for: u) else { return }
+        pendingLink = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            self?.webView.evaluateJavaScript("location.hash='" + frag + "'", completionHandler: nil)
+        }
     }
 
     private var watchdog: Timer?
@@ -275,6 +335,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
             watchdog?.invalidate()
             if !offlineCopyShown { saveOfflineCopy() }
             retryView?.removeFromSuperview(); retryView = nil
+            applyPendingLink()
         }
     }
 
@@ -319,6 +380,14 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         load()
     }
 
+    // MARK: Camera (scan a friend's QR code) — granted for Lock In's own pages; iOS still asks once for the app
+    @available(iOS 15.0, *)
+    func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo,
+                 type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) {
+        let h = origin.host.lowercased()
+        decisionHandler(h == "lockin-app.online" || h.hasSuffix(".lockin-app.online") ? .grant : .prompt)
+    }
+
     // MARK: alert / confirm / prompt
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
                  initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
@@ -354,9 +423,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = ViewController()
+        let vc = ViewController()
+        vc.pendingLink = connectionOptions.urlContexts.first?.url
+        window.rootViewController = vc
         window.makeKeyAndVisible()
         self.window = window
+    }
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url, let vc = window?.rootViewController as? ViewController else { return }
+        vc.openDeepLink(url)
     }
 }
 
