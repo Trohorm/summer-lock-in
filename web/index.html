@@ -3626,7 +3626,7 @@ function renderGyms(){
 function renameGym(i,v){if(v.trim()){S.gyms[i].name=v.trim();save();toast('Renamed');}}
 function addGym(name){name=(name||'').trim();if(!name)return null;const g={id:uid('g'),name};S.gyms.push(g);save();return g;}
 function delGym(i){const g=S.gyms[i];const n=Object.values(S.workouts).filter(w=>w.gym===g.id).length;if(!confirm('Remove '+g.name+'?'+(n?' Its '+n+' logged workouts stay in your history.':'')))return;S.gyms.splice(i,1);if(S.activeGym===g.id)S.activeGym=S.gyms[0].id;save();renderGyms();}
-const kcalOn=()=>!!(S&&S.settings.kcal);
+const kcalOn=()=>!!S&&S.settings.kcal!==false;
 const kcalOf=n=>4*(+(n&&n.protein)||0)+4*(+(n&&n.carbs)||0)+9*(+(n&&n.fat)||0);
 function kcalMacroGoal(){const T=S.targets;return Math.round(4*(T.protein||0)+4*(T.carbs||0)+9*(T.fat||0));}
 function kcalGoal(){return S.targets.kcal>0?S.targets.kcal:kcalMacroGoal();}
