@@ -893,6 +893,10 @@ details.rules .fb{display:grid;gap:10px}
 .qrav{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;padding:4px;background:#fff;display:grid;box-shadow:0 3px 12px rgba(20,30,80,.25)}
 .qrav .av{box-shadow:none}
 .qrwho{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;font-size:15px}
+.qrtime{height:5px;margin:14px 22px 0;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.qrtime i{display:block;height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,#3ecf8e,#6ea6ff 60%,#7b6cff);transform-origin:left center;transform:scaleX(1)}
+@keyframes qrdrain{0%{transform:scaleX(1)}85%{background:linear-gradient(90deg,#3ecf8e,#6ea6ff 60%,#7b6cff)}100%{transform:scaleX(0);background:#ef6a56}}
+.qrsecs{text-align:center;margin-top:6px;font-variant-numeric:tabular-nums}
 .qrcode{margin-top:10px;display:inline-flex;align-items:center;gap:9px;border:1px dashed rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#d9e4f8;border-radius:12px;padding:9px 14px;
   font:800 18px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.16em;cursor:pointer;transition:transform .45s var(--sp-bounce),background-color .2s}
 .qrcode:active{transform:scale(.95);background:rgba(255,255,255,.08)}
@@ -3097,6 +3101,7 @@ async function eraseAll(){
   if(!confirm('Erase ALL your data (logs, splits, food, photos) from your account? This cannot be undone.')||!confirm('Really sure?'))return;
   try{await puter.kv.del(KV_KEY);for(const k in pushed)await puter.kv.del(k);}catch(e){}
   try{await puter.fs.delete(PDIR,{recursive:true});}catch(e){}
+  try{if(SOC.me)await sapi('/me','DELETE');}catch(e){}socWipe();
   try{localStorage.removeItem(cacheKey());}catch(e){}
   S=fresh();pushed={};photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
 }
@@ -3527,7 +3532,11 @@ async function declineReq(id,btn){btn.disabled=true;try{await sapi('/friends/res
 async function cancelReq(id,btn){btn.disabled=true;try{await sapi('/friends/'+id,'DELETE');removeRow(btn.closest('.req'));SOC.data.outgoing=SOC.data.outgoing.filter(x=>x.id!==id);SOC.v++;socSave();}catch(e){btn.disabled=false;toast(e.message,'err');}}
 
 /* ---------- add friends: my code (QR), scan, username ---------- */
-function inviteURL(){const c=SOC.me&&SOC.me.invite;return c?location.origin+'/i/'+c:'';}
+/* invite links last 24 h and only send a request; one is made ahead of time so the share sheet opens instantly */
+async function inviteLink(){
+  if(SOC.link&&SOC.link.exp-Date.now()>2*3600e3)return SOC.link.url;
+  const r=await sapi('/invite/link','POST',{});SOC.link={url:location.origin+'/i/'+r.code,exp:r.exp};return SOC.link.url;
+}
 async function nativeShare(url,text){
   if(window.__lockinNative&&window.__lockinNative.share&&nat({action:'share',url,text}))return;
   if(navigator.share){try{await navigator.share({title:'Lock In',text,url});return;}catch(e){if(e&&e.name==='AbortError')return;}}
@@ -3535,8 +3544,9 @@ async function nativeShare(url,text){
 }
 async function copyText(t,btn){try{await navigator.clipboard.writeText(t);toast('Link copied — paste it anywhere','ok');if(btn)haptic('success');}catch(e){prompt('Copy this link:',t);}}
 async function shareInvite(btn){
-  if(!SOC.me){await socEnsureMe();if(!SOC.me){toast(socTok()?'Couldn’t reach the server':'Sign in to invite friends','err');return;}}
-  await nativeShare(inviteURL(),'Add me on Lock In 💪 Let’s keep each other locked in.');
+  if(!socTok()){toast('Sign in to invite friends','err');return;}
+  let url;try{url=await inviteLink();}catch(e){toast(e.message||'Couldn’t make a link','err');return;}
+  await nativeShare(url,'Add me on Lock In 💪 (this link works for 24 hours)');
 }
 function openAdd(tab){
   if(tab)SOC.addTab=tab;
@@ -3544,10 +3554,11 @@ function openAdd(tab){
   openSheet('Add friends','<div id="addBody"></div>',{tall:true,top});
   addTab(SOC.addTab,true);
   if(!SOC.me)socEnsureMe().then(()=>{if(SOC.addTab==='code'&&$('addBody'))addTab('code',true);});
+  if(socTok())inviteLink().catch(()=>{});
 }
 function moveSeg(seg){const on=seg.querySelector('button.on'),p=seg.querySelector('.segpill');if(!on||!p)return;p.style.width=on.offsetWidth+'px';p.style.translate=on.offsetLeft+'px 0';}
 function addTab(t,firstOpen){
-  const prev=SOC.addTab;SOC.addTab=t;stopScanner();
+  const prev=SOC.addTab;SOC.addTab=t;stopScanner();qrStop();
   const seg=$('addSeg');if(seg){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));requestAnimationFrame(()=>moveSeg(seg));}
   const box=$('addBody');if(!box)return;
   box.innerHTML=t==='code'?addCodeHTML():t==='scan'?addScanHTML():addFindHTML();
@@ -3559,23 +3570,40 @@ function addTab(t,firstOpen){
 function addCodeHTML(){
   const me=SOC.me;
   if(!me)return socTok()?'<div class="qrcard"><div class="qrbox"><div class="qrskel"></div></div></div>':frNote('🔐','Sign in first','Your invite code comes with your Lock In account.');
-  const c=String(me.invite||'');
   return '<div class="qrcard"><div class="qrbox" id="qrBox"><div class="qrskel"></div></div>'+
-    '<div class="qrwho">'+avHTML(socMe(),28)+'<b>'+esc(me.name||me.handle)+'</b><span class="tiny">@'+esc(me.handle)+'</span></div>'+
-    '<button class="qrcode" onclick="copyText(inviteURL(),this)">'+esc(c.slice(0,4)+'-'+c.slice(4))+IC.copy+'</button></div>'+
-    '<button class="btn btn-primary socbtn" style="margin-top:16px" onclick="shareInvite(this)">'+IC.share+' Share invite link</button>'+
-    '<p class="tiny" style="text-align:center;margin-top:10px">Send it with AirDrop, Messages or WhatsApp — whoever opens it becomes your friend. Friends can also scan this code from their Lock In.</p>'+
-    '<p class="tiny" style="text-align:center;margin-top:8px"><span class="linkbtn" onclick="resetInvite()">Make a new link</span> · old links stop working</p>';
+    '<div class="qrtime"><i id="qrBar"></i></div><div class="tiny qrsecs" id="qrSecs">Making your code…</div>'+
+    '<div class="qrwho">'+avHTML(socMe(),28)+'<b>'+esc(me.name||me.handle)+'</b><span class="tiny">@'+esc(me.handle)+'</span></div></div>'+
+    '<p class="tiny" style="text-align:center;margin-top:10px">Let a friend scan this from <b>Add friends → Scan</b> in their Lock In — you’re friends instantly. The code changes every 30 seconds, so a photo of it is useless.</p>'+
+    '<button class="btn btn-ghost socbtn" style="width:100%;margin-top:16px" onclick="shareInvite(this)">'+IC.share+' Share an invite link instead</button>'+
+    '<p class="tiny" style="text-align:center;margin-top:8px">Links work for 24 hours and you accept each request yourself.</p>';
 }
+/* live QR: a fresh one-time code from the server every 30 s (the old one stops working) */
+let qrTimer=0,qrUntil=0,qrBusy=false;
+function qrStop(){clearInterval(qrTimer);qrTimer=0;}
+function qrAlive(){return !!$('qrBox')&&SOC.addTab==='code'&&$('sheet').classList.contains('show');}
 async function drawQR(){
-  const box=$('qrBox'),url=inviteURL();if(!box||!url)return;
-  try{await loadZXing();}catch(e){box.innerHTML='<p class="tiny" style="color:#555;padding:20px">The QR code needs internet the first time.</p>';return;}
-  const b=$('qrBox');if(!b||SOC.addTab!=='code')return;
-  try{b.innerHTML=qrSVG(url)+'<span class="qrav">'+avHTML(socMe(),Math.round(b.clientWidth*0.2)||52)+'</span>';}catch(e){b.innerHTML='<p class="tiny">Couldn’t draw the code.</p>';return;}
-  const s=b.querySelector('svg');
-  if(s&&!RM){anim(s,[{clipPath:'circle(0% at 50% 50%)',opacity:.3},{clipPath:'circle(72% at 50% 50%)',opacity:1}],{duration:950,easing:EASE_OUT});
-    anim(b.querySelector('.qrav'),[{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:650,delay:300,easing:SPR_BOUNCE,fill:'backwards'});}
+  if(!$('qrBox')||qrBusy)return;qrBusy=true;
+  try{
+    let r;try{[r]=await Promise.all([sapi('/invite/qr','POST',{}),loadZXing()]);}
+    catch(e){const b=$('qrBox');if(b)b.innerHTML='<p class="tiny" style="color:#555;padding:24px;text-align:center">'+esc(e.message||'Couldn’t make your code')+'<br><br><span class="linkbtn" onclick="drawQR()">Try again</span></p>';return;}
+    const b=$('qrBox');if(!b||!qrAlive())return;
+    const first=!b.querySelector('svg');
+    try{b.innerHTML=qrSVG(location.origin+'/q/'+r.code)+'<span class="qrav">'+avHTML(socMe(),Math.round(b.clientWidth*0.2)||52)+'</span>';}catch(e){b.innerHTML='<p class="tiny">Couldn’t draw the code.</p>';return;}
+    qrUntil=Date.now()+(r.show||30)*1000;
+    const bar=$('qrBar');if(bar){bar.style.animation='none';void bar.offsetWidth;bar.style.animation='qrdrain '+(r.show||30)+'s linear forwards';}
+    const s=b.querySelector('svg');
+    if(s&&!RM){anim(s,first?[{clipPath:'circle(0% at 50% 50%)',opacity:.3},{clipPath:'circle(72% at 50% 50%)',opacity:1}]:[{opacity:.15,filter:'blur(3px)',transform:'scale(.96)'},{opacity:1,filter:'blur(0)',transform:'none'}],{duration:first?950:520,easing:EASE_OUT});
+      if(first)anim(b.querySelector('.qrav'),[{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:650,delay:300,easing:SPR_BOUNCE,fill:'backwards'});}
+    qrStop();qrTimer=setInterval(qrTick,250);qrTick();
+  }finally{qrBusy=false;}
 }
+function qrTick(){
+  if(!qrAlive()){qrStop();return;}
+  const left=Math.max(0,Math.ceil((qrUntil-Date.now())/1000)),el=$('qrSecs');
+  if(el)el.textContent=left?'New code in '+left+' s':'Refreshing…';
+  if(!left&&!document.hidden){qrStop();drawQR();}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&qrAlive()&&Date.now()>=qrUntil)drawQR();});
 /* QR as one SVG path: rounded "liquid" modules, custom finder eyes, space in the middle for the photo */
 function qrSVG(text){
   const hints=new Map();hints.set(ZXing.EncodeHintType.MARGIN,0);
@@ -3586,10 +3614,6 @@ function qrSVG(text){
   const fin=(x,y)=>'<rect x="'+(x+.5)+'" y="'+(y+.5)+'" width="6" height="6" rx="1.9" fill="none" stroke="url(#qrg)" stroke-width="1"/><rect x="'+(x+2)+'" y="'+(y+2)+'" width="3" height="3" rx=".95" fill="url(#qrg)"/>';
   return '<svg viewBox="-1.5 -1.5 '+(n+3)+' '+(n+3)+'" class="qrsvg" role="img" aria-label="Invite QR code"><defs><linearGradient id="qrg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#101a3d"/><stop offset=".55" stop-color="#1b2c78"/><stop offset="1" stop-color="#36207f"/></linearGradient></defs>'+
     '<path d="'+d+'" fill="url(#qrg)" stroke="url(#qrg)" stroke-width=".24" stroke-linejoin="round"/>'+fin(0,0)+fin(n-7,0)+fin(0,n-7)+'</svg>';
-}
-async function resetInvite(){
-  if(!confirm('Make a new invite link? Your old link and QR code will stop working.'))return;
-  try{const r=await sapi('/me/invite','POST',{});SOC.me=r;if(SOC.data)SOC.data.me=r;socSave();addTab('code',true);toast('New invite link ready','ok');}catch(e){toast(e.message,'err');}
 }
 function addScanHTML(){
   return '<div class="scanbox" id="scanBox"><video id="qrVid" playsinline muted></video><div class="sframe"><i></i><i></i><i></i><i></i></div><div class="slaser"></div></div>'+
@@ -3608,14 +3632,32 @@ async function startQRScan(){
   }catch(e){if(msg())msg().textContent='Camera not available — allow camera access, or scan from a photo.';}
 }
 let qrAt=0;
-function parseInviteText(t){t=String(t||'').trim();const m=/\/i\/([A-Za-z0-9-]{6,12})(?:[/?#]|$)/.exec(t)||/#add=([A-Za-z0-9-]{6,12})/.exec(t)||/^lockin:\/\/add\/([A-Za-z0-9-]{6,12})/i.exec(t)||/^([A-Za-z0-9]{4}-?[A-Za-z0-9]{4})$/.exec(t);return m?m[1].replace(/-/g,'').toUpperCase():'';}
+function parseQR(t){const m=/\/q\/([A-Za-z0-9]{8,16})(?:[/?#]|$)/.exec(String(t||'').trim());return m?m[1].toUpperCase():'';}
+function parseLink(t){const m=/\/i\/([A-Za-z0-9]{8,16})(?:[/?#]|$)/.exec(String(t||'').trim());return m?m[1].toUpperCase():'';}
 function onQRText(t){
   if(Date.now()-qrAt<2500)return;qrAt=Date.now();
-  const c=parseInviteText(t);if(!c){toast('That isn’t a Lock In code','err');return;}
+  const q=parseQR(t),l=q?'':parseLink(t);
+  if(!q&&!l){toast('That isn’t a Lock In code','err');return;}
   stopScanner();haptic('success');
   const sb=$('scanBox');if(sb){const r=sb.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,'#6ea6ff',true);}
   const box=$('addBody');if(box)box.innerHTML='<div id="frFound"></div>';
-  previewInvite(c);
+  if(q)addByQR(q);else previewInvite(l);
+}
+/* scanning a friend's live code in person: friends straight away, no request */
+async function addByQR(code){
+  if(!$('sheet').classList.contains('show')||!$('frFound'))openSheet('Add friend','<div id="frFound"></div>');
+  $('frFound').innerHTML=foundSkel();
+  try{
+    const r=await sapi('/friends/add','POST',{qr:code});
+    const box=$('frFound');haptic('success');celebrate();
+    if(box){box.innerHTML='<div class="found">'+avHTML(r.user,88,'today')+'<div class="fname">'+esc(r.user.name)+'</div><div class="tiny">@'+esc(r.user.handle)+'</div><div class="okline" style="margin-top:16px;text-align:center">'+(r.state==='friend'?'You’re friends now 🎉':'Request sent')+'</div></div>';
+      const a=box.querySelector('.avr');if(a)anim(a,[{transform:'scale(.3)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:650,easing:SPR_BOUNCE});}
+    await socRefresh(true);snapSoon(800);
+    setTimeout(()=>{closeSheet();if(curView!=='friends')setTimeout(()=>show('friends'),260);},1600);
+  }catch(e){
+    const box=$('frFound');if(!box)return;
+    box.innerHTML=frNote(e.code==='qr_expired'?'⏱️':'⚠️',e.code==='qr_expired'?'That code just changed':'Couldn’t add',esc(e.message)+(SOC.addTab==='scan'?'<br><br><button class="btn btn-primary btn-sm" onclick="addTab(\'scan\',true)">Scan again</button>':''));
+  }
 }
 async function scanQRImage(file){
   if(!file)return;const msg=$('qrMsg');if(msg)msg.textContent='Reading the code…';
@@ -3623,16 +3665,14 @@ async function scanQRImage(file){
   catch(e){if(msg)msg.textContent='No Lock In code found in that photo — get the whole code in the frame and try again.';}
 }
 function addFindHTML(){
-  return '<div class="sfield">'+IC.at+'<input id="frQ" type="search" placeholder="Username or invite code" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search" onkeydown="if(event.key===\'Enter\'){event.preventDefault();findFriend()}"></div>'+
+  return '<div class="sfield">'+IC.at+'<input id="frQ" type="search" placeholder="Their username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search" onkeydown="if(event.key===\'Enter\'){event.preventDefault();findFriend()}"></div>'+
     '<button class="btn btn-primary" style="margin-top:10px" onclick="findFriend()">Find</button><div id="frFound"></div>';
 }
 function foundSkel(){return '<div class="found"><div class="skelring" style="width:84px;height:84px;margin:0 auto"></div><div class="skel" style="width:46%;margin:16px auto 0"></div><div class="skel" style="width:30%;margin:10px auto 0"></div></div>';}
 async function findFriend(){
   const q=$('frQ'),v=(q&&q.value||'').trim();if(!v){if(q)q.focus();return;}
   const box=$('frFound');if(!box)return;box.innerHTML=foundSkel();if(q)q.blur();
-  const code=parseInviteText(v);
   try{
-    if(code&&/\d/.test(code)){try{const r=await sapi('/invite/'+code);showFound(r.user,'i',code);return;}catch(e){if(e.status!==404)throw e;}}
     const r=await sapi('/lookup?h='+encodeURIComponent(v.replace(/^@/,'')));showFound(r.user,'h',r.user.handle,r.state);
   }catch(e){if($('frFound'))$('frFound').innerHTML='<p class="muted" style="margin-top:16px;text-align:center">'+esc(e.message)+'</p>';}
 }
@@ -3642,7 +3682,7 @@ function showFound(u,kind,val,state){
   const safe=/^[A-Za-z0-9_.]{1,24}$/.test(val)?val:'';
   const btn=state==='friend'?'<button class="btn btn-ghost" disabled>Already friends ✓</button>':state==='self'?'<button class="btn btn-ghost" disabled>That’s you 🙂</button>'
     :state==='out'?'<button class="btn btn-ghost" disabled>Request sent — waiting</button>'
-    :'<button class="btn btn-primary socbtn" onclick="doAdd(\''+kind+'\',\''+safe+'\',this)">'+IC.add+' '+(kind==='i'||state==='in'?'Add friend':'Send friend request')+'</button>';
+    :'<button class="btn btn-primary socbtn" onclick="doAdd(\''+kind+'\',\''+safe+'\',this)">'+IC.add+' '+(state==='in'?'Accept & add':'Send friend request')+'</button>'+(state==='in'?'':'<p class="tiny" style="margin-top:10px">'+esc(first(u.name))+' gets a request and has to accept it.</p>');
   box.innerHTML='<div class="found">'+avHTML(u,88,'wk')+'<div class="fname">'+esc(u.name)+'</div><div class="tiny">@'+esc(u.handle)+'</div>'+btn+'</div>';
   const a=box.querySelector('.avr');if(a)anim(a,[{transform:'scale(.3)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:650,easing:SPR_BOUNCE});
 }
@@ -3650,17 +3690,17 @@ async function previewInvite(code){
   const sh=$('sheet');
   if(!sh.classList.contains('show')||!$('frFound'))openSheet('Add friend','<div id="frFound"></div>');
   $('frFound').innerHTML=foundSkel();
-  try{const r=await sapi('/invite/'+encodeURIComponent(code));showFound(r.user,'i',code);}
-  catch(e){if($('frFound'))$('frFound').innerHTML=e.code==='signin'?frNote('🔐','Sign in first','Then open the invite again.'):frNote('🔗','That invite doesn’t work',esc(e.message));}
+  try{const r=await sapi('/invite/'+encodeURIComponent(code));showFound(r.user,'l',code);}
+  catch(e){if($('frFound'))$('frFound').innerHTML=e.code==='signin'?frNote('🔐','Sign in first','Then open the invite again.'):frNote('⏱️','That invite doesn’t work',esc(e.message));}
 }
 async function doAdd(kind,val,btn){
   if(!val)return;
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Adding…';}
   try{
-    const r=await sapi('/friends/add','POST',kind==='i'?{invite:val}:{handle:val});
+    const r=await sapi('/friends/add','POST',kind==='l'?{link:val}:{handle:val});
     haptic('success');
     if(r.state==='friend'){celebrate();toast('You and '+r.user.name+' are now friends','ok');if(btn){btn.disabled=false;btnOk(btn,'Friends!');}}
-    else{toast('Request sent to '+r.user.name,'ok');if(btn){btn.disabled=false;btnOk(btn,'Request sent');}}
+    else{toast('Request sent — '+first(r.user.name)+' needs to accept','ok');if(btn){btn.disabled=false;btnOk(btn,'Request sent');}}
     await socRefresh(true);snapSoon(800);
     setTimeout(()=>{if(r.state==='friend'){closeSheet();if(curView!=='friends')setTimeout(()=>show('friends'),260);}},1300);
   }catch(e){if(btn){btn.disabled=false;btn.textContent='Try again';}toast(e.message||'Couldn’t add','err');}
@@ -3859,8 +3899,15 @@ function renderSocialSettings(){
     '<button class="btn btn-ghost btn-sm" onclick="saveHandle(this)"'+(ok?'':' disabled')+'>Save</button></div></div>'+
     '<label class="f" style="margin:14px 0 2px">Friends can see</label>'+
     CATS.map(c=>'<label class="checkline permrow"><span class="grow"><b>'+CATINFO[c][0]+'</b><small>'+CATINFO[c][1]+'</small></span><input type="checkbox" switch '+(def[c]?'checked ':'')+(ok?'':'disabled ')+'onchange="setDefault(\''+c+'\',this.checked,this)"></label>').join('')+
-    '<p class="tiny" style="margin-top:10px">'+(ok?'These are your defaults. To change it for one person, open Friends and tap their name. Progress photos are never shared.':'Connect to the internet to set up your friends profile.')+'</p>';
+    '<p class="tiny" style="margin-top:10px">'+(ok?'These are your defaults. To change it for one person, open Friends and tap their name. Progress photos are never shared.':'Connect to the internet to set up your friends profile.')+'</p>'+
+    (ok?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:12px" onclick="deleteSocial(this)">Delete friends profile</button><p class="tiny" style="margin-top:6px">Removes your friends, requests and everything they could see, and frees your username. Your own training data stays.</p>':'');
 }
+async function deleteSocial(btn){
+  if(!confirm('Delete your friends profile? All friends and requests are removed and @'+(SOC.me&&SOC.me.handle)+' becomes free for anyone.'))return;
+  if(btn)btn.disabled=true;
+  try{await sapi('/me','DELETE');socWipe();toast('Friends profile deleted','ok');}catch(e){if(btn)btn.disabled=false;toast(e.message,'err');}
+}
+function socWipe(){SOC.data=null;SOC.me=null;SOC.myAv='';SOC.link=null;SOC.sent={};SOC.prof={};SOC.err='';SOC.v++;try{localStorage.removeItem(socKey());}catch(e){}socBadge();heroAvatar();renderSocialSettings();}
 async function setDefault(c,val,el){
   const me=SOC.me;if(!me)return;const def=Object.assign({},CATDEF,me.defaults||{});def[c]=val;me.defaults=def;haptic('selection');
   try{const r=await sapi('/me','PUT',{defaults:def});SOC.me=r;if(SOC.data)SOC.data.me=r;socSave();snapSoon(1500);}
@@ -3927,6 +3974,7 @@ function socAvatarUpdated(){SOC.v++;heroAvatar();renderSocialSettings();if(curVi
 function deepLink(){
   const h=location.hash||'';let m;
   if((m=/^#add=([A-Za-z0-9-]{4,20})$/.exec(h))){clearHash();const c=m[1].replace(/-/g,'').toUpperCase();setTimeout(()=>{show('friends');setTimeout(()=>previewInvite(c),250);},350);return true;}
+  if((m=/^#qr=([A-Za-z0-9]{8,16})$/.exec(h))){clearHash();const c=m[1].toUpperCase();setTimeout(()=>{show('friends');setTimeout(()=>addByQR(c),250);},350);return true;}
   if((m=/^#split=([A-Za-z0-9-]{4,20})$/.exec(h))){clearHash();const c=m[1];setTimeout(()=>previewShare(c),350);return true;}
   return false;
 }

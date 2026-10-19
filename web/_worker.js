@@ -11,7 +11,7 @@ export default {
     const url = new URL(request.url);
     if (url.hostname.startsWith('ipa.')) return ipaSource(url);
     if (url.pathname.startsWith('/api/')) return api(request, env, ctx, url);
-    const lm = /^\/(i|s)\/([A-Za-z0-9-]{4,20})\/?$/.exec(url.pathname);
+    const lm = /^\/(i|s|q)\/([A-Za-z0-9-]{4,20})\/?$/.exec(url.pathname);
     if (lm && request.method === 'GET') return landing(env, url, lm[1], lm[2]);
     const res = await env.ASSETS.fetch(request);
     if ((res.headers.get('content-type') || '').includes('text/html') || url.pathname.endsWith('sw.js')) {
@@ -38,7 +38,7 @@ const CATS = ['gym', 'lifts', 'split', 'diet', 'nutr', 'body'];
 const DEFAULTS = { gym: true, lifts: true, split: true, diet: true, nutr: false, body: false };
 const EMOJI = ['💪', '🔥', '👏', '🫡', '🤯', '👋'];
 const ABC = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
-const HOUR = 3600e3, DAY = 864e5;
+const HOUR = 3600e3, DAY = 864e5, LINK_TTL = DAY, QR_TTL = 40e3; // QR shown for 30 s, accepted for 40 s (scan delay)
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, puid TEXT NOT NULL UNIQUE, handle TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '',
@@ -50,6 +50,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS reacts(owner TEXT NOT NULL, item TEXT NOT NULL, uid TEXT NOT NULL, emoji TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY(owner,item,uid))`,
   `CREATE INDEX IF NOT EXISTS reacts_owner_ts ON reacts(owner,ts)`,
   `CREATE TABLE IF NOT EXISTS tokens(h TEXT PRIMARY KEY, id TEXT NOT NULL, exp INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS invites(code TEXT PRIMARY KEY, uid TEXT NOT NULL, kind TEXT NOT NULL, exp INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS invites_uid ON invites(uid)`,
   `CREATE TABLE IF NOT EXISTS shares(code TEXT PRIMARY KEY, uid TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, created INTEGER NOT NULL)`
 ];
 let schemaReady = null;
@@ -63,7 +65,7 @@ const J = (o, status) => new Response(JSON.stringify(o), { status: status || 200
 const err = (status, code, message) => J({ error: code, message }, status);
 const parse = s => { try { return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
-const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
 function code(n) { const a = new Uint8Array(n); crypto.getRandomValues(a); let s = ''; for (const x of a) s += ABC[x % ABC.length]; return s; }
 const pub = u => ({ id: u.id, handle: u.handle, name: u.name || u.handle, av: u.av || 0 });
 function cleanPerms(p) { const o = {}; if (p && typeof p === 'object') for (const c of CATS) if (typeof p[c] === 'boolean') o[c] = p[c]; return o; }
@@ -175,8 +177,8 @@ async function api(req, env, ctx, url) {
     /* public: avatars, invite previews, shared splits */
     if (M === 'GET' && (m = /^\/api\/avatar\/([a-z0-9]{8,32})$/.exec(p))) return await avatarOut(db, m[1], url);
     if (M === 'GET' && (m = /^\/api\/invite\/([A-Za-z0-9-]{4,20})$/.exec(p))) {
-      const u = await db.prepare('SELECT id,handle,name,av FROM users WHERE invite=?').bind(normCode(m[1])).first();
-      return u ? J({ user: pub(u) }) : err(404, 'invite_invalid', 'That invite doesn’t work any more — ask for a new one.');
+      const u = await db.prepare("SELECT u.id,u.handle,u.name,u.av,i.exp FROM invites i JOIN users u ON u.id=i.uid WHERE i.code=? AND i.kind='link' AND i.exp>?").bind(normCode(m[1]), Date.now()).first();
+      return u ? J({ user: pub(u), exp: u.exp }) : err(410, 'invite_expired', 'This invite has expired — links work for 24 hours. Ask for a new one.');
     }
     if (M === 'GET' && (m = /^\/api\/share\/([A-Za-z0-9-]{4,20})$/.exec(p))) {
       const s = await db.prepare('SELECT s.kind, s.data, s.created, u.id, u.handle, u.name, u.av FROM shares s JOIN users u ON u.id=s.uid WHERE s.code=?').bind(normCode(m[1])).first();
@@ -190,7 +192,20 @@ async function api(req, env, ctx, url) {
     switch (M + ' ' + p) {
       case 'GET /api/me': return J(await meOut(db, id));
       case 'PUT /api/me': return await putMe(db, id, b);
-      case 'POST /api/me/invite': await db.prepare('UPDATE users SET invite=? WHERE id=?').bind(code(8), id).run(); return J(await meOut(db, id));
+      case 'DELETE /api/me': return await deleteMe(db, id);
+      case 'POST /api/invite/link': {
+        const c = code(10), exp = Date.now() + LINK_TTL;
+        await db.batch([db.prepare('DELETE FROM invites WHERE exp<?').bind(Date.now()),
+                        db.prepare("INSERT INTO invites(code,uid,kind,exp) VALUES(?,?,'link',?)").bind(c, id, exp)]);
+        return J({ code: c, exp });
+      }
+      case 'POST /api/invite/qr': {
+        // one live QR per person: a new one replaces the last, so a photo of an old code is useless
+        const c = code(12), exp = Date.now() + QR_TTL;
+        await db.batch([db.prepare("DELETE FROM invites WHERE uid=? AND kind='qr'").bind(id),
+                        db.prepare("INSERT INTO invites(code,uid,kind,exp) VALUES(?,?,'qr',?)").bind(c, id, exp)]);
+        return J({ code: c, exp, show: 30 });
+      }
       case 'PUT /api/snap': return await putSnap(db, id, b);
       case 'GET /api/friends': return J(await friendsOut(db, id));
       case 'POST /api/friends/add': return await addFriend(db, id, b);
@@ -226,7 +241,7 @@ async function api(req, env, ctx, url) {
 async function meOut(db, id) {
   const u = await db.prepare('SELECT id,handle,name,av,invite,defaults,created,seen FROM users WHERE id=?').bind(id).first();
   if (!u) throw new HttpError(404, 'no_profile', 'Profile not found.');
-  return { id: u.id, handle: u.handle, name: u.name, av: u.av, invite: u.invite, defaults: eff(u.defaults), created: u.created, seen: u.seen };
+  return { id: u.id, handle: u.handle, name: u.name, av: u.av, defaults: eff(u.defaults), created: u.created, seen: u.seen };
 }
 async function putMe(db, id, b) {
   const sets = [], vals = [], extra = [];
@@ -331,22 +346,28 @@ async function friendsOut(db, me) {
 }
 
 async function addFriend(db, me, b) {
-  let t;
-  if (b.invite) {
-    t = await db.prepare('SELECT id,handle,name,av FROM users WHERE invite=?').bind(normCode(b.invite)).first();
-    if (!t) throw new HttpError(404, 'invite_invalid', 'That invite doesn’t work any more — ask for a new one.');
+  let t, instant = false;
+  const viaInvite = kind => db.prepare("SELECT u.id,u.handle,u.name,u.av FROM invites i JOIN users u ON u.id=i.uid WHERE i.code=? AND i.kind=? AND i.exp>?")
+    .bind(normCode(kind === 'qr' ? b.qr : b.link), kind, Date.now()).first();
+  if (b.qr) {
+    t = await viaInvite('qr');
+    if (!t) throw new HttpError(410, 'qr_expired', 'That code expired — codes change every 30 seconds. Scan it again.');
+    instant = true;
+  } else if (b.link) {
+    t = await viaInvite('link');
+    if (!t) throw new HttpError(410, 'invite_expired', 'This invite has expired — links work for 24 hours. Ask for a new one.');
   } else if (b.handle) {
     const h = String(b.handle).toLowerCase().replace(/^@/, '').trim();
     t = /^[a-z0-9_.]{3,20}$/.test(h) && await db.prepare('SELECT id,handle,name,av FROM users WHERE handle=?').bind(h).first();
     if (!t) throw new HttpError(404, 'no_user', 'Nobody has that username.');
-  } else throw new HttpError(400, 'bad', 'Scan a code, open an invite link or type a username.');
+  } else throw new HttpError(400, 'bad', 'Scan a QR code, open an invite link or type a username.');
   if (t.id === me) throw new HttpError(400, 'self', 'That’s your own code 🙂');
   const cur = await db.prepare('SELECT state FROM links WHERE a=? AND b=?').bind(me, t.id).first();
   const now = Date.now();
   let state;
   if (cur && cur.state === 'friend') state = 'friend';
-  else if (b.invite || (cur && cur.state === 'in')) {
-    // an invite link is the owner's consent; an incoming request is accepted by adding back
+  else if (instant || (cur && cur.state === 'in')) {
+    // scanning someone's live QR in person is their consent; an incoming request is accepted by adding back
     const up = 'INSERT INTO links(a,b,state,perms,created) VALUES(?,?,\'friend\',NULL,?) ON CONFLICT(a,b) DO UPDATE SET state=\'friend\', created=excluded.created';
     await db.batch([db.prepare(up).bind(me, t.id, now), db.prepare(up).bind(t.id, me, now)]);
     state = 'friend';
@@ -360,6 +381,20 @@ async function addFriend(db, me, b) {
     state = 'out';
   }
   return J({ state, user: pub(t) });
+}
+/* delete the friends profile: frees the username, removes friends, requests, shared data and reactions */
+async function deleteMe(db, id) {
+  await db.batch([
+    db.prepare('DELETE FROM links WHERE a=? OR b=?').bind(id, id),
+    db.prepare('DELETE FROM snaps WHERE uid=?').bind(id),
+    db.prepare('DELETE FROM reacts WHERE owner=? OR uid=?').bind(id, id),
+    db.prepare('DELETE FROM avatars WHERE uid=?').bind(id),
+    db.prepare('DELETE FROM shares WHERE uid=?').bind(id),
+    db.prepare('DELETE FROM invites WHERE uid=?').bind(id),
+    db.prepare('DELETE FROM tokens WHERE id=?').bind(id),
+    db.prepare('DELETE FROM users WHERE id=?').bind(id)]);
+  for (const [k, v] of MEM) if (v.id === id) MEM.delete(k);
+  return J({ ok: true });
 }
 async function respond(db, me, b) {
   const other = String((b && b.id) || '');
@@ -426,15 +461,16 @@ async function share(db, me, b) {
 // then straight into the app. On an iPhone outside the app it offers the app or the browser.
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 async function landing(env, url, kind, raw) {
-  const c = normCode(raw), isInvite = kind === 'i';
-  let name = '', avatar = '', title = isInvite ? 'Join me on Lock In' : 'A training split for you', desc = 'Train together on Lock In — workouts, streaks, PRs and splits.', sub = '';
+  const c = normCode(raw), isInvite = kind === 'i', isQR = kind === 'q';
+  let name = '', avatar = '', title = isInvite ? 'This invite has expired' : isQR ? 'Scan this code in Lock In' : 'A training split for you',
+    desc = 'Train together on Lock In — workouts, streaks, PRs and splits.', sub = isInvite ? 'Invite links work for 24 hours — ask for a new one.' : isQR ? 'Friends → Add friends → Scan. Codes change every 30 seconds.' : '';
   if (env.DB) {
     try {
       await ensureSchema(env.DB);
       if (isInvite) {
-        const u = await env.DB.prepare('SELECT id,handle,name,av FROM users WHERE invite=?').bind(c).first();
-        if (u) { name = u.name || u.handle; title = 'Add ' + name + ' on Lock In'; sub = '@' + u.handle; if (u.av) avatar = '/api/avatar/' + u.id + '?v=' + u.av; }
-      } else {
+        const u = await env.DB.prepare("SELECT u.id,u.handle,u.name,u.av FROM invites i JOIN users u ON u.id=i.uid WHERE i.code=? AND i.kind='link' AND i.exp>?").bind(c, Date.now()).first();
+        if (u) { name = u.name || u.handle; title = 'Add ' + name + ' on Lock In'; sub = '@' + u.handle + ' · they accept your request in the app'; if (u.av) avatar = '/api/avatar/' + u.id + '?v=' + u.av; }
+      } else if (!isQR) {
         const s = await env.DB.prepare('SELECT s.data, u.id, u.handle, u.name, u.av FROM shares s JOIN users u ON u.id=s.uid WHERE s.code=?').bind(c).first();
         if (s) {
           const d = parse(s.data) || {}, days = Array.isArray(d.days) ? d.days.length : 0;
@@ -445,7 +481,7 @@ async function landing(env, url, kind, raw) {
       }
     } catch (e) {}
   }
-  const target = '/#' + (isInvite ? 'add=' : 'split=') + c, scheme = 'lockin://' + (isInvite ? 'add/' : 'split/') + c;
+  const target = '/#' + (isInvite ? 'add=' : isQR ? 'qr=' : 'split=') + c, scheme = 'lockin://' + (isInvite ? 'add/' : 'split/') + c;
   const img = url.origin + (avatar || '/icon-512.png'), initial = esc((name || 'L').trim().charAt(0).toUpperCase());
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -473,10 +509,10 @@ small{display:block;margin-top:18px;color:#7d8592;font-size:12.5px}
 </style></head><body><main>
 <div class="av">${avatar ? `<img src="${esc(avatar)}" alt="">` : initial}</div>
 <h1>${esc(title)}</h1><p>${esc(sub || desc)}</p>
-${isInvite ? `<div class="code">${esc(c.slice(0, 4) + '-' + c.slice(4))}</div>` : '<div style="height:22px"></div>'}
-<a class="p" href="${esc(scheme)}">Open in the Lock In app</a>
-<a class="g" href="${esc(target)}">Continue in the browser</a>
-<small>${isInvite ? 'Already in Lock In? Friends → Add friends → Username, then type this code.' : 'Opens the split in Lock In so you can add it to your splits.'}</small>
+<div style="height:22px"></div>
+${isQR ? '' : `<a class="p" href="${esc(scheme)}">Open in the Lock In app</a>`}
+<a class="${isQR ? 'p' : 'g'}" href="${esc(isQR ? '/' : target)}">${isQR ? 'Open Lock In' : 'Continue in the browser'}</a>
+<small>${isInvite ? 'Invite links work for 24 hours. Your request needs their OK.' : isQR ? 'QR codes only work from the scanner inside Lock In.' : 'Opens the split in Lock In so you can add it to your splits.'}</small>
 </main></body></html>`;
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } });
 }
