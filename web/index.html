@@ -1331,6 +1331,10 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 .ugver small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}.ugver b{font-size:22px;color:#fff}.ugver span{color:#6ea6ff;font-size:20px}
 .ugver div:last-child b{color:#7ee2b1}
 .ugsteps{text-align:left;margin:0 0 18px 0;padding-left:20px;color:#d9e4f8;font-size:14px;line-height:1.9}
+.where{margin:2px 0 14px;padding:12px;border-radius:16px;background:rgba(255,190,90,.06);border:1px solid rgba(255,190,90,.2)}
+.where.done{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08)}
+.wchips{display:flex;flex-wrap:wrap;gap:6px}
+.wst{margin-top:8px}.wst.ok{color:#7ee2b1;font-weight:700}.wst.bad{color:#ff9d8c;font-weight:700}
 </style>
 </head>
 <body>
@@ -3040,8 +3044,9 @@ function localAnalysis(e,date){
 }
 function mealFacts(e){
   const m=e.mult||1,v=k=>(+((e.n||{})[k])||0)*m;
+  const cookedTxt=e.where?'\nCooked: '+whereTxt(e.where)+' (the user told us — trust it)':'';
   const foods=(e.parts&&e.parts.length?e.parts:[{name:e.name,g:null}]).map(p=>{const h=ingScan(p.ing).hits;return '- '+p.name+(p.g?' ('+Math.round(p.g*m)+' g)':'')+(p.flags&&p.flags.length?' ['+p.flags.join(', ')+']':'')+
-    (h.length?' — bad ingredients: '+[...new Set(h.map(x=>x.t.toLowerCase()))].slice(0,6).join(', '):'');}).join('\n');
+    (h.length?' — bad ingredients: '+[...new Set(h.map(x=>x.t.toLowerCase()))].slice(0,6).join(', '):'');}).join('\n')+cookedTxt;
   const key=['protein','carbs','fat','seedoil','la','addsugar','caffeine','glycine','creatine','carotenoids','polyphenols'].filter(k=>k!=='caffeine'||v(k)>0).map(k=>NMAP[k].n+' '+fmtNum(v(k))+' '+NMAP[k].u).join(', ');
   const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0).map(x=>x[1]+' '+fmtNum(v(x[0]))+' '+x[2]).join(', ');
   const cover=NUT.filter(x=>x[3]==='vit'||x[3]==='min').map(x=>({n:x[1],p:goalFor(x[0])?v(x[0])/goalFor(x[0])*100:0})).filter(o=>o.p>=20).sort((a,b)=>b.p-a.p).slice(0,8).map(o=>o.n+' '+Math.round(o.p)+'%').join(', ');
@@ -3300,11 +3305,11 @@ function cleanN(n){const o={};NK.forEach(k=>{const v=+((n||{})[k]);if(v>0)o[k]=M
 function saveMeal(md,date){
   const d=date||dDate;
   const parts=(md.parts||[]).map(p=>{const ing=p.ing?String(p.ing).slice(0,1500):undefined,fl=[...new Set([...(p.flags||[]),...ingFlags(ing)])];
-    return {name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined,ing,flags:fl.length?fl:undefined};});
+    return {name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined,ing,flags:fl.length?fl:undefined,cooked:p.cooked?1:undefined,wh:p.wh?1:undefined};});
   let e=md.id?findMeal(md.id):null,mid;
-  if(e){Object.assign(e.e,{name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,ts:e.e.ts,q:1});delete e.e.items;delete e.e.an;mid=e.e.id;}
+  if(e){Object.assign(e.e,{name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,ts:e.e.ts,q:1});if(md.where)e.e.where=md.where;delete e.e.items;delete e.e.an;mid=e.e.id;}
   else{
-    const ne={id:uid('f'),ts:Date.now(),name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,src:md.src||'ai',q:1};mid=ne.id;
+    const ne={id:uid('f'),ts:Date.now(),name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,src:md.src||'ai',q:1};if(md.where)ne.where=md.where;mid=ne.id;
     if(d!==todayStr()){const now=new Date();const dd=parseD(d);dd.setHours(now.getHours(),now.getMinutes());ne.ts=dd.getTime();}
     (S.food[d]=S.food[d]||[]).push(ne);
   }
@@ -3316,14 +3321,14 @@ function saveMeal(md,date){
   anFocus=mid;analyzeMeal(mid);
 }
 /* ---------- meal editor: foods, grams, cooking fat, add ingredients ---------- */
-function editMeal(id){const f=findMeal(id);if(!f)return;openMealEditor({id,name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:f.e.src},'Edit meal');}
+function editMeal(id){const f=findMeal(id);if(!f)return;openMealEditor({id,name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:f.e.src,where:f.e.where},'Edit meal');}
 function openMealEditor(md,title){MD=md;openSheet(title||'Review meal','<div id="mdBox"></div>');drawMD();}
 function drawMD(){
   const box=$('mdBox');if(!box||!MD)return;
   const tot=partsTotal(MD.parts),m=MD.mult||1,v=k=>(tot[k]||0)*m;
   const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0);
   box.innerHTML=(MD.img?'<img class="preview" style="max-height:160px" src="'+MD.img+'">':'')+
-    '<div class="field"><label class="f">Meal name</label><input value="'+esc(MD.name||'')+'" onchange="MD.name=this.value"></div>'+
+    '<div class="field"><label class="f">Meal name</label><input value="'+esc(MD.name||'')+'" onchange="MD.name=this.value"></div>'+whereHTML()+
     (MD.note?'<p class="tiny" style="margin:-4px 0 8px">'+esc(MD.note)+'</p>':'')+
     '<label class="f">Foods in this meal</label>'+
     MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><input type="text" inputmode="decimal" autocomplete="off" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value)"><span>g</span></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
@@ -3352,6 +3357,50 @@ const COOK={
  grill:{n:'Grilled / pan greased lightly',by:'used',f:0.5,h:'Brushed on the grill or a greased tray.'},
  binder:{n:'Mixed in — dough, batter, binder, sauce',by:'used',f:1,h:'Melted into a sauce, mash, dough or patties — all of it is eaten.'},
  topping:{n:'Spread or drizzled on top',by:'used',f:1,h:'Butter on bread or potatoes, oil on a salad.'}};
+/* ---------- where was it made? The camera can't see the pan, so ask — and count seed oils from the answer ---------- */
+const WHERE_FATS=[['butter','Butter'],['ghee','Ghee'],['tallow','Beef tallow'],['olive','Olive oil'],['coconut','Coconut oil'],['lard','Lard'],['duck','Duck fat'],['avocado','Avocado oil'],['none','No added fat']];
+const COOKRX=/steak|potato|fries|chips|chicken|egg|fried|roast|grill|schnitzel|burger|bacon|sausage|pancake|omelet|stir|saut|pork|beef|lamb|fish|salmon|cutlet|wings|nugget|veg|mushroom|rice|noodle|toast/i;
+const isCookedPart=p=>!p.fat&&(p.cooked||COOKRX.test(p.name||''));
+const isOilPart=p=>!!p.fat||(/\b(oil|margarine|shortening|frying fat)\b/i.test(p.name||'')&&(+((p.n||{}).seedoil)||0)>=0.6*Math.max(1,+((p.n||{}).fat)||0));
+function whereTxt(w){if(w==='rest')return 'restaurant / takeaway — seed oils likely';const f=WHERE_FATS.find(x=>x[0]===w);return w==='none'?'at home with no added fat — no seed oils':'at home with '+(f?f[1].toLowerCase():w)+' — no seed oils';}
+function needsWhere(){
+  if(!MD||['barcode','quick','again'].includes(MD.src))return false;
+  const ps=MD.orig||MD.parts||[];return ps.some(p=>isCookedPart(p)||(+((p.n||{}).seedoil)||0)>0||(p.flags||[]).includes('seed_oil'));
+}
+function fatPart(k,g,name){const f=FATS[k],per100={},n={};for(const x in f[2])per100[x]=f[2][x]/f[1]*100;for(const x in per100)n[x]=per100[x]*g/100;
+  return {name,g:Math.round(g*10)/10,n,per100,fat:1,flags:f[3]?['seed_oil']:undefined,wh:1};}
+function whereApply(w){
+  if(!MD)return;if(!MD.orig)MD.orig=clone(MD.parts);
+  let parts=clone(MD.orig);
+  if(w==='rest'){parts=parts.filter(p=>!p.wh);
+    // restaurant: keep the AI's seed oil; if it guessed none, add the frying oil restaurants typically use
+    const so=parts.reduce((a,p)=>a+(+((p.n||{}).seedoil)||0),0),cg=parts.filter(isCookedPart).reduce((a,p)=>a+(+p.g||0),0);
+    if(so<0.5&&cg>0)parts.push(fatPart('vegetable',cg*0.05,'Restaurant cooking oil'));
+  }else{
+    // home: the seed oil the AI assumed becomes the fat you used (or nothing)
+    let moved=0;const out=[];
+    for(const p of parts){
+      if(isOilPart(p)){moved+=(+p.g||+((p.n||{}).fat)||0);continue;}
+      const so=+((p.n||{}).seedoil)||0;
+      if(so>0){p.n=Object.assign({},p.n);p.n.fat=Math.max(0,(+p.n.fat||0)-so);p.n.la=Math.max(0,(+p.n.la||0)-so*0.5);delete p.n.seedoil;moved+=so;}
+      if(p.flags){p.flags=p.flags.filter(f=>f!=='seed_oil');if(!p.flags.length)delete p.flags;}
+      out.push(p);
+    }
+    if(w!=='none'){const g=moved>0?moved:out.filter(isCookedPart).reduce((a,p)=>a+(+p.g||0),0)*0.03;if(g>0.2)out.push(fatPart(w,g,(WHERE_FATS.find(x=>x[0]===w)||['',''])[1]+' (cooking)'));}
+    parts=out;
+  }
+  MD.parts=parts;MD.where=w;haptic('selection');drawMD();
+  const b=document.querySelector('#mdBox .where');if(b&&!RM)anim(b,[{transform:'scale(.985)'},{transform:'none'}],{duration:260,easing:EASE_OUT});
+}
+function whereHTML(){
+  if(!needsWhere())return '';const w=MD.where||'';
+  const chip=(k,l)=>'<button class="chip sm'+(w===k?' on':'')+'" onclick="whereApply(\''+k+'\')">'+l+'</button>';
+  return '<div class="where'+(w?' done':'')+'"><label class="f">Where was it made?</label>'+
+    '<div class="wchips">'+chip('rest','🍽 Restaurant / takeaway · seed oils')+'</div>'+
+    '<div class="tiny" style="margin:8px 0 6px">or at home, made with</div><div class="wchips">'+WHERE_FATS.map(x=>chip(x[0],x[1])).join('')+'</div>'+
+    (w?'<p class="tiny wst '+(w==='rest'?'bad':'ok')+'">'+(w==='rest'?'⚠ Counted as restaurant food — seed oils included.':'✓ Home-made '+esc(whereTxt(w).replace(/^at home /,''))+'.')+'</p>'
+      :'<p class="tiny wst">The camera can’t see the pan — tell it, and seed oils are counted right.</p>')+'</div>';
+}
 function drawCook(){
   const el=$('cookBox');if(!el)return;
   const c=COOK[MD.cm||'pan_light'];const foods=MD.parts.map((p,i)=>({i,p})).filter(x=>x.p.g>0&&!x.p.fat);
@@ -3399,7 +3448,7 @@ async function addPart(){
 function toParts(r){
   if(!r)return [];
   if(Array.isArray(r.items)&&r.items.length&&typeof r.items[0]==='object')return r.items.map(it=>{const ing=typeof it.ing==='string'&&it.ing.trim().length>3?it.ing.trim().slice(0,1500):undefined;
-    const fl=[...new Set([...(cleanFlags(it.flags,it.n)||[]),...ingFlags(ing)])];return {name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),ing,flags:fl.length?fl:undefined};});
+    const fl=[...new Set([...(cleanFlags(it.flags,it.n)||[]),...ingFlags(ing)])];return {name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),ing,flags:fl.length?fl:undefined,cooked:it.cooked?1:undefined};});
   if(r.n)return [{name:r.name||'Meal',g:null,n:cleanN(r.n)}];
   return [];
 }
@@ -3444,7 +3493,8 @@ function nutrientPrompt(hint,photo){
     'Beneficial compounds: glycine=g (collagen, gelatin and bone broth are about a quarter glycine; muscle meat ~1 g per 100 g), creatine=g (raw beef, lamb, salmon ~0.45 per 100 g, herring ~0.8; none in plants), '+
     'taurine=mg (red meat and fish 40–80 per 100 g, dark poultry meat ~170, clams, scallops and octopus 500–800), coq10=mg (beef heart ~11 per 100 g, liver ~4, beef ~3, sardines ~6), '+
     'k2=µg vitamin K2/menaquinones (egg yolk ~15 each, gouda ~75 per 100 g, butter ~15, goose liver ~370, chicken thigh ~10), carotenoids=mg total of beta-carotene, lutein, zeaxanthin, lycopene and astaxanthin (raw carrot ~8 per 100 g, sweet potato ~9, egg yolk ~0.4), '+
-    'polyphenols=mg total (Phenol-Explorer: berries 200–600 per 100 g, dates ~250, apples ~200, coffee ~200 a mug). '+SEEDRULES;
+    'polyphenols=mg total (Phenol-Explorer: berries 200–600 per 100 g, dates ~250, apples ~200, coffee ~200 a mug). '+SEEDRULES+
+    ' Add "cooked":true to any item that was cooked in a pan, fryer, oven or on a grill (so cooking fat may be in it). Add a top-level "place": "restaurant" for restaurant, takeaway or fast food, "home" when it is clearly home-cooked, otherwise "unknown".';
 }
 async function analyze(photo){
   const hint=($('mealHint')&&$('mealHint').value.trim())||'';
@@ -3458,7 +3508,7 @@ async function analyze(photo){
   const parts=toParts(r);
   if(!parts.length){
     $('estBox').innerHTML='<p class="tiny" style="color:var(--bad);margin-top:8px">Couldn\'t get an estimate — check your connection and try again.</p>'+(photo?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="queuePhoto()">Save photo and analyze later</button>':'');return;}
-  openMealEditor({name:r.name||'Meal',parts,mult:1,src:photo?'photo':'text',img:photo?pendingImg:null,note:r.confidence?'AI estimate · '+r.confidence+' confidence — fix any grams or foods below.':''});
+  openMealEditor({name:r.name||'Meal',parts,mult:1,place:r.place,src:photo?'photo':'text',img:photo?pendingImg:null,note:r.confidence?'AI estimate · '+r.confidence+' confidence — fix any grams or foods below.':''});
 }
 /* ---------- offline photo queue (analyzed automatically when back online) ---------- */
 function qKey(){return 'lockin_q_'+(user?user.username:'anon');}
@@ -5897,8 +5947,10 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.19.3';
+const WEB_VER='2026.10.19.4';
 const WHATSNEW=[
+ {v:'2026.10.19.4',d:'19 Oct',items:[
+  ['🍳','Where was it made?','Scanned a steak and potatoes? Tell it: restaurant (seed oils) or home-made with butter, ghee, tallow, olive oil… and seed oils are counted right.']]},
  {v:'2026.10.19.3',d:'19 Oct',items:[
   ['📡','Public split links','One link anyone can open. Followers always get your latest version — only you can change it. Share → Public link.'],
   ['🤝','Decline, but keep a copy','Got invited to a shared split? Keep it just for you, without their edits.'],
