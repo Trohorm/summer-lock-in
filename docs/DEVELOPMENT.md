@@ -30,7 +30,7 @@ Web changes need no app release — the app loads the live site.
   one in `source.json` (served at `/api/appver`). An older app shows a full-screen update screen and can't be used
   until it's updated — so a new release in the Build IPA workflow reaches everyone right away. The check starts
   while the page is still loading and the answer is remembered, so the update screen is the first thing an
-  outdated app shows (the splash waits up to 0.9 s for a first answer).
+  outdated app shows (the splash waits up to 1.5 s for an answer, or not at all if it checked in the last 10 minutes).
 - **What's new:** each web release bumps `WEB_VER` and adds an entry to `WHATSNEW` (built from `tools/p30_ver.py`
   in the build scripts). Existing users see it once, the moment the app opens after the update; new accounts don't.
 

@@ -6144,7 +6144,7 @@ function appVerApply(j){
 }
 async function appVerCheck(){const nv=nativeVer();if(!nv||!navigator.onLine)return;APPVT=Date.now();appVerApply(await appVerFetch());}
 /* First things first: the update screen and What's new come before the app.
-   A known-outdated app stops at the gate on the very first frame; otherwise the splash waits (≤0.9 s)
+   A known-outdated app stops at the gate on the very first frame; otherwise the splash waits (≤1.5 s)
    for the version check that started while the page was loading. */
 let SPLASH_HOLD=0,SPLASH_WANT=0;const SPLASH_Q=[];
 function splashRelease(){if(!SPLASH_HOLD)return;SPLASH_HOLD=0;while(SPLASH_Q.length){try{SPLASH_Q.shift()();}catch(e){}}if(SPLASH_WANT)hideSplash();}
@@ -6155,7 +6155,9 @@ function appGateBoot(){
   if(c&&c.v&&navigator.onLine&&verCmp(nv,c.v)<0){APPV={version:c.v};updGate(nv,c.v);}
   const p=window.__appvP;window.__appvP=null;if(!p)return;APPVT=Date.now();
   p.then(appVerApply);
-  if(!$('updGate')){SPLASH_HOLD=1;setTimeout(splashRelease,900);p.then(splashRelease);}
+  // checked in the last 10 minutes and current: no waiting; otherwise the splash waits (≤1.5 s) for the answer
+  const recent=c&&c.v&&c.t&&Date.now()-c.t<6e5&&verCmp(nv,c.v)>=0;
+  if(!$('updGate')&&!recent){SPLASH_HOLD=1;setTimeout(splashRelease,1500);p.then(splashRelease);}
 }
 function updGate(have,latest){
   if($('updGate')){$('updHave').textContent=have;$('updNew').textContent=latest;return;}
