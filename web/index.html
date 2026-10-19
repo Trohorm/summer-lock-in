@@ -1215,6 +1215,36 @@ img.fadein{animation:fadeIn .45s var(--out,ease) both}
 @keyframes ptpulse{0%{r:3.2;fill:#fff}40%{r:8;fill:#3ecf8e}100%{r:3.2}}
 @media (prefers-reduced-motion:reduce){.fxcard,.fxbadge,.fxshield.big{transition:none}.fxcheck circle,.fxcheck path{stroke-dashoffset:0}}
 
+/* setup screen: clear of the status bar / Dynamic Island, centred, scrollable */
+body.prelogin #view-wizard{padding:calc(env(safe-area-inset-top) + 34px) 2px calc(env(safe-area-inset-bottom) + 60px)}
+.wizcard{max-width:480px;margin:0 auto!important}
+.wizmark{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;margin-bottom:14px;background:var(--grad);box-shadow:0 10px 26px rgba(79,124,247,.35)}
+.wizmark svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wizhead{font-size:21px!important;letter-spacing:-.015em}
+input[switch]{padding:0;border:0;background:none;box-shadow:none;border-radius:0;outline:none}
+input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
+/* lift buttons */
+.wobtns{display:flex;gap:8px}
+.wobtns .btn-primary{flex:1}
+.wobtns #closeWoBtn{flex:0 0 auto;padding-left:20px;padding-right:20px}
+.wobtns #delWoBtn{flex:0 0 52px;display:grid;place-items:center;padding:0}
+.wobtns #delWoBtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wobtns [hidden]{display:none!important}
+/* caffeine */
+.cafbar{position:relative;overflow:visible}
+.cafcut{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:rgba(255,255,255,.35)}
+.cafline{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;font-weight:700}
+.cafok{color:#8ff0c2}.cafno{color:#f0c46a}
+.cafitems{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cafitems span{font-size:12px;padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--slate)}
+.cafitems span b{color:#e9ecf1;margin-right:2px}
+.cafitems span.late{background:rgba(239,106,86,.14);color:#ff9d8c}
+.cafwarn{color:#ff9d8c!important;margin-top:8px}
+.cafq{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.cafq .chip i{font-style:normal;opacity:.6;margin-left:3px;font-size:11px}
+/* good stuff bars */
+.bar i.gd{background:linear-gradient(90deg,#3ecf8e,#8fe3c0)}
+
 </style>
 </head>
 <body>
@@ -1252,14 +1282,15 @@ img.fadein{animation:fadeIn .45s var(--out,ease) both}
 
   <!-- WIZARD -->
   <section class="view" id="view-wizard">
-    <div class="card" style="max-width:480px;margin:4vh auto 0">
+    <div class="card wizcard">
+      <div class="wizmark"><svg viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg></div>
       <div class="wizhead">Set up Lock In</div>
       <div class="wizsub">Your numbers drive your nutrition goals. Change anything later in Setup.</div>
       <div class="field"><label class="f">Display name</label><input id="wz-name" maxlength="24" placeholder="How should the app call you?"></div>
       <div class="grid2">
         <div class="field"><label class="f">Weight kg</label><input id="wz-weight" type="number" step="0.1" inputmode="decimal"></div>
         <div class="field"><label class="f">Height cm</label><input id="wz-height" type="number" inputmode="numeric"></div>
-        <div class="field"><label class="f">Age</label><input id="wz-age" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Birthday</label><input id="wz-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="wz-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
       </div>
       <div class="field"><label class="f">Gym name</label><input id="wz-gym" maxlength="30" placeholder="e.g. Fitness Trnava"></div>
@@ -1301,10 +1332,11 @@ img.fadein{animation:fadeIn .45s var(--out,ease) both}
       <div id="woList"></div>
       <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" onclick="openPicker({mode:'workout'})">+ Add exercise to this workout</button>
       <div class="field"><label class="f">Session notes</label><textarea id="woNotes" placeholder="How it felt, machine settings…" oninput="syncWorkout()"></textarea></div>
-      <p class="tiny" style="margin:-2px 0 10px">Everything you type saves instantly. Weights are remembered per gym. Tap <b>End workout</b> when you're done.</p>
-      <div class="grid2">
+      <p class="tiny" style="margin:-2px 0 10px">Everything you type saves instantly. Weights are remembered per gym. <b>End workout</b> saves it, <b>Close</b> opens a fresh page, <b>Delete</b> throws away a workout you haven’t saved.</p>
+      <div class="wobtns">
         <button class="btn btn-primary" id="saveWoBtn">End workout</button>
-        <button class="btn btn-ghost" id="newWoBtn">New workout</button>
+        <button class="btn btn-ghost" id="closeWoBtn" onclick="closeWorkout()" hidden>Close</button>
+        <button class="btn btn-danger" id="delWoBtn" onclick="deleteCurWorkout()" aria-label="Delete this workout" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/><path d="M10 11v5M14 11v5"/></svg></button>
       </div>
       <div class="aibox" id="aiBox"><div class="ttl">Coach feedback</div><div class="txt" id="aiTxt"></div></div>
     </div>
@@ -1367,15 +1399,17 @@ img.fadein{animation:fadeIn .45s var(--out,ease) both}
     <div class="card ancard" id="anCard" style="display:none"></div>
     <div id="dietAlert"></div>
     <div class="card"><h2>Macros <span class="right" id="dietCount"></span></h2><div id="macroBox"></div></div>
+    <div class="card cafcard" id="cafCard"><h2>Caffeine <span class="right" id="cafRight"></span></h2><div id="cafBox"></div></div>
     <div class="card"><h2>Seed oils, omega-6 &amp; sugar <span class="right">keep out</span></h2><div id="badBox"></div></div>
     <div class="card"><h2>Anti-nutrients <span class="right">daily limit</span></h2><div id="antiBox"></div></div>
     <div class="card"><h2>Micronutrients <span class="right" id="microScore"></span></h2><div id="microBox"></div></div>
+    <div class="card"><h2>Good stuff <span class="right" id="goodScore"></span></h2><p class="tiny" style="margin:-4px 0 10px">Antioxidants and compounds your body thrives on — glycine, creatine, taurine, CoQ10, K2, carotenoids, polyphenols.</p><div id="goodBox"></div></div>
     <div class="card"><h2>Meals</h2><div id="mealList" class="muted">Nothing logged yet.</div></div>
     <div class="card"><h2>This week’s gaps <span class="right">7-day average</span></h2><div id="gapBox"></div></div>
     <div class="card"><details class="fold rules"><summary>How Lock In grades food</summary><div class="fb">
-      <div class="rcol good"><b>Build every meal on</b><ul><li>Beef, lamb and other ruminant meat</li><li>Eggs — whole, yolks included</li><li>Liver and other organs, 100–200 g a week</li><li>Wild fish and shellfish</li><li>Full-fat dairy — A2/A2 milk is best — plus butter, ghee, tallow</li><li>Ripe fruit, honey, maple syrup</li></ul></div>
+      <div class="rcol good"><b>Build every meal on</b><ul><li>Beef, lamb and other ruminant meat</li><li>Eggs — whole, yolks included</li><li>Liver and other organs, 100–200 g a week</li><li>Wild fish and shellfish</li><li>Full-fat dairy — A2/A2 milk is best — plus butter, ghee, tallow</li><li>Ripe fruit and dates, honey, maple syrup</li><li>Carrots, squash, cucumber, peeled potatoes, avocado</li><li>Bone broth and collagen</li></ul></div>
       <div class="rcol bad"><b>Keep out</b><ul><li>Seed oils — canola, sunflower, soybean, corn, “vegetable oil”, margarine</li><li>Fried and restaurant food cooked in them</li><li>Refined sugar and syrups</li><li>Ultra-processed food and refined flour</li><li>Alcohol and artificial sweeteners</li></ul></div>
-      <div class="rcol amber"><b>Minimise</b><ul><li>Grains, legumes, nuts and seeds — plant defence chemicals that block minerals</li><li>Raw leafy greens and soy</li><li>Chicken skin and pork fat (omega-6)</li></ul></div>
+      <div class="rcol amber"><b>Minimise</b><ul><li>Grains, legumes, nuts and seeds — plant defence chemicals that block minerals</li><li>Spinach, chard and other high-oxalate greens; soy</li><li>Chicken skin and pork fat (omega-6)</li><li>Caffeine — one, early, none after 1 pm</li></ul></div>
       <p class="tiny" style="margin-top:8px">Every meal you log gets graded against these rules, with warnings and what to eat next.</p>
     </div></details></div>
   </section>
@@ -1422,7 +1456,7 @@ img.fadein{animation:fadeIn .45s var(--out,ease) both}
       <div class="grid2">
         <div class="field"><label class="f">Weight kg</label><input id="set-weight" type="number" step="0.1" inputmode="decimal"></div>
         <div class="field"><label class="f">Height cm</label><input id="set-height" type="number" inputmode="numeric"></div>
-        <div class="field"><label class="f">Age</label><input id="set-age" type="number" inputmode="numeric"></div>
+        <div class="field"><label class="f">Birthday <span class="tiny" id="ageLbl"></span></label><input id="set-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="set-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
       </div>
       <button class="btn btn-primary" id="setSaveBtn">Save profile</button>
@@ -1556,7 +1590,9 @@ const NUT=[
  ['calcium','Calcium','mg','min'],['iron','Iron','mg','min'],['magnesium','Magnesium','mg','min'],['phosphorus','Phosphorus','mg','min'],['potassium','Potassium','mg','min'],
  ['sodium','Sodium','mg','min'],['zinc','Zinc','mg','min'],['copper','Copper','µg','min'],['manganese','Manganese','mg','min'],['selenium','Selenium','µg','min'],
  ['iodine','Iodine','µg','min'],['chromium','Chromium','µg','min'],['molybdenum','Molybdenum','µg','min'],
- ['seedoil','Seed oils','g','bad'],['la','Omega-6 (linoleic acid)','g','bad'],['addsugar','Refined sugar','g','bad'],
+ ['glycine','Glycine (collagen)','g','good'],['creatine','Creatine','g','good'],['taurine','Taurine','mg','good'],['coq10','CoQ10','mg','good'],
+ ['k2','Vitamin K2','µg','good'],['carotenoids','Carotenoids','mg','good'],['polyphenols','Polyphenols','mg','good'],
+ ['seedoil','Seed oils','g','bad'],['la','Omega-6 (linoleic acid)','g','bad'],['addsugar','Refined sugar','g','bad'],['caffeine','Caffeine','mg','bad'],
  ['phytate','Phytic acid (phytates)','mg','anti'],['oxalate','Oxalates','mg','anti'],['tannins','Tannins','mg','anti'],['lectins','Lectins (active)','mg','anti'],
  ['saponins','Saponins','mg','anti'],['goitrogens','Goitrogens (glucosinolates)','mg','anti'],['protease','Protease / trypsin inhibitors','mg','anti'],
  ['isoflavones','Phytoestrogens (isoflavones)','mg','anti'],['glycoalkaloids','Glycoalkaloids (solanine)','mg','anti'],['cyanogenic','Cyanogenic glycosides (as HCN)','mg','anti']
@@ -1567,13 +1603,15 @@ const NMAP={};NUT.forEach(n=>NMAP[n[0]]={k:n[0],n:n[1],u:n[2],g:n[3]});
 const RDA={vitA:[900,900,700,700],vitC:[75,90,65,75],vitD:[15,15,15,15],vitE:[15,15,15,15],vitK:[75,120,75,90],b1:[1.2,1.2,1,1.1],b2:[1.3,1.3,1,1.1],
  b3:[16,16,14,14],b5:[5,5,5,5],b6:[1.3,1.3,1.2,1.3],b7:[25,30,25,30],b9:[400,400,400,400],b12:[2.4,2.4,2.4,2.4],choline:[550,550,400,425],
  calcium:[1300,1000,1300,1000],iron:[11,8,15,18],magnesium:[410,400,360,310],phosphorus:[1250,700,1250,700],potassium:[3000,3400,2300,2600],sodium:[1500,1500,1500,1500],
- zinc:[11,11,9,8],copper:[890,900,890,900],manganese:[2.2,2.3,1.6,1.8],selenium:[55,55,55,55],iodine:[150,150,150,150],chromium:[35,35,24,25],molybdenum:[43,45,43,45]};
+ zinc:[11,11,9,8],copper:[890,900,890,900],manganese:[2.2,2.3,1.6,1.8],selenium:[55,55,55,55],iodine:[150,150,150,150],chromium:[35,35,24,25],molybdenum:[43,45,43,45],
+ /* beneficial compounds — practical daily targets from a meat-and-fruit diet, not official minimums */
+ glycine:[10,10,8,8],creatine:[3,3,2,2],taurine:[500,500,400,400],coq10:[10,10,8,8],k2:[100,100,90,90],carotenoids:[10,10,10,10],polyphenols:[500,500,500,500]};
 function antiDefaults(){
   const bw=S&&S.settings.weight||70;
   /* strict daily limits: oxalate = clinical low-oxalate diet (<40-50 mg); phytate keeps phytate:zinc molar ratio ~5
      (good zinc absorption); glycoalkaloids = EFSA LOAEL 1 mg/kg bw with a x10 margin; cyanide = EFSA ARfD 20 µg/kg bw;
      the rest sit at or below ordinary low intakes, since there is no official safe level */
-  return {seedoil:0,la:7,addsugar:15,phytate:400,oxalate:40,tannins:300,lectins:5,saponins:50,goitrogens:50,protease:50,isoflavones:25,
+  return {seedoil:0,la:7,addsugar:15,caffeine:(S&&S.settings.age||25)<18?100:200,phytate:400,oxalate:40,tannins:300,lectins:5,saponins:50,goitrogens:50,protease:50,isoflavones:25,
     glycoalkaloids:Math.round(bw*0.1*10)/10,cyanogenic:Math.round(bw*0.02*10)/10};
 }
 function microDefault(k){const r=RDA[k];if(!r)return 0;const s=S.settings;const teen=(s.age||25)<19;return r[(s.sex==='f'?2:0)+(teen?0:1)];}
@@ -1883,11 +1921,11 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){setTimeout(dobLoad,3000);migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
-  $('wz-weight').value=S.settings.weight||'';$('wz-height').value=S.settings.height||'';$('wz-age').value=S.settings.age||'';
+  $('wz-weight').value=S.settings.weight||'';$('wz-height').value=S.settings.height||'';$('wz-dob').value=DOB||'';$('wz-dob').max=addDays(todayStr(),-3650);
   $('wz-sex').value=S.settings.sex||'m';$('wz-gym').value=(S.gyms[0]&&S.gyms[0].name)||'';
   wzGoal=S.settings.goal||'recomp';
   $('wz-ai').checked=S.settings.aiAuto!==false;show('wizard');
@@ -1898,17 +1936,17 @@ function renderGoalChips(elId,cur,onPick){
 }
 function finishWizard(){
   const err=$('wzErr');err.textContent='';
-  const name=$('wz-name').value.trim(),weight=parseFloat($('wz-weight').value),height=parseFloat($('wz-height').value),age=parseInt($('wz-age').value);
+  const name=$('wz-name').value.trim(),weight=parseFloat($('wz-weight').value),height=parseFloat($('wz-height').value),dob=$('wz-dob').value,age=ageFrom(dob);
   if(!name){err.textContent='Give yourself a name.';return;}
   if(!weight||weight<30||weight>250){err.textContent='Enter your weight in kg.';return;}
   if(!height||height<120||height>230){err.textContent='Enter your height in cm.';return;}
-  if(!age||age<10||age>90){err.textContent='Enter your age.';return;}
+  if(!age||age<10||age>90){err.textContent='Enter your birthday.';return;}
   Object.assign(S.settings,{name,weight,height,age,sex:$('wz-sex').value,goal:wzGoal,aiAuto:$('wz-ai').checked,setupDone:true});
   const gym=$('wz-gym').value.trim();
   migrate();if(gym)S.gyms[0].name=gym;
   const m=suggestMacros(weight,wzGoal);Object.assign(S.targets,m);
   S.body[todayStr()]=weight;
-  save();enterApp();toast('You\'re set, '+name+' — locked in.');
+  save();dobSet(dob);enterApp();toast('You\'re set, '+name+' — locked in.');
 }
 async function doSignIn(){$('loginMsg').textContent='';try{await puter.auth.signIn();await boot();}catch(e){$('loginMsg').textContent='Sign-in was cancelled or failed — try again.';}}
 async function doSignOut(){
@@ -2202,7 +2240,33 @@ function swapVariant(i,v){
   const sp=S.splits[w.split],day=sp&&sp.days.find(d=>d.id===w.day);
   if(day&&day.ex.some(e=>e.k===old)&&confirm('Use '+exInfo(nk).vname+' in your '+day.name+' plan from now on too?')){day.ex.forEach(e=>{if(e.k===old)e.k=nk;});save();toast('Plan updated');}
 }
-function woButtons(){const w=curWO();$('saveWoBtn').textContent=(w&&w.ended)?'Update workout':'End workout';}
+function woButtons(){const w=curWO(),has=!!w&&woHasData(w);$('saveWoBtn').textContent=(w&&w.ended)?'Update workout':'End workout';
+  const del=$('delWoBtn'),cl=$('closeWoBtn');if(del)del.hidden=!(w&&!w.ended&&has);if(cl)cl.hidden=!(w&&(w.ended||has||w.id===editingOld));}
+/* Delete: throws away the workout you're in that isn't saved yet */
+function deleteCurWorkout(){
+  const w=curWO();if(!w||w.ended||!woHasData(w))return;const n=countSets(w);
+  if(!confirm('Delete this workout? The '+n+' set'+(n===1?'':'s')+' you logged in it will be gone.'))return;
+  const day=w.day;delete S.workouts[w.id];S.tomb[w.id]=Date.now();S.cur=null;editingOld='';
+  const sp=activeSplit();makeWO(sp.days.find(x=>x.id===day)||plannedDay(todayStr())||sp.days[0]);
+  save();snapSoon(1500);haptic('medium');renderWorkout();$('scroller').scrollTo({top:0,behavior:'smooth'});toast('Workout deleted');
+}
+/* Close: leaves this workout (saved ones stay in History) and opens a fresh page */
+function closeWorkout(){
+  const w=curWO();if(!w)return;
+  if(!w.ended&&woHasData(w)){
+    openSheet('Save this workout?','<p class="muted">'+esc(w.dayName||'This workout')+' has '+countSets(w)+' logged set'+(countSets(w)===1?'':'s')+' that '+(countSets(w)===1?'isn’t':'aren’t')+' saved yet.</p>'+
+      '<button class="btn btn-primary" style="margin-top:14px" onclick="closeSheet();if(endWorkout())freshWorkout()">Save and close</button>'+
+      '<button class="btn btn-danger" style="margin-top:10px;width:100%" onclick="closeSheet();discardWorkout()">Delete it</button>'+
+      '<button class="btn btn-ghost" style="margin-top:10px;width:100%" onclick="closeSheet()">Keep training</button>');
+    return;}
+  freshWorkout();
+}
+function discardWorkout(){const w=curWO();if(w&&!w.ended){delete S.workouts[w.id];S.tomb[w.id]=Date.now();}S.cur=null;freshWorkout();}
+function freshWorkout(){
+  const w=curWO();if(w&&!w.ended&&!woHasData(w))delete S.workouts[w.id];
+  editingOld='';S.cur=null;const sp=activeSplit();makeWO(plannedDay(todayStr())||sp.days[0]);save();
+  renderWorkout();$('scroller').scrollTo({top:0,behavior:'smooth'});toast('Fresh page — ready for your next workout');
+}
 function updateWoProg(first){
   const w=curWO(),el=$('woProg');if(!w||!el)return;
   let tot=0,done=0;w.items.forEach((it,i)=>{const c=$('exc_'+i);if(!c)return;c.querySelectorAll('.done-in').forEach(b=>{tot++;if(b.checked)done++;});});
@@ -2216,6 +2280,16 @@ function updateWoProg(first){
   el.classList.toggle('full',full);
 }
 function markDone(cb,i){
+  const sn=cb.id.split('_')[2],wi=$('w_'+i+'_'+sn),ri=$('r_'+i+'_'+sn);
+  if(cb.checked){
+    // ticking an empty set fills it from last time; with nothing to fill, there is nothing to log yet
+    if(ri&&!ri.value&&!isNaN(parseFloat(ri.placeholder))){ri.value=parseFloat(ri.placeholder);ri.dataset.auto=1;}
+    if(wi&&!wi.value&&!isNaN(parseFloat(wi.placeholder))){wi.value=parseFloat(wi.placeholder);wi.dataset.auto=1;}
+    if(ri&&!(parseFloat(ri.value)>0)){cb.checked=false;ri.focus();toast('Type your reps first');return;}
+  }else{
+    // unticking un-logs the set (and clears what ticking filled in)
+    if(ri){ri.value='';delete ri.dataset.auto;}if(wi&&wi.dataset.auto){wi.value='';delete wi.dataset.auto;}
+  }
   syncWorkout();
   const card=$('exc_'+i),was=card.classList.contains('exdone'),now=[...card.querySelectorAll('.done-in')].every(b=>b.checked);
   card.classList.toggle('exdone',now);
@@ -2227,21 +2301,25 @@ function markDone(cb,i){
   if(cb.checked&&S.settings.autoRest!==false){const w=curWO();const it=w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
 }
 function syncWorkout(){
-  const w=curWO();if(!w)return;
+  const w=curWO();if(!w)return;let tick=false;
   w.items.forEach((it,i)=>{
     const card=$('exc_'+i);if(!card)return;
     const n=card.querySelectorAll('.done-in').length;const arr=[];
     for(let s=0;s<n;s++){
       const wi=$('w_'+i+'_'+s),ri=$('r_'+i+'_'+s),di=$('d_'+i+'_'+s);
       const wv=wi?parseFloat(wi.value):NaN;let rv=ri?parseFloat(ri.value):NaN;
-      if(isNaN(rv)&&di&&di.checked&&ri&&ri.placeholder&&!isNaN(parseFloat(ri.placeholder))){rv=parseFloat(ri.placeholder);ri.value=rv;if(wi&&!wi.value&&!isNaN(parseFloat(wi.placeholder)))wi.value=parseFloat(wi.placeholder);}
+      const has=!isNaN(rv)&&rv>0;if(di&&di.checked!==has){di.checked=has;tick=true;}   // the tick always shows whether the set is logged
       arr.push({w:wi&&!isNaN(parseFloat(wi.value))?parseFloat(wi.value):0,r:isNaN(rv)?0:rv});
     }
     w.ex[it.k]=arr;
   });
   const nt=$('woNotes');if(nt)w.notes=nt.value.trim();
-  if(!w.t0&&!w.ended&&woHasData(w)){w.t0=Date.now();snapSoon(4000);}
+  const has=woHasData(w);
+  if(!w.t0&&!w.ended&&has){w.t0=Date.now();snapSoon(4000);}
+  else if(w.t0&&!w.ended&&!has){delete w.t0;snapSoon(4000);}        // everything un-logged: no workout running
   w.ts=Date.now();save();
+  if(tick){w.items.forEach((it,i)=>{const c=$('exc_'+i);if(c)c.classList.toggle('exdone',[...c.querySelectorAll('.done-in')].every(b=>b.checked));});updateWoProg();}
+  woButtons();
 }
 function endWorkout(){
   const w=curWO();if(!w){toast('Nothing to log');return false;}
@@ -2650,6 +2728,14 @@ const INFO={
  iodine:{g:'Thyroid hormones that set your metabolism and growth.',s:'Seafood (cod, shrimp), eggs, dairy.',x:'Unrefined sea salt has almost no iodine — get it from seafood, eggs and dairy.'},
  chromium:{g:'Helps insulin move sugar into your cells.',s:'Beef, eggs, cheese, apples, bananas.'},
  molybdenum:{g:'Enzymes that break down certain amino acids and toxins.',s:'Liver (richest), eggs, dairy.'},
+ caffeine:{a:'The stimulant in coffee, tea, matcha, cola, energy drinks and chocolate.',r:'It blocks the brain’s sleep signal and lingers — about half is still in you 5–6 hours later. Taken after 1 pm it cuts deep sleep, when you grow, recover and build muscle, even if you fall asleep fine. Keep it small and early: wait 1–2 hours after waking, nothing after 1 pm.',s:'Coffee (~95 mg a mug, ~63 mg an espresso), matcha (~70 mg), black tea (~47 mg), green tea (~28 mg), cola (~34 mg a can), energy drinks (80–160 mg a can), dark chocolate.',f:'One coffee mid-morning at most, then water, mineral water or herbal tea. Sunlight, food and sleep are the energy that lasts.'},
+ glycine:{g:'The main amino acid in collagen: tendons, ligaments, joints and skin, deeper sleep, and it balances the methionine in muscle meat. Your body makes less than it needs.',s:'Bone broth, gelatin and collagen, slow-cooked cuts with connective tissue (oxtail, shank, brisket, cheek), fish skin, pork rinds.',x:'Muscle meat alone gives about 3–5 g a day; a mug of bone broth or a scoop of collagen adds 5–10 g.'},
+ creatine:{g:'Fast energy for heavy sets and sprints — more reps per set — and fuel for your brain too.',s:'Beef, lamb, bison, herring, salmon, tuna, pork: about 0.4–0.5 g per 100 g of raw meat.',x:'Plants have none. Long, hot cooking destroys part of it.'},
+ taurine:{g:'Heart and muscle function, bile for digesting fat, eyes, and recovery after hard training.',s:'Scallops, clams, mussels and oysters, octopus and squid, dark poultry meat, beef heart, red meat and fish.',x:'Only animal foods have it.'},
+ coq10:{g:'Makes energy inside every cell and protects it as an antioxidant — your heart and muscles use the most.',s:'Beef heart (by far the richest), liver and kidney, beef, sardines and mackerel.',x:'Organ meats once or twice a week cover most of it.'},
+ k2:{g:'Moves calcium into bones and teeth and keeps it out of your arteries; works together with vitamin D.',s:'Egg yolks, aged cheese (gouda, brie), butter and ghee from grass-fed cows, goose and chicken liver, chicken thighs.',x:'Vitamin K1 from leaves is a different vitamin — animal fat carries the K2.'},
+ carotenoids:{g:'Antioxidant pigments: eyes (lutein, zeaxanthin), skin protection from the sun, and part becomes vitamin A.',s:'Carrots, pumpkin and squash, sweet potato, egg yolks, wild salmon, mango, papaya, apricots, tomatoes.',x:'Eat them with fat — butter on carrots, whole eggs — or you absorb very little.'},
+ polyphenols:{g:'Antioxidants that protect your cells and feed the good bacteria in your gut.',s:'Berries, cherries, pomegranate, dates, plums, apples, grapes, kiwi, raw honey, coffee.',x:'Ripe fruit is the cleanest source.'},
  seedoil:{a:'Industrial oils pressed and chemically refined from seeds: canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran — plus anything labelled “vegetable oil”, margarine and shortening.',r:'They are the most heavily processed fats in food: solvent-extracted, bleached and deodorised, and mostly unstable omega-6 that oxidises when heated — worst of all in re-used frying oil. They have no place in your diet.',s:'Fried and fast food, restaurant cooking, chips and crackers, mayo, dressings and sauces, hummus, pastries and biscuits, roasted nuts, protein bars, “healthy” spreads.',f:'Cook with tallow, butter, ghee or coconut oil. Ask restaurants what they fry in, and read labels — “vegetable oil” means seed oil.'},
  la:{a:'Linoleic acid — the main omega-6 fat. Seed oils are 20–70% linoleic acid.',r:'Too much pushes your omega-6 to omega-3 balance far off, and it gets stored in your body fat for years. Keep it low.',s:'Seed oils, nuts and seeds, chicken skin and fat, pork fat from grain-fed pigs, mayo.',f:'Pick beef, lamb and fish over chicken and pork, cook in tallow/butter/ghee, skip nuts and seed snacks.'},
  addsugar:{a:'Table sugar, high-fructose corn syrup, glucose syrup and dextrose added to processed food. Fruit, honey and maple syrup don’t count here.',r:'Empty carbs with no vitamins or minerals — and they usually come packaged with seed oils and refined flour.',s:'Soda and juice drinks, candy, pastries, cereal and granola, flavoured yogurt, ketchup and sauces, energy drinks.',f:'Swap to fruit, honey or maple syrup, and check labels for hidden syrups.'},
@@ -2689,12 +2775,13 @@ function renderDiet(){
   const tot=dayTotals(dDate),meals=S.food[dDate]||[];
   $('dietCount').textContent=meals.length?meals.length+' meal'+(meals.length>1?'s':''):'';
   $('macroBox').innerHTML=['protein','carbs','fat'].map(k=>nutRow(k,tot)).join('');
-  $('badBox').innerHTML=NUT.filter(n=>n[3]==='bad').map(n=>nutRow(n[0],tot,true)).join('');
+  $('badBox').innerHTML=NUT.filter(n=>n[3]==='bad'&&n[0]!=='caffeine').map(n=>nutRow(n[0],tot,true)).join('');renderCaffeine(tot);
   $('antiBox').innerHTML=NUT.filter(n=>n[3]==='anti').map(n=>nutRow(n[0],tot,true)).join('')+'<p class="tiny" style="margin-top:10px">Tap any name to see what it does and where today’s amount came from.</p>';
   const mh=microHits(dDate);$('microScore').textContent=mh.hit+'/'+mh.of+' goals hit';
-  renderMicros(tot);
+  renderMicros(tot);renderGood(tot);
   const over=antiOver(dDate),hadAlert=!!$('dietAlert').querySelector('.alert');
-  $('dietAlert').innerHTML=(over.length?'<div class="alert">⚠ <b>Over your limits:</b> '+over.map(o=>'<span style="text-decoration:underline;cursor:pointer" onclick="openInfo(\''+o.k+'\')">'+esc(NMAP[o.k].n)+'</span> '+limTxt(o.k,o.v)).join(' · ')+'<br><span style="font-size:12px">Tap one to see which foods caused it.</span></div>':'')+queueCard();
+  const lateCaf=dDate===todayStr()&&cafItems(dDate).some(x=>cafHour(x.ts)>=CAF_CUT);
+  $('dietAlert').innerHTML=(lateCaf?'<div class="alert">☕ <b>Caffeine after 1 pm</b> — expect lighter, shorter deep sleep tonight. Water or herbal tea from here.</div>':'')+(over.length?'<div class="alert">⚠ <b>Over your limits:</b> '+over.map(o=>'<span style="text-decoration:underline;cursor:pointer" onclick="openInfo(\''+o.k+'\')">'+esc(NMAP[o.k].n)+'</span> '+limTxt(o.k,o.v)).join(' · ')+'<br><span style="font-size:12px">Tap one to see which foods caused it.</span></div>':'')+queueCard();
   $('mealList').innerHTML=meals.length?meals.slice().reverse().map(e=>mealHTML(e)).join(''):'<span class="muted">Nothing logged for this day yet.</span>';
   renderGaps();animBars($('view-diet'),enteringView==='diet');renderAnCard();
   const al=$('dietAlert').querySelector('.alert');if(al&&!hadAlert&&!enteringView)anim(al,[{opacity:0,transform:'translate3d(0,-8px,0) scale(.98)'},{opacity:1,transform:'none'}],{duration:520,easing:SPR_SOFT});
@@ -2711,7 +2798,7 @@ function openInfo(k){
   const n=NMAP[k],I=INFO[k]||{},anti=n.g==='anti'||n.g==='bad';
   const tot=dayTotals(dDate)[k],goal=goalFor(k);
   const src=sourcesOf(k,dDate);
-  let h='<div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:'+(anti?'var(--warn)':'var(--sky)')+'">'+(anti?(k==='seedoil'?'Keep out completely':(n.g==='bad'?'Keep it low':'Anti-nutrient')+' · daily limit '+fmtNum(goal)+' '+n.u):(n.g==='mac'?'Macro':'Micronutrient')+' · daily goal '+fmtNum(goal)+' '+n.u)+'</div>';
+  let h='<div class="tiny" style="text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:'+(anti?'var(--warn)':'var(--sky)')+'">'+(anti?(k==='seedoil'?'Keep out completely':(n.g==='bad'?'Keep it low':'Anti-nutrient')+' · daily limit '+fmtNum(goal)+' '+n.u):(n.g==='mac'?'Macro':n.g==='good'?'Good stuff':'Micronutrient')+' · daily goal '+fmtNum(goal)+' '+n.u)+'</div>';
   if(anti){
     h+='<p class="muted" style="margin:8px 0"><b style="color:var(--navy)">What it is:</b> '+esc(I.a||'')+'</p><p class="muted" style="margin-bottom:8px"><b style="color:var(--bad)">'+(k==='seedoil'?'Why it stays out:':'Why limit it:')+'</b> '+esc(I.r||'')+'</p>'+
       '<p class="muted" style="margin-bottom:8px"><b style="color:var(--navy)">Main sources:</b> '+esc(I.s||'')+'</p><p class="muted"><b style="color:var(--ok)">'+(k==='seedoil'?'What to use instead:':'How to cut it:')+'</b> '+esc(I.f||'')+'</p>';
@@ -2747,15 +2834,17 @@ function renderGaps(){
 /* ================= MEAL ANALYSIS: every meal graded against the app's food rules ================= */
 const FOOD_RULES='Nutrition principles of this app. State them as plain fact; never mention any person, influencer, study or "some say", and never hedge:\n'+
  '1. Animal foods are the base: ruminant meat (beef, lamb, bison), eggs, organ meats (beef liver 1–2 times a week, heart, kidney), wild fish and shellfish, full-fat dairy (milk, kefir, yogurt, cheese), butter, ghee and tallow.\n'+
- '2. Carbs come from ripe fruit, honey and maple syrup — the least defended plant foods.\n'+
+ '2. Carbs come from ripe fruit (berries, citrus, kiwi, bananas, mango, dates, figs), honey and maple syrup — the least defended plant foods. Whole fruit and dates are top-tier foods (A).\n'+
  '3. Seed oils (canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran, "vegetable oil", margarine) are harmful and always get called out, including hidden sources: fried and restaurant food, chips, sauces, dressings, mayo, hummus, pastries, roasted nuts, protein bars. Cook with tallow, butter, ghee or coconut oil.\n'+
  '4. Keep omega-6 linoleic acid low (under ~7 g a day): seed oils, nuts, seeds, chicken skin and pork fat are the big sources; ruminant fat is low.\n'+
- '5. Grains, legumes, nuts, seeds and most vegetables carry plant defence chemicals (oxalates, phytates, lectins, goitrogens) that block minerals and irritate the gut — minimise them; if eaten, soak, ferment, peel and cook them well.\n'+
+ '5. Low-defence vegetables are good food (B to A): carrots (raw carrot salad is excellent), pumpkin and squash, zucchini, cucumber, peeled potatoes, avocado, olives. Grains, legumes, nuts, seeds, soy and high-oxalate greens (spinach, chard, beet greens, rhubarb) carry plant defence chemicals (oxalates, phytates, lectins, goitrogens) that block minerals and irritate the gut — minimise those; if eaten, soak, ferment, peel and cook them well. A few milligrams of oxalate (under ~10 mg) don’t matter.\n'+
  '6. Avoid ultra-processed food, refined sugar and syrups, refined flour, artificial sweeteners, emulsifiers and gums, and alcohol.\n'+
- '7. Protein at every meal (30–50 g), mostly animal protein. Eat enough to grow, train and recover — never suggest eating less, skipping meals or fasting.\n'+
+ '7. Protein at every main meal (30–50 g), mostly animal protein. A piece of fruit, a carrot or a drink is a snack — never mark a snack down for having little protein; suggest protein for the next meal instead. Eat enough to grow, train and recover — never suggest eating less, skipping meals or fasting.\n'+
  '8. Liver is the most nutrient-dense food, but keep it to 100–200 g a week (vitamin A).\n'+
  '9. Dairy: A2/A2 milk and A2 dairy (A2 cows, goat, sheep) beat regular A1 cow dairy — suggest A2/A2 milk whenever milk or dairy comes up. Never bring up pasteurization or raw milk at all.\n'+
- '10. Magnesium is the usual gap: magnesium-rich mineral water fixes it. Vitamin D comes from sun, fatty fish and egg yolks.';
+ '10. Magnesium is the usual gap: magnesium-rich mineral water fixes it. Vitamin D comes from sun, fatty fish and egg yolks.\n'+
+ '11. Caffeine: a little and early — wait 1–2 hours after waking, nothing after 1 pm (half of it is still in you 5–6 hours later and it cuts deep sleep), one coffee rather than three.\n'+
+ '12. Reward the compounds a body thrives on: glycine and collagen (bone broth, gelatin, slow-cooked connective tissue), creatine and taurine (red meat, seafood), CoQ10 (heart), vitamin K2 (egg yolks, aged cheese, butter), carotenoids (carrots, egg yolks, wild salmon) and fruit polyphenols (berries, dates).';
 function whoLine(){const s=S.settings;return (s.age?s.age+'-year-old ':'')+(s.sex==='f'?'female':'male')+' lifter'+(s.height?', '+s.height+' cm':'')+(s.weight?', '+s.weight+' kg':'')+', training for body recomposition and expert-level skiing'+((s.age||25)<19?', still growing':'');}
 function mealFlags(e){
   const out=new Set();(e.parts||[]).forEach(p=>(p.flags||[]).forEach(f=>out.add(f)));
@@ -2771,7 +2860,9 @@ function microPct(t){return NUT.filter(x=>x[3]==='vit'||x[3]==='min').map(x=>({k
 function localAnalysis(e,date){
   const m=e.mult||1,v=k=>(+((e.n||{})[k])||0)*m,fl=mealFlags(e);
   let sc=72;const good=[],bad=[],low=[];
-  const P=v('protein');if(P>=30){sc+=10;good.push(Math.round(P)+' g protein — solid');}else if(P<15){sc-=10;}
+  const P=v('protein'),kcal=4*P+4*v('carbs')+9*v('fat'),snack=kcal<350;
+  if(P>=30){sc+=10;good.push(Math.round(P)+' g protein — solid');}else if(P<15&&!snack){sc-=10;}
+  const caf=v('caffeine');if(caf>0&&new Date(e.ts||Date.now()).getHours()>=CAF_CUT){sc-=15;bad.push('Caffeine after 1 pm — still in you at bedtime');}else if(caf>150){sc-=5;bad.push(fmtNum(caf)+' mg caffeine in one go');}
   const so=v('seedoil');if(so>0.4){sc-=35;const src=(e.parts||[]).filter(p=>(+(p.n||{}).seedoil||0)>0.2||(p.flags||[]).includes('seed_oil')).map(p=>p.name.toLowerCase());bad.push('Seed oils ~'+fmtNum(so)+' g'+(src.length?' ('+src.slice(0,2).join(', ')+')':''));}
   const la=v('la');if(la>4){sc-=10;bad.push('High omega-6: '+fmtNum(la)+' g linoleic acid');}
   const su=v('addsugar');if(su>8){sc-=15;bad.push('Refined sugar: '+fmtNum(su)+' g');}
@@ -2784,6 +2875,9 @@ function localAnalysis(e,date){
   NUT.filter(x=>x[3]==='anti').filter(x=>goalFor(x[0])&&v(x[0])>goalFor(x[0])*0.5).forEach(x=>{sc-=8;bad.push(x[1]+' '+fmtNum(v(x[0]))+' '+x[2]+' — half the day’s limit');});
   const dense=NUT.filter(x=>x[3]==='vit'||x[3]==='min').filter(x=>goalFor(x[0])&&v(x[0])>=goalFor(x[0])*0.3).map(x=>x[1].split(' ')[0]);
   if(dense.length>=6){sc+=8;good.push('Nutrient dense: '+dense.slice(0,4).join(', ')+(dense.length>4?'…':''));}
+  const ant=['carotenoids','polyphenols'].filter(k=>goalFor(k)&&v(k)>=goalFor(k)*0.3);if(ant.length){sc+=6;good.push('Rich in antioxidants ('+ant.map(k=>NMAP[k].n.toLowerCase()).join(', ')+')');}
+  const gs=['glycine','creatine','taurine','coq10','k2'].filter(k=>goalFor(k)&&v(k)>=goalFor(k)*0.4);if(gs.length>=2){sc+=5;good.push('Good stuff: '+gs.map(k=>NMAP[k].n.split(' ')[0]).join(', '));}
+  if(snack&&!bad.length&&so<=0.4&&su<=2)sc+=10;
   if(!bad.length&&good.length<2)good.push('Clean — no seed oils, sugar or processed food');
   const t=dayTotals(date),late=date!==todayStr()||new Date().getHours()>=17||(S.food[date]||[]).length>=3;
   microPct(t).filter(o=>o.p<(late?60:25)).sort((a,b)=>a.p-b.p).slice(0,3).forEach(o=>low.push(NMAP[o.k].n+' — '+firstSources(o.k)));
@@ -2797,10 +2891,11 @@ function mealFacts(e){
   const m=e.mult||1,v=k=>(+((e.n||{})[k])||0)*m;
   const foods=(e.parts&&e.parts.length?e.parts:[{name:e.name,g:null}]).map(p=>{const h=ingScan(p.ing).hits;return '- '+p.name+(p.g?' ('+Math.round(p.g*m)+' g)':'')+(p.flags&&p.flags.length?' ['+p.flags.join(', ')+']':'')+
     (h.length?' — bad ingredients: '+[...new Set(h.map(x=>x.t.toLowerCase()))].slice(0,6).join(', '):'');}).join('\n');
-  const key=['protein','carbs','fat','seedoil','la','addsugar'].map(k=>NMAP[k].n+' '+fmtNum(v(k))+' '+NMAP[k].u).join(', ');
+  const key=['protein','carbs','fat','seedoil','la','addsugar','caffeine','glycine','creatine','carotenoids','polyphenols'].filter(k=>k!=='caffeine'||v(k)>0).map(k=>NMAP[k].n+' '+fmtNum(v(k))+' '+NMAP[k].u).join(', ');
   const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0).map(x=>x[1]+' '+fmtNum(v(x[0]))+' '+x[2]).join(', ');
   const cover=NUT.filter(x=>x[3]==='vit'||x[3]==='min').map(x=>({n:x[1],p:goalFor(x[0])?v(x[0])/goalFor(x[0])*100:0})).filter(o=>o.p>=20).sort((a,b)=>b.p-a.p).slice(0,8).map(o=>o.n+' '+Math.round(o.p)+'%').join(', ');
-  return 'Foods:\n'+foods+'\nThis meal: '+key+(anti?'\nAnti-nutrients: '+anti:'')+(cover?'\nShare of daily goals covered by this meal: '+cover:'');
+  const at=e.ts?new Date(e.ts).toTimeString().slice(0,5):'';
+  return 'Foods:\n'+foods+(at?'\nEaten at '+at:'')+'\nThis meal: '+key+(anti?'\nAnti-nutrients: '+anti:'')+(cover?'\nShare of daily goals covered by this meal: '+cover:'');
 }
 function dayFacts(date){
   const t=dayTotals(date);
@@ -2815,6 +2910,8 @@ function anPrompt(e,date){
   return 'You are the nutrition coach inside the Lock In app, judging one meal for a '+whoLine()+'.\n'+FOOD_RULES+
     '\n\nMEAL: '+e.name+'\n'+mealFacts(e)+'\n\n'+dayFacts(date)+
     '\n\nReturn ONLY JSON: {"grade":"A|B|C|D|F","score":0-100,"headline":"verdict, max 8 words","good":["0-2 short points"],"bad":["0-3 warnings about bad things in THIS meal — seed oils, sugar, processed food, plant toxins, too much liver; empty if clean"],"low":["0-3 nutrients still low today as \'Nutrient — best food fix\'; leave out gaps that are normal this early in the day"],"next":"one concrete next-meal suggestion that fixes the biggest gap, max 16 words"}\n'+
+    'Grade the food for what it is: whole fruit, dates, honey and clean low-defence vegetables like carrots are A or B on their own, and a snack is never marked down for little protein. Caffeine eaten after 1 pm goes under "bad" and caps the grade at B. '+
+    'Day totals are only context for "low" and "next": never list a limit as bad unless THIS meal itself contains it. '+
     'Grade strictly: any seed oil caps the grade at C; refined sugar or ultra-processed food caps it at B. A2 dairy raises the score; regular A1 cow dairy lowers it a little and gets an A2/A2 swap suggestion. Use only the numbers given — never invent amounts. Every item under 14 words, plain words, no emojis.';
 }
 function arr(a,n){return (Array.isArray(a)?a:[]).map(x=>String(x).trim()).filter(Boolean).slice(0,n);}
@@ -2826,8 +2923,9 @@ async function analyzeMeal(id,quiet){
   let r=null;try{r=parseJSON(await ai(anPrompt(f.e,f.d)));}catch(err){}
   anBusy.delete(id);
   const g=findMeal(id);if(!g)return;
-  const gr=String((r&&r.grade)||'').trim().toUpperCase().charAt(0),ok=/[ABCDF]/.test(gr);
+  let gr=String((r&&r.grade)||'').trim().toUpperCase().charAt(0);const ok=/[ABCDF]/.test(gr);
   const loc=localAnalysis(g.e,g.d);
+  if(ok&&gr>'B'&&!arr(r.bad,3).length&&!loc.bad.length&&loc.score>=80){gr='B';r.score=Math.max(+r.score||0,76);}
   g.e.an=ok?{grade:gr,score:Math.max(0,Math.min(100,Math.round(+r.score||loc.score))),headline:String(r.headline||loc.headline).slice(0,90),good:arr(r.good,2),bad:arr(r.bad,3),low:arr(r.low,3),next:String(r.next||'').slice(0,160),ts:Date.now()}:loc;
   if(ok)delete g.e.anPending;else g.e.anPending=1;
   save();renderAnCard(true);updateMealPill(id);
@@ -3061,7 +3159,9 @@ function saveMeal(md,date){
   }
   save();dDate=md.id&&e?e.d:d;dAuto=dDate===todayStr();closeSheet();setTimeout(fxProgressCheck,1400);
   if(!$('view-diet').classList.contains('active'))show('diet');else flip($('mealList'),renderDiet);
-  const over=antiOver(dDate);toast(over.length?(md.id?'Saved':'Logged')+' — ⚠ '+NMAP[over[0].k].n+' over your limit':(md.id?'Saved ':'Logged ')+(md.name||'meal'));
+  const mn=partsTotal(parts),mm=md.mult||1,late=(+mn.caffeine||0)>0&&new Date(e?e.e.ts:Date.now()).getHours()>=CAF_CUT;
+  const over=antiOver(dDate).filter(o=>(+mn[o.k]||0)*mm>(o.k==='seedoil'?0.1:goalFor(o.k)*0.05));
+  toast(late?(md.id?'Saved':'Logged')+' — ⚠ caffeine after 1 pm':over.length?(md.id?'Saved':'Logged')+' — ⚠ '+NMAP[over[0].k].n+' over your limit':(md.id?'Saved ':'Logged ')+(md.name||'meal'));
   anFocus=mid;analyzeMeal(mid);
 }
 /* ---------- meal editor: foods, grams, cooking fat, add ingredients ---------- */
@@ -3188,7 +3288,12 @@ function nutrientPrompt(hint,photo){
     '\n\nReturn ONLY JSON: {"name":"short meal name","confidence":"low|medium|high","items":[{"name":"food","g":grams,"n":{nutrient:value},"flags":[],"ing":"ingredient list"}]} — one entry per separate food or ingredient, each with its OWN nutrients for that portion. '+
     '"ing": for packaged, processed, restaurant or fast-food items give the full ingredient list the way it is printed on such products (copy it exactly if an ingredient label is visible in the photo), comma-separated, with E-numbers; leave "ing" out for whole foods like meat, eggs, fish, fruit, milk or butter. '+
     'Nutrient keys and units: '+NUT.map(x=>x[0]+' ('+x[2]+')').join(', ')+'. Omit a key when it is 0. '+
-    'Anti-nutrients: phytate=phytic acid, oxalate=total oxalates, tannins, lectins=ACTIVE lectins only (≈0 when properly cooked), saponins, goitrogens=glucosinolates, protease=trypsin/protease inhibitors (mostly destroyed by cooking), isoflavones, glycoalkaloids=solanine+chaconine, cyanogenic=as mg HCN. Do not include chloride or fluoride. '+SEEDRULES;
+    'Anti-nutrients: phytate=phytic acid, oxalate=total oxalates, tannins, lectins=ACTIVE lectins only (≈0 when properly cooked), saponins, goitrogens=glucosinolates, protease=trypsin/protease inhibitors (mostly destroyed by cooking), isoflavones, glycoalkaloids=solanine+chaconine, cyanogenic=as mg HCN. Do not include chloride or fluoride. '+
+    'caffeine=mg (mug of coffee ~95, espresso ~63, black tea ~47, green tea ~28, matcha ~70, cola ~34 a can, energy drinks per label). '+
+    'Beneficial compounds: glycine=g (collagen, gelatin and bone broth are about a quarter glycine; muscle meat ~1 g per 100 g), creatine=g (raw beef, lamb, salmon ~0.45 per 100 g, herring ~0.8; none in plants), '+
+    'taurine=mg (red meat and fish 40–80 per 100 g, dark poultry meat ~170, clams, scallops and octopus 500–800), coq10=mg (beef heart ~11 per 100 g, liver ~4, beef ~3, sardines ~6), '+
+    'k2=µg vitamin K2/menaquinones (egg yolk ~15 each, gouda ~75 per 100 g, butter ~15, goose liver ~370, chicken thigh ~10), carotenoids=mg total of beta-carotene, lutein, zeaxanthin, lycopene and astaxanthin (raw carrot ~8 per 100 g, sweet potato ~9, egg yolk ~0.4), '+
+    'polyphenols=mg total (Phenol-Explorer: berries 200–600 per 100 g, dates ~250, apples ~200, coffee ~200 a mug). '+SEEDRULES;
 }
 async function analyze(photo){
   const hint=($('mealHint')&&$('mealHint').value.trim())||'';
@@ -3270,7 +3375,7 @@ async function scanFromImage(file){
 const OFFMAP={protein:['proteins',1],carbs:['carbohydrates',1],fat:['fat',1],vitA:['vitamin-a',1e6],vitC:['vitamin-c',1e3],vitD:['vitamin-d',1e6],vitE:['vitamin-e',1e3],vitK:['vitamin-k',1e6],
  b1:['vitamin-b1',1e3],b2:['vitamin-b2',1e3],b3:['vitamin-pp',1e3],b5:['pantothenic-acid',1e3],b6:['vitamin-b6',1e3],b7:['biotin',1e6],b9:['vitamin-b9',1e6],b12:['vitamin-b12',1e6],choline:['choline',1e3],
  calcium:['calcium',1e3],iron:['iron',1e3],magnesium:['magnesium',1e3],phosphorus:['phosphorus',1e3],potassium:['potassium',1e3],sodium:['sodium',1e3],zinc:['zinc',1e3],copper:['copper',1e6],
- manganese:['manganese',1e3],selenium:['selenium',1e6],iodine:['iodine',1e6],chromium:['chromium',1e6],molybdenum:['molybdenum',1e6]};
+ manganese:['manganese',1e3],selenium:['selenium',1e6],iodine:['iodine',1e6],chromium:['chromium',1e6],molybdenum:['molybdenum',1e6],caffeine:['caffeine',1e3]};
 async function lookupBarcode(code){
   code=String(code||'').replace(/\D/g,'');if(code.length<6){toast('That doesn’t look like a barcode');return;}
   stopScanner();
@@ -3445,13 +3550,13 @@ let setGoal='recomp';
 function renderSettings(){
   $('acctLine').textContent=user?'Signed in as @'+user.username:'—';renderSync();
   const s=S.settings;
-  $('set-name').value=s.name;$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-age').value=s.age||'';$('set-sex').value=s.sex||'m';
+  $('set-name').value=s.name;$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-dob').value=DOB||'';$('set-dob').max=addDays(todayStr(),-3650);$('ageLbl').textContent=s.age?'· age '+s.age:'';$('set-sex').value=s.sex||'m';
   setGoal='recomp';
   $('set-ai').checked=s.aiAuto!==false;$('set-autorest').checked=s.autoRest!==false;$('set-wake').checked=!!s.wake;
   $('set-notify').checked=s.restNotify!==false;$('notifyLine').style.display=hasNative()?'':'none';
   $('t-protein').value=S.targets.protein||'';$('t-carbs').value=S.targets.carbs||'';$('t-fat').value=S.targets.fat||'';
   const AD=antiDefaults();
-  $('microTgt').innerHTML=NUT.filter(n=>['vit','min','oth'].includes(n[3])).map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-mi="'+n[0]+'" placeholder="'+microDefault(n[0])+'" value="'+((S.targets.micro||{})[n[0]]||'')+'">').join('');
+  $('microTgt').innerHTML=NUT.filter(n=>['vit','min','oth','good'].includes(n[3])).map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-mi="'+n[0]+'" placeholder="'+microDefault(n[0])+'" value="'+((S.targets.micro||{})[n[0]]||'')+'">').join('');
   $('antiTgt').innerHTML=NUT.filter(n=>n[3]==='bad'||n[3]==='anti').map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-an="'+n[0]+'" placeholder="'+AD[n[0]]+'" value="'+((S.targets.anti||{})[n[0]]||'')+'">').join('');
   renderGyms();renderSocialSettings();if(!SOC.me&&socTok())socEnsureMe().then(()=>renderSocialSettings());
 }
@@ -3463,8 +3568,8 @@ function addGym(name){name=(name||'').trim();if(!name)return null;const g={id:ui
 function delGym(i){const g=S.gyms[i];const n=Object.values(S.workouts).filter(w=>w.gym===g.id).length;if(!confirm('Remove '+g.name+'?'+(n?' Its '+n+' logged workouts stay in your history.':'')))return;S.gyms.splice(i,1);if(S.activeGym===g.id)S.activeGym=S.gyms[0].id;save();renderGyms();}
 function saveSettings(){
   const s=S.settings;const name=$('set-name').value.trim();if(name)s.name=name;
-  const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),a=parseInt($('set-age').value);
-  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a)s.age=a;s.sex=$('set-sex').value;s.goal=setGoal;
+  const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),dob=$('set-dob').value,a=ageFrom(dob);
+  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;s.goal=setGoal;
   save();renderHeader();renderSettings();socNameSync();
 }
 function saveTargets(){
@@ -4906,11 +5011,12 @@ function fxWorkoutDone(w,prs){
   const bar=$('fxXp');bar.style.transform='translate3d('+(F.p-100)+'%,0,0)';
   requestAnimationFrame(()=>{el.classList.add('show');setTimeout(()=>countUp(el,true),450);});
   setTimeout(()=>{fxConfetti({y:innerHeight*.3});haptic('success');},350);
-  if(prs.length)setTimeout(()=>{const t=el.querySelector('.fxprs');if(t){const r=t.getBoundingClientRect();burst(r.left+28,r.top+18,'#f0b941',true);}haptic('heavy');},1000);
+  if(prs.length)setTimeout(()=>{if(!el.isConnected)return;const t=el.querySelector('.fxprs');if(t){const r=t.getBoundingClientRect();burst(r.left+28,r.top+18,'#f0b941',true);}haptic('heavy');},1000);
   setTimeout(()=>{
+    if(!el.isConnected)return;   // closed early
     if(!up){bar.style.transform='translate3d('+(L.p-100)+'%,0,0)';$('fxLvTxt').textContent='Level '+L.lv+' · '+Math.round(L.xp-L.lo)+' / '+Math.round(L.hi-L.lo)+' XP';return;}
     bar.style.transform='translate3d(0,0,0)';
-    setTimeout(()=>{bar.style.transition='none';bar.style.transform='translate3d(-100%,0,0)';void bar.offsetWidth;bar.style.transition='';bar.style.transform='translate3d('+(L.p-100)+'%,0,0)';
+    setTimeout(()=>{if(!el.isConnected)return;bar.style.transition='none';bar.style.transform='translate3d(-100%,0,0)';void bar.offsetWidth;bar.style.transition='';bar.style.transform='translate3d('+(L.p-100)+'%,0,0)';
       $('fxLv').textContent=L.lv;$('fxLvTxt').textContent='Level '+L.lv;el.querySelector('.fxcard').classList.add('lvlup');haptic('heavy');
       const sh=el.querySelector('.fxshield').getBoundingClientRect();burst(sh.left+sh.width/2,sh.top+sh.height/2,'#f0b941',true);fxConfetti({x:sh.left+sh.width/2,y:sh.top,n:90,colors:['#f0b941','#ffd978','#fff3c9','#ffffff'],power:.8});},900);
   },1300);
@@ -4998,6 +5104,64 @@ function initTilt(){
   document.addEventListener('pointerup',up,{passive:true});document.addEventListener('pointercancel',up,{passive:true});
 }
 function initFx(){initPull();initTilt();setTimeout(()=>fxProgressCheck(),6000);}
+
+
+/* ---------- birthday: kept encrypted with your own key; only the age is used anywhere ---------- */
+let DOB='';
+function ageFrom(d){if(!/^\d{4}-\d\d-\d\d$/.test(d||''))return 0;const b=parseD(d),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))a--;return a;}
+async function dobSet(d){
+  if(!S||!/^\d{4}-\d\d-\d\d$/.test(d||''))return;DOB=d;S.settings.age=ageFrom(d);
+  try{if(typeof e2eLoad==='function'&&await e2eLoad()){S.settings.dobE=await encS(E2E.self,TE.encode(d),'dob');delete S.settings.dob;}else S.settings.dob=d;}catch(e){S.settings.dob=d;}
+  save();
+}
+async function dobLoad(){
+  const st=S&&S.settings;if(!st)return;
+  if(st.dob&&!st.dobE){await dobSet(st.dob);return;}            // saved while offline: encrypt it now
+  if(!st.dobE||typeof e2eLoad!=='function'||!(await e2eLoad()))return;
+  try{DOB=TD.decode(await decS(E2E.self,st.dobE,'dob'));const a=ageFrom(DOB);if(a&&a!==st.age){st.age=a;save();}}catch(e){}
+  if($('set-dob')&&!$('set-dob').value)$('set-dob').value=DOB;
+}
+
+/* ---------- good stuff: same idea as micros (done first, then closest), never red ---------- */
+function renderGood(tot){
+  const box=$('goodBox');if(!box)return;
+  const rows=NUT.filter(n=>n[3]==='good').map(n=>{const g=goalFor(n[0]);return {k:n[0],p:g?(+tot[n[0]]||0)/g*100:0};}).sort((a,b)=>(b.p>=100)-(a.p>=100)||b.p-a.p);
+  const hit=rows.filter(r=>r.p>=100).length,gs=$('goodScore');if(gs)gs.textContent=hit+'/'+rows.length+' hit';
+  const html=rows.map(r=>{const n=NMAP[r.k],g=goalFor(r.k),v=+tot[r.k]||0,done=r.p>=100;
+    return '<div class="nrow mrow'+(done?' done':'')+'" data-fk="gd'+r.k+'"><div class="tgtline"><span class="nlab" onclick="openInfo(\''+r.k+'\')">'+(done?'<i class="mchk">✓</i>':'')+esc(n.n)+' <i class="ib">i</i></span><span><b>'+fmtNum(v)+'</b> / '+fmtNum(g)+' '+n.u+'<span class="pct"> '+Math.round(r.p)+'%</span></span></div><div class="bar"><i class="'+(done?'full':'gd')+'" data-k="n'+r.k+'" data-p="'+Math.min(100,r.p).toFixed(1)+'"></i></div></div>';}).join('');
+  if(box.children.length&&!enteringView&&!RM&&$('view-diet').classList.contains('active'))flip(box,()=>{box.innerHTML=html;});else box.innerHTML=html;
+}
+/* ---------- caffeine: a little, early, nothing after 1 pm ---------- */
+const CAF_CUT=13,CAF_BED=22.5,CAF_HALF=5;
+const CAFQ=[['Espresso',63,30,{potassium:35,magnesium:24,polyphenols:120}],['Double espresso',126,60,{potassium:70,magnesium:48,polyphenols:240}],['Coffee',95,240,{potassium:116,magnesium:7,b3:0.5,polyphenols:200}],
+  ['Black tea',47,240,{polyphenols:100,manganese:0.5,tannins:60,oxalate:10}],['Green tea',28,240,{polyphenols:120,manganese:0.4,tannins:40,oxalate:6}],['Matcha',70,240,{polyphenols:150,vitK:30,oxalate:8}]];
+function cafItems(d){const out=[];(S.food[d]||[]).forEach(e=>{const m=e.mult||1,v=(+(e.n||{}).caffeine||0)*m;if(v>0)out.push({id:e.id,n:e.name||'Drink',v,ts:e.ts||parseD(d).getTime()});});return out.sort((a,b)=>a.ts-b.ts);}
+function cafHour(ts){const x=new Date(ts);return x.getHours()+x.getMinutes()/60;}
+function renderCaffeine(tot){
+  const box=$('cafBox');if(!box)return;
+  const lim=goalFor('caffeine'),v=+tot.caffeine||0,items=cafItems(dDate),today=dDate===todayStr(),now=new Date(),h=now.getHours()+now.getMinutes()/60;
+  const late=items.filter(x=>cafHour(x.ts)>=CAF_CUT),p=lim?v/lim*100:0;
+  let left=0;items.forEach(x=>{const dt=CAF_BED-cafHour(x.ts);if(dt>0)left+=x.v*Math.pow(.5,dt/CAF_HALF);});
+  $('cafRight').textContent=fmtNum(v)+' / '+fmtNum(lim)+' mg';
+  let status='';
+  if(today){status=h<CAF_CUT?'<span class="cafok">☕ '+(Math.floor(CAF_CUT-h)?Math.floor(CAF_CUT-h)+' h ':'')+Math.round((CAF_CUT-h)%1*60)+' min until your 1 pm cutoff</span>':'<span class="cafno">🌙 Past 1 pm — no more caffeine today</span>';}
+  box.innerHTML='<div class="bar cafbar"><i class="'+(p>100?'over':p>=80?'near':'')+'" data-k="ncaffeine" data-p="'+Math.min(100,p).toFixed(1)+'"></i><span class="cafcut" style="left:'+((CAF_CUT-6)/(CAF_BED-6)*100).toFixed(1)+'%"></span></div>'+
+    '<div class="cafline">'+status+(v&&(today||late.length)?'<span class="tiny">≈ '+fmtNum(Math.round(left))+' mg still in you at 22:30</span>':'')+'</div>'+
+    (items.length?'<div class="cafitems">'+items.map(x=>{const t=new Date(x.ts),lt=cafHour(x.ts)>=CAF_CUT;return '<span class="'+(lt?'late':'')+'"><b>'+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+'</b> '+esc(x.n)+' · '+fmtNum(x.v)+' mg'+(lt?' ⚠':'')+'</span>';}).join('')+'</div>':'')+
+    (late.length?'<p class="tiny cafwarn">⚠ Caffeine after 1 pm is still working at bedtime and cuts your deep sleep — the sleep you grow and recover in.</p>':'')+
+    (today?'<div class="cafq">'+CAFQ.map((q,i)=>'<button class="chip sm" onclick="quickCaf('+i+',this)">+ '+q[0]+' <i>'+q[1]+'</i></button>').join('')+'</div>':'')+
+    '<p class="tiny" style="margin-top:8px">A little and early: wait 1–2 hours after waking, nothing after 1 pm, under '+fmtNum(lim)+' mg a day. <span class="linkbtn" style="font-size:11.5px" onclick="openInfo(\'caffeine\')">Why?</span></p>';
+}
+function quickCaf(i,btn){
+  const q=CAFQ[i];if(!q)return;const d=todayStr();
+  const n=Object.assign({caffeine:q[1]},q[3]),parts=[{name:q[0],g:q[2],n:cleanN(n)}];
+  const e={id:uid('f'),ts:Date.now(),name:q[0],parts,n:partsTotal(parts),mult:1,src:'quick',q:1};
+  (S.food[d]=S.food[d]||[]).push(e);e.an=localAnalysis(e,d);dDate=d;dAuto=true;save();
+  flip($('mealList'),renderDiet);haptic(new Date().getHours()>=CAF_CUT?'heavy':'light');
+  if(btn)floatEmoji(btn,'☕');
+  const tot=dayTotals(d).caffeine,lim=goalFor('caffeine');
+  toast(new Date().getHours()>=CAF_CUT?'Logged '+q[0]+' — ⚠ caffeine after 1 pm':tot>lim?'Logged '+q[0]+' — ⚠ '+fmtNum(tot)+' mg is over your '+fmtNum(lim)+' mg':'Logged '+q[0]+' · '+fmtNum(tot)+' mg today');
+}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
@@ -5211,7 +5375,7 @@ function init(){
     else S.activeGym=e.target.value;
     const w=curWO();if(w&&!w.ended)w.gym=S.activeGym;save();renderWorkout();
   });
-  $('saveWoBtn').addEventListener('click',e=>{const r=endWorkout();if(r)btnOk(e.currentTarget,r);});$('newWoBtn').addEventListener('click',startNewWorkout);
+  $('saveWoBtn').addEventListener('click',e=>{const r=endWorkout();if(r)btnOk(e.currentTarget,r);});
   $('woDate').addEventListener('change',()=>{const w=curWO();if(w){let v=$('woDate').value||todayStr();if(v>todayStr())v=todayStr();w.date=v;w.ts=Date.now();save();}renderWorkout();});
   $('timerStop').addEventListener('click',stopTimer);
   $('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet();});
