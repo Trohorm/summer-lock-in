@@ -72,7 +72,7 @@ const RX = {
   uid: /^[a-z0-9]{8,32}$/
 };
 
-const SCHEMA_V = '2';
+const SCHEMA_V = '3';
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, puid TEXT NOT NULL UNIQUE, handle TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '',
      av INTEGER NOT NULL DEFAULT 0, invite TEXT NOT NULL UNIQUE, defaults TEXT NOT NULL DEFAULT '{}', created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, pub TEXT, fp TEXT)`,
@@ -97,13 +97,16 @@ const SCHEMA = [
      PRIMARY KEY(owner,reader,cat))`,
   `CREATE INDEX IF NOT EXISTS keyring_reader ON keyring(reader)`,
   `CREATE TABLE IF NOT EXISTS rl(k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT)`
+  `CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT)`,
+  // someone's Puter AI credit ran out (one row per person per month) — shown to the admin
+  `CREATE TABLE IF NOT EXISTS aiout(uid TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL, first INTEGER NOT NULL, last INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uid,month))`
 ];
 // columns added after the first release (fresh databases get them from SCHEMA, the ALTERs then just fail)
 const MIGRATE = [
   'ALTER TABLE users ADD COLUMN pub TEXT', 'ALTER TABLE users ADD COLUMN fp TEXT',
   'ALTER TABLE posts ADD COLUMN pk TEXT', 'ALTER TABLE posts ADD COLUMN sk TEXT', 'ALTER TABLE posts ADD COLUMN enc INTEGER NOT NULL DEFAULT 0',
-  'ALTER TABLE sends ADD COLUMN w TEXT', 'ALTER TABLE sends ADD COLUMN meta TEXT', 'ALTER TABLE sends ADD COLUMN rfp TEXT', 'ALTER TABLE sends ADD COLUMN ofp TEXT'
+  'ALTER TABLE sends ADD COLUMN w TEXT', 'ALTER TABLE sends ADD COLUMN meta TEXT', 'ALTER TABLE sends ADD COLUMN rfp TEXT', 'ALTER TABLE sends ADD COLUMN ofp TEXT',
+  'ALTER TABLE users ADD COLUMN pname TEXT'
 ];
 let schemaReady = null;
 function ensureSchema(db) {
@@ -209,7 +212,8 @@ async function who(req, env, ctx) {
   const w = { id, exp: now + HOUR };
   if (MEM.size > 1000) MEM.clear();
   MEM.set(h, w);
-  const st = [db.prepare('INSERT OR REPLACE INTO tokens(h,id,exp) VALUES(?,?,?)').bind(h, id, w.exp)];
+  const st = [db.prepare('INSERT OR REPLACE INTO tokens(h,id,exp) VALUES(?,?,?)').bind(h, id, w.exp),
+              db.prepare('UPDATE users SET pname=? WHERE id=?').bind(String(u.username).slice(0, 64), id)];
   if (Math.random() < 0.05) st.push(db.prepare('DELETE FROM tokens WHERE exp<?').bind(now));
   const p = db.batch(st).catch(() => {});
   if (ctx && ctx.waitUntil) ctx.waitUntil(p); else await p;
@@ -234,6 +238,12 @@ async function ensureUser(db, puid, uname) {
     }
   }
   throw new HttpError(500, 'server', 'Couldn’t create your profile.');
+}
+
+async function isAdmin(db, id, env) {
+  const u = await db.prepare('SELECT pname FROM users WHERE id=?').bind(id).first();
+  const admins = String(env.ADMIN || 'Trohorm').toLowerCase().split(/[\s,]+/);
+  return !!(u && u.pname && admins.includes(String(u.pname).toLowerCase()));
 }
 
 /* ---------- router ---------- */
@@ -293,6 +303,24 @@ async function api(req, env, ctx, url) {
       case 'POST /api/share': return await share(db, id, b);
       case 'POST /api/posts': await limit(db, 'u:' + id + ':post', 40, HOUR); return await addPost(db, id, b);
       case 'GET /api/posts': return await listPosts(db, id, String(url.searchParams.get('u') || id));
+      case 'POST /api/aiout': {
+        await limit(db, 'u:' + id + ':aiout', 6, HOUR);
+        const now = Date.now(), mo = new Date(now).toISOString().slice(0, 7);
+        await db.prepare('INSERT INTO aiout(uid,month,n,first,last,seen) VALUES(?,?,1,?,?,0) ON CONFLICT(uid,month) DO UPDATE SET n=n+1, last=excluded.last')
+          .bind(id, mo, now, now).run();
+        return J({ ok: true });
+      }
+      case 'GET /api/admin/aiout': {
+        if (!await isAdmin(db, id, env)) return err(403, 'forbidden', 'Not allowed.');
+        const r = await db.prepare('SELECT a.uid, a.month, a.n, a.first, a.last, a.seen, u.handle, u.name, u.pname FROM aiout a JOIN users u ON u.id=a.uid ORDER BY a.last DESC LIMIT 50').all();
+        return J({ items: r.results || [] });
+      }
+      case 'POST /api/admin/aiout/seen': {
+        if (!await isAdmin(db, id, env)) return err(403, 'forbidden', 'Not allowed.');
+        await db.prepare('UPDATE aiout SET seen=1 WHERE seen=0').run();
+        return J({ ok: true });
+      }
+      case 'GET /api/admin': return J({ admin: await isAdmin(db, id, env) });
       case 'GET /api/lookup': {
         await limit(db, 'u:' + id + ':lookup', 40, 10 * 60e3);
         const h = String(url.searchParams.get('h') || '').toLowerCase().replace(/^@/, '').trim();

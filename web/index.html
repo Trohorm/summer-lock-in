@@ -1245,6 +1245,8 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 /* good stuff bars */
 .bar i.gd{background:linear-gradient(90deg,#3ecf8e,#8fe3c0)}
 
+.ainote{margin:0 0 12px;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.35;color:#f5c26b;background:rgba(245,194,107,.09);border:1px solid rgba(245,194,107,.22)}
+.aolist .req b{display:block}
 </style>
 </head>
 <body>
@@ -1397,7 +1399,8 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
       <p class="tiny" style="margin-top:8px;text-align:center">Scan reads barcodes on its own — or snap your plate and the AI estimates every macro, micro and anti-nutrient. <span class="linkbtn" style="font-size:11.5px" onclick="$('libIn').click()">Pick from photos</span></p>
     </div>
     <div class="card ancard" id="anCard" style="display:none"></div>
-    <div id="dietAlert"></div>
+    <div id="aiOutNote" class="ainote" hidden>AI is paused — your Puter AI credit ran out this month. Meals still get the built-in grade.</div>
+<div id="dietAlert"></div>
     <div class="card"><h2>Macros <span class="right" id="dietCount"></span></h2><div id="macroBox"></div></div>
     <div class="card cafcard" id="cafCard"><h2>Caffeine <span class="right" id="cafRight"></span></h2><div id="cafBox"></div></div>
     <div class="card"><h2>Seed oils, omega-6 &amp; sugar <span class="right">keep out</span></h2><div id="badBox"></div></div>
@@ -1778,13 +1781,37 @@ function parseJSON(t){
   const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<a)return null;
   try{return JSON.parse(t.slice(a,b+1));}catch(e){return null;}
 }
+/* ---- AI credit: Puter bills each person's own account; when it runs out, say so and tell the admin ---- */
+const AI_CREDIT=/insufficient[_ ]?fund|funding is insufficient|usage[-_ ]?limit|out of (ai )?credit|credits? (has |have )?run out|reached your (ai |monthly )?(usage|limit)|quota|payment required|\b402\b/i;
+const aiOutKey=()=>'lockin_aiout_'+(user?user.username:'anon'),aiMonth=()=>new Date().toISOString().slice(0,7);
+function aiOutGet(){try{const o=JSON.parse(localStorage.getItem(aiOutKey())||'null');return o&&o.m===aiMonth()?o:null;}catch(e){return null;}}
+function aiOutSet(o){try{o?localStorage.setItem(aiOutKey(),JSON.stringify(o)):localStorage.removeItem(aiOutKey());}catch(e){}}
+let aiNoteT=0;
+function aiOutNote(){const n=Date.now();if(n-aiNoteT<4000)return;aiNoteT=n;
+  const d=new Date();d.setMonth(d.getMonth()+1,1);
+  setTimeout(()=>toast('AI unavailable — credit ran out (back '+d.toLocaleDateString(undefined,{day:'numeric',month:'short'})+')','warn'),80);
+  const el=$('aiOutNote');if(el)el.hidden=false;}
+async function aiOutReport(){const o=aiOutGet();if(!o||o.r||typeof sapi!=='function'||!navigator.onLine)return;
+  try{await sapi('/aiout','POST',{});o.r=1;aiOutSet(o);}catch(e){}}
+function aiOutHit(){let o=aiOutGet();if(!o)o={m:aiMonth(),t:Date.now()};o.try=Date.now();aiOutSet(o);aiOutNote();aiOutReport();
+  return Object.assign(new Error('ai_credit'),{code:'ai_credit'});}
 async function ai(prompt,img){
   if(typeof puter==='undefined')throw new Error('offline');
+  // out of credit this month: don't spend a call (re-check at most every 6 h in case it was topped up)
+  const out=aiOutGet();if(out&&Date.now()-(out.try||0)<6*3600e3){aiOutNote();aiOutReport();throw Object.assign(new Error('ai_credit'),{code:'ai_credit'});}
   // cheap Haiku for text, Sonnet only when it has to read a photo; remember which id works
   const list=img?AI_IMG:AI_TEXT,key=img?'img':'txt',ok=(window.__aiOk=window.__aiOk||{})[key];
   const order=ok?[ok,...list.filter(m=>m!==ok)]:list;let err;
-  for(const m of order){try{const r=img?await puter.ai.chat(prompt,img,false,{model:m}):await puter.ai.chat(prompt,{model:m});window.__aiOk[key]=m;return normChat(r);}
-    catch(e){err=e;const t=String((e&&(e.message||e.error&&e.error.message||e.code))||e);if(/insufficient|funds|credit|quota|limit|402|auth|sign/i.test(t))throw e;}}
+  for(const m of order){let r;
+    try{r=img?await puter.ai.chat(prompt,img,false,{model:m}):await puter.ai.chat(prompt,{model:m});}
+    catch(e){err=e;const t=String((e&&(e.message||e.error&&(e.error.message||e.error.code)||e.code))||e)+' '+(e&&e.status||'');
+      if(AI_CREDIT.test(t)||(e&&(e.status===402||e.code==='insufficient_funds')))throw aiOutHit();
+      if(/auth|sign.?in|401|403/i.test(t))throw e;continue;}
+    const txt=normChat(r);
+    // Puter can answer with a short "you've hit your usage limit" message instead of an error
+    if(txt&&txt.length<400&&!/[{\[]/.test(txt)&&AI_CREDIT.test(txt))throw aiOutHit();
+    if(out){aiOutSet(null);const el=$('aiOutNote');if(el)el.hidden=true;}
+    window.__aiOk[key]=m;return txt;}
   throw err;
 }
 function fmtNum(v){if(v==null||isNaN(v))return '0';const a=Math.abs(v);return a>=100?String(Math.round(v)):a>=10?String(Math.round(v*10)/10):String(Math.round(v*100)/100);}
@@ -5167,6 +5194,16 @@ function quickCaf(i,btn){
   toast(new Date().getHours()>=CAF_CUT?'Logged '+q[0]+' — ⚠ caffeine after 1 pm':tot>lim?'Logged '+q[0]+' — ⚠ '+fmtNum(tot)+' mg is over your '+fmtNum(lim)+' mg':'Logged '+q[0]+' · '+fmtNum(tot)+' mg today');
 }
 
+async function aiAdminCheck(){
+  if(typeof sapi!=='function'||typeof socTok!=='function'||!socTok()||!navigator.onLine)return;
+  let j;try{j=await sapi('/admin/aiout');}catch(e){return;}
+  const items=(j.items||[]).filter(x=>!x.seen);if(!items.length)return;
+  const when=t=>new Date(t).toLocaleString(undefined,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  openSheet('AI credit ran out','<p class="tiny" style="margin:0 0 12px">These people hit their Puter AI limit. The app shows them a note and uses the built-in grading until it resets next month.</p><div class="aolist">'+
+    items.map(x=>'<div class="req"><div class="grow"><b>'+esc(x.name||x.handle)+'</b><div class="tiny">@'+esc(x.handle)+(x.pname?' · Puter: '+esc(x.pname):'')+'</div><div class="tiny">Ran out '+when(x.first)+(x.n>1?' · '+x.n+' times, last '+when(x.last):'')+'</div></div></div>').join('')+
+    '</div><button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="sapi(\'/admin/aiout/seen\',\'POST\',{}).catch(()=>{});closeSheet()">Got it</button>');
+  haptic('heavy');
+}
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','friends','settings'];
@@ -5370,7 +5407,7 @@ function btnOk(b,txt){
 }
 
 function init(){
-  initUI();initGlass();initFx();
+  initUI();initGlass();initFx();setTimeout(()=>{if(aiOutGet()){const el=$('aiOutNote');if(el)el.hidden=false;aiOutReport();}},1500);setTimeout(aiAdminCheck,4500);
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
   $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);
   $('splitSel').addEventListener('change',e=>{S.activeSplit=e.target.value;const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}save();renderWorkout();renderHeader();});
