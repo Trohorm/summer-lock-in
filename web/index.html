@@ -3113,7 +3113,7 @@ const CATS=['gym','lifts','split','diet','nutr','body'];
 const CATINFO={gym:['Gym activity','Sessions, streaks and live training'],lifts:['Lift weights','Weights, reps and PRs'],split:['Splits','They can view and copy your splits'],
   diet:['Diet & food grades','Meals, grades, seed-oil-free streak'],nutr:['Nutrients','Macros and micronutrients'],body:['Bodyweight','Weight and trend']};
 const CATDEF={gym:true,lifts:true,split:true,diet:true,nutr:false,body:false};
-const REACTS=['💪','🔥','👏','🫡','🤯'];
+const REACTS=['💪','🔥','👏'];
 const IC={
   qr:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><path d="M14 14h3v3h-3zM20.5 14v.01M14 20.5h.01M17 20.5h3.5V17"/></svg>',
   share:'<svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
@@ -3346,7 +3346,7 @@ async function snapPush(){
 
 /* ---------- leaderboard maths (relative to today, so stale snapshots age out) ---------- */
 function inLast(obj,n){if(!obj||typeof obj!=='object')return 0;const t=todayStr(),f=addDays(t,-n);let s=0;for(const d in obj)if(d>f&&d<=t)s+=num(obj[d]);return s;}
-const LBM={wk:['Sessions','gym'],sets:['Sets','gym'],vol:['Volume','lifts'],st:['Streak','gym'],diet:['Food','diet'],sf:['Seed-oil free','diet']};
+const LBM={wk:['Sessions','gym'],vol:['Volume','lifts'],st:['Streak','gym'],diet:['Food','diet']};
 function lbVal(s,m){
   if(!s)return 0;
   if(m==='wk')return inLast(s.gym&&s.gym.dates,7);
@@ -3388,8 +3388,7 @@ function frHead(me,d){
   const n=d?(d.friends||[]).length:0;
   return '<div class="card frme"><div class="frme-row"><label class="avbtn" for="avIn" aria-label="Change profile photo">'+avHTML(me,64,'me')+'<span class="avcam">'+IC.cam+'</span></label>'+
     '<div class="grow"><div class="frname">'+esc(me.name||'You')+'</div><div class="tiny">'+(me.handle?'@'+esc(me.handle):'')+(d?' · '+n+' friend'+(n===1?'':'s'):'')+'</div></div>'+
-    '<button class="icbtn qrbtn" onclick="openAdd(\'code\')" aria-label="My code">'+IC.qr+'</button></div>'+
-    '<div class="row" style="margin-top:14px"><button class="btn btn-primary grow socbtn" onclick="openAdd()">'+IC.add+' Add friends</button><button class="btn btn-ghost socbtn" onclick="shareInvite(this)" aria-label="Share invite link">'+IC.share+'</button></div></div>';
+    '</div><button class="btn btn-primary socbtn" style="width:100%;margin-top:14px" onclick="openAdd()">'+IC.add+' Add friends</button></div>';
 }
 function frRequests(list){
   return '<div class="card"><h2>Friend requests <span class="right">'+list.length+'</span></h2>'+list.map(u=>{const id=sid(u.id);return id?
@@ -3406,7 +3405,7 @@ function frInbox(d){
 function frLive(list){
   return '<div class="card livecard"><div class="kicker" style="margin-bottom:6px"><i class="dot"></i>Training now</div>'+list.map(f=>{const l=liveOf(f),id=sid(f.id),it=(SOC.data.feed||[]).find(x=>x.by===f.id&&x.id===l.id);
     return '<div class="liverow" onclick="openFriend(\''+id+'\')">'+avHTML(f,46,'live')+'<div class="grow"><b>'+esc(f.name)+'</b> <span class="lvday">'+esc(l.n)+'</span><div class="tiny">'+mins(Date.now()-(+l.t0||Date.now()))+' in · '+num(l.sets)+' sets</div></div>'+
-      (it&&sid(it.id)?'<button class="rbtn big'+(it.mine==='💪'?' on':'')+'" data-rk="'+id+'|'+sid(it.id)+'" onclick="event.stopPropagation();react(\''+id+'\',\''+sid(it.id)+'\',\'💪\',this)">💪</button>':'')+'</div>';}).join('')+'</div>';
+      '<i class="chev"></i></div>';}).join('')+'</div>';
 }
 function frBoard(d){
   return '<div class="card"><h2>Leaderboard <span class="right" id="lbWhen">'+(SOC.lb==='st'||SOC.lb==='sf'?'current streak':'last 7 days')+'</span></h2><div class="chipbar scroll lbchips">'+
@@ -3475,8 +3474,7 @@ function friendLine(f){
 function frEmpty(){
   return '<div class="card frempty"><div class="fe-art"><span>🏋️</span><span>💪</span><span>🥩</span></div><h3>Train with your friends</h3>'+
     '<p class="muted">See each other’s workouts, streaks and PRs, cheer each session and copy splits. You choose exactly what each friend can see.</p>'+
-    '<div class="fe-ways"><button class="addbtn" onclick="shareInvite(this)">'+IC.share+'Send invite</button><button class="addbtn" onclick="openAdd(\'code\')">'+IC.qr+'My QR code</button>'+
-    '<button class="addbtn" onclick="openAdd(\'scan\')">'+IC.scan+'Scan a code</button><button class="addbtn" onclick="openAdd(\'find\')">'+IC.at+'Username</button></div></div>';
+    '<p class="tiny" style="margin-top:12px">Tap <b>Add friends</b> above to show your QR code, scan a friend’s, or find them by username.</p></div>';
 }
 function frOutgoing(list){
   return '<div class="card"><h2>Sent requests</h2>'+list.map(u=>{const id=sid(u.id);return id?'<div class="req" data-fk="oq'+id+'">'+avHTML(u,36)+'<div class="grow"><b>'+esc(u.name)+'</b><div class="tiny">@'+esc(u.handle)+' · waiting</div></div><button class="btn btn-ghost btn-xs" onclick="cancelReq(\''+id+'\',this)">Cancel</button></div>':'';}).join('')+'</div>';
@@ -3725,7 +3723,7 @@ function profileHTML(f,p){
   let h='<div class="pfhead">'+avHTML(f,92,ringFor({sum:s}))+'<div class="pfname">'+esc(f.name)+'</div><div class="tiny">@'+esc(f.handle)+(f.since?' · friends since '+monthYear(f.since):'')+'</div>'+
     (live?'<div class="livepill"><i class="dot"></i>Training '+esc(live.n)+' · '+mins(Date.now()-(+live.t0||Date.now()))+'</div>':'')+
     '<div class="row pfacts"><button class="btn btn-ghost btn-sm" onclick="nudge(\''+id+'\',this)">👋 Nudge</button>'+
-    (p&&p.data&&p.data.split?'<button class="btn btn-ghost btn-sm" onclick="$(\'pfSplit\').scrollIntoView({behavior:\'smooth\',block:\'start\'})">🗓️ Their splits</button>':'')+'</div></div>';
+    '</div></div>';
   const tiles=[];
   if(s.gym){tiles.push(['Sessions','<span data-count="'+inLast(s.gym.dates,7)+'" data-ck="pfw'+id+'">0</span>','this week']);tiles.push(['Streak','<span data-count="'+lbVal(s,'st')+'" data-ck="pfs'+id+'">0</span>','weeks']);}
   if(s.lifts)tiles.push(['Volume',lbFmt(inLast(s.lifts.vol,7),'vol'),'this week']);
