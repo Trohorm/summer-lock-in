@@ -1052,6 +1052,30 @@ details.rules .fb{display:grid;gap:10px}
 .partrow{grid-template-columns:minmax(0,1fr) 92px 30px}
 .partrow .pm{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
 .partrow details.ingd{grid-column:1/-1}
+/* ---------- end-to-end encryption ---------- */
+.e2epill{flex:none;align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:6px 10px 6px 8px;border-radius:99px;border:1px solid rgba(62,207,142,.35);background:rgba(62,207,142,.1);color:#8ff0c2;font:800 11px/1 inherit;font-family:inherit;letter-spacing:.04em;cursor:pointer}
+.e2epill svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.e2epill.off{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--mist)}
+@media (prefers-reduced-motion:no-preference){.e2epill:not(.off) svg{animation:lockin .9s var(--sp-bounce) .3s both}}
+@keyframes lockin{0%{transform:translateY(-3px) scale(.6);opacity:0}60%{transform:translateY(1px) scale(1.15);opacity:1}100%{transform:none}}
+.okline.e2ewarn{background:#2a2216;border-color:#5a4524;color:#f0c46a}
+.okline.e2enote{display:flex;gap:10px;align-items:flex-start;background:#152420;border-color:#24453a;color:#a8e8cb;margin-top:14px}
+.okline.e2enote svg,.e2etag svg,.e2erow svg,.tiny svg{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+.e2etag{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:11.5px;font-weight:800;color:#8ff0c2}
+.e2etag.inl{margin:0;font-size:inherit;font-weight:700}
+.safety{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.scode{font:800 22px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;text-align:center;padding:14px 8px;border-radius:14px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.22);color:#c9f5e0;margin-bottom:8px}
+.scode.sm{font-size:16px}
+.e2einfo p{font-size:14px;line-height:1.5;color:#c9d2de}
+.e2einfo ul{margin:12px 0 0;padding:0;list-style:none}
+.e2einfo li{font-size:13px;line-height:1.45;color:var(--slate);padding:8px 0;border-bottom:1px solid var(--line)}
+.e2einfo li b{color:#e9ecf1}
+.e2ehero{width:76px;height:76px;margin:4px auto 14px;border-radius:24px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#3ecf8e,#1b7f59);box-shadow:0 14px 40px rgba(62,207,142,.35)}
+.e2ehero svg{width:38px;height:38px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){.e2ehero{animation:dpop .6s var(--sp-bounce) both}.e2ehero svg{animation:lockin .8s var(--sp-bounce) .25s both}}
+.e2erow{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid rgba(62,207,142,.25);background:rgba(62,207,142,.07);color:#8ff0c2;text-align:left;font-family:inherit;cursor:pointer}
+.e2erow svg{width:20px;height:20px}
+.e2erow b{display:block;color:#e9ecf1;font-size:14px}.e2erow small{display:block;color:var(--slate);font-size:12px;margin-top:2px}
 
 /* micronutrients ordered by progress */
 .mrow{transition:background-color .3s;border-radius:10px}
@@ -1094,6 +1118,102 @@ mark.ing.warn{background:rgba(226,172,69,.18);color:#f6d08a}
 .camside svg{width:26px;height:26px;stroke:#dfe8f7;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;padding:9px;box-sizing:content-box;border-radius:50%;background:rgba(255,255,255,.08)}
 /* progress photo share */
 .pcell .pshare{position:absolute;top:4px;left:4px;background:rgba(91,147,255,.92);color:#fff;border-radius:6px;width:22px;height:22px;font-size:13px;line-height:22px;text-align:center;font-weight:900}
+
+/* cards and exercises off screen skip style, layout and paint until you scroll near them */
+.view>.card:nth-child(n+3),#view-workout>.card:last-child,#view-workout .excard:nth-child(n+4){content-visibility:auto;contain-intrinsic-size:auto 360px}
+.view.leaving>.card{content-visibility:visible}
+.histmore{width:100%;margin-top:10px}
+img.fadein{animation:fadeIn .45s var(--out,ease) both}
+
+/* ================= effects ================= */
+.fxcanvas{position:fixed;inset:0;width:100%;height:100%;z-index:400;pointer-events:none}
+/* workout complete */
+.fxdone{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:24px;background:rgba(6,8,12,.55);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);opacity:0;transition:opacity .3s}
+.fxdone.show{opacity:1}.fxdone.hide{opacity:0}
+.fxcard{position:relative;width:100%;max-width:360px;text-align:center;padding:26px 20px 20px;border-radius:28px;overflow:hidden;
+  background:radial-gradient(260px 180px at 50% -10%,rgba(62,207,142,.32),transparent 70%),linear-gradient(170deg,#1b2433,#12161d);border:1px solid rgba(62,207,142,.3);
+  box-shadow:0 30px 80px rgba(0,0,0,.55);transform:translate3d(0,40px,0) scale(.86);opacity:0;transition:transform .6s var(--sp-bounce,cubic-bezier(.34,1.5,.64,1)),opacity .3s}
+.fxdone.show .fxcard{transform:none;opacity:1}.fxdone.hide .fxcard{transform:translate3d(0,24px,0) scale(.94);opacity:0;transition-duration:.28s}
+.fxglow{position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,rgba(62,207,142,.18),transparent 30%,rgba(110,166,255,.16),transparent 60%);animation:ringspin 7s linear infinite;pointer-events:none}
+.fxcard>*:not(.fxglow){position:relative}
+.fxcheck{width:84px;height:84px;margin:0 auto 6px;display:block;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fxcheck circle{stroke:#3ecf8e;stroke-width:5;stroke-dasharray:1;stroke-dashoffset:1;transform:rotate(-90deg);transform-origin:50% 50%;filter:drop-shadow(0 0 10px rgba(62,207,142,.6))}
+.fxcheck path{stroke:#fff;stroke-width:6.5;stroke-dasharray:1;stroke-dashoffset:1}
+.fxdone.show .fxcheck circle{animation:fxdraw .6s .15s var(--out,ease) forwards}.fxdone.show .fxcheck path{animation:fxdraw .4s .62s var(--out,ease) forwards}
+@keyframes fxdraw{to{stroke-dashoffset:0}}
+.fxcard h2{font-size:24px;letter-spacing:-.02em;margin:4px 0 2px;text-transform:none;color:#fff}
+.fxstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 6px}
+.fxstats>div{padding:12px 4px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)}
+.fxdone.show .fxstats>div{animation:dpop .5s var(--sp-bounce) both;animation-delay:calc(.45s + var(--j) * 90ms)}
+.fxstats b{display:block;font-size:26px;font-weight:900;letter-spacing:-.02em;color:#fff}.fxstats span{font-size:11.5px;color:var(--slate);font-weight:700}
+.fxprs{margin-top:10px;display:grid;gap:6px}
+.fxprs>div{padding:10px 12px;border-radius:14px;text-align:left;font-size:13.5px;color:#f6e4b0;background:linear-gradient(90deg,rgba(240,185,65,.2),rgba(240,185,65,.05));border:1px solid rgba(240,185,65,.35)}
+.fxprs b{color:#ffd978;margin-right:4px}.fxprs .trophy{display:inline-block;margin-right:8px}
+.fxdone.show .fxprs>div{animation:dpop .55s var(--sp-bounce) both;animation-delay:calc(.9s + var(--j) * 110ms)}
+.fxdone.show .fxprs .trophy{animation:trophy 1s .95s both}
+.fxlvl{display:flex;align-items:center;gap:12px;margin:16px 0 14px;text-align:left}
+.fxshield{position:relative;width:40px;height:46px;flex:none;display:grid;place-items:center;filter:drop-shadow(0 4px 10px rgba(240,185,65,.45))}
+.fxshield svg{position:absolute;inset:0;width:100%;height:100%;fill:#f0b941;stroke:#fff3c9;stroke-width:2}
+.fxshield b{position:relative;font-size:17px;font-weight:900;color:#3b2700;margin-top:-3px}
+.fxcard .xpbar{height:12px}
+.fxcard .xpbar i{transition:transform 1.1s var(--out,ease)}
+.fxxp{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;font-weight:800;color:#f6d791}
+.fxup{height:0;overflow:hidden;font-size:22px;font-weight:900;letter-spacing:.08em;color:#ffd978;text-shadow:0 0 18px rgba(240,185,65,.8);transition:height .4s var(--sp-bounce)}
+.fxcard.lvlup .fxup{height:34px;animation:fxpulse 1s ease-in-out 2}
+.fxcard.lvlup .fxshield{animation:fxshield .8s var(--sp-bounce)}
+@keyframes fxshield{0%{transform:scale(1)}40%{transform:scale(1.45) rotate(-8deg)}100%{transform:scale(1)}}
+@keyframes fxpulse{50%{transform:scale(1.08)}}
+/* level up + badge */
+.fxlevel{position:fixed;inset:0;z-index:310;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(6,8,12,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:opacity .3s}
+.fxlevel.show{opacity:1}
+.fxrays{position:absolute;width:520px;height:520px;background:repeating-conic-gradient(rgba(240,185,65,.16) 0 9deg,transparent 9deg 22deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:ringspin 9s linear infinite}
+.fxshield.big{width:96px;height:110px;transform:scale(.2);transition:transform .7s var(--sp-bounce)}
+.fxshield.big b{font-size:40px;margin-top:-8px}
+.fxlevel.show .fxshield.big{transform:none}
+.fxlt{position:relative;font-size:30px;font-weight:900;letter-spacing:.1em;color:#ffd978;text-shadow:0 0 24px rgba(240,185,65,.7)}
+.fxls{position:relative;color:#e9dcb8;font-weight:700}
+.fxbadge{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);z-index:320;display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border-radius:20px;
+  background:linear-gradient(135deg,#2b2412,#1a1710);border:1px solid rgba(240,185,65,.45);box-shadow:0 18px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04) inset;
+  transform:translate3d(-50%,-130%,0);transition:transform .55s var(--sp-bounce);overflow:hidden;cursor:pointer}
+.fxbadge.show{transform:translate3d(-50%,0,0)}
+.fxbadge::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);transform:translateX(-100%);animation:fxshine 1.3s .5s ease-out forwards}
+@keyframes fxshine{to{transform:translateX(100%)}}
+.fxbadge i{font-style:normal;font-size:30px;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:rgba(240,185,65,.18)}
+.fxbadge small{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#d9b35c;font-weight:800}
+.fxbadge b{color:#fff3c9;font-size:15px}
+/* live PR on a set */
+.setrow.prrow{position:relative}
+.prchip{position:absolute;right:46px;top:-10px;z-index:3;padding:3px 8px;border-radius:99px;font-size:10.5px;font-weight:900;letter-spacing:.02em;color:#3b2700;
+  background:linear-gradient(135deg,#ffd978,#f0b941);box-shadow:0 4px 14px rgba(240,185,65,.5);white-space:nowrap;pointer-events:none;animation:prpop .7s var(--sp-bounce) both}
+@keyframes prpop{0%{transform:scale(0) rotate(-12deg);opacity:0}60%{transform:scale(1.18) rotate(4deg);opacity:1}100%{transform:none}}
+/* pull to refresh */
+.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 58px);z-index:90;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(23,26,32,.92);border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.4);transform:translate3d(-50%,-48px,0);opacity:0;pointer-events:none}
+.ptr svg{width:20px;height:20px;stroke:var(--sky);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.ptr.ready svg{stroke:#3ecf8e}
+.ptr.spin svg{animation:ringspin .8s linear infinite}
+/* player card: holo shine + tilt */
+.pcard{transform-style:preserve-3d;transition:transform .5s var(--sp-bounce)}
+.pcard.tilting{transition:transform .08s linear}
+.pcard::after{content:'';position:absolute;inset:-60%;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.13) 48%,rgba(160,200,255,.12) 52%,transparent 58%);transform:translateX(-55%);mix-blend-mode:screen}
+@media (prefers-reduced-motion:no-preference){.pcard::after{animation:holo 6s ease-in-out 1.2s infinite}}
+.pcard.tilting::after{animation:none;transform:none;background:radial-gradient(240px circle at var(--hx,50%) var(--hy,50%),rgba(255,255,255,.14),transparent 60%)}
+@keyframes holo{0%{transform:translateX(-55%)}30%,100%{transform:translateX(55%)}}
+/* barcode scanner laser */
+.cambox.on .bcguide::after{content:'';position:absolute;left:3%;right:3%;top:50%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#ff5a5a 20%,#ff5a5a 80%,transparent);box-shadow:0 0 12px 2px rgba(255,90,90,.6)}
+@media (prefers-reduced-motion:no-preference){.cambox.on .bcguide::after{animation:bclaser 1.4s ease-in-out infinite alternate}}
+.cambox.found .bcguide::after{background:#3ecf8e;box-shadow:0 0 16px 3px rgba(62,207,142,.7);animation:none}
+@keyframes bclaser{from{transform:translateY(-34px)}to{transform:translateY(34px)}}
+/* meal grade stamp */
+.gring.stamp{animation:stamp .62s var(--sp-bounce) both}
+@keyframes stamp{0%{transform:scale(1.9) rotate(-14deg);opacity:0;filter:blur(4px)}55%{transform:scale(.92) rotate(3deg);opacity:1;filter:none}100%{transform:none}}
+/* micronutrient just completed */
+.mrow.justdone{animation:mdone 1.2s ease-out}
+@keyframes mdone{0%{background:rgba(62,207,142,.28)}100%{background:transparent}}
+/* bodyweight: the point you just logged */
+#weightChart circle.pt.newpt{animation:ptpulse 1.4s ease-out 2;transform-box:fill-box;transform-origin:center}
+@keyframes ptpulse{0%{r:3.2;fill:#fff}40%{r:8;fill:#3ecf8e}100%{r:3.2}}
+@media (prefers-reduced-motion:reduce){.fxcard,.fxbadge,.fxshield.big{transition:none}.fxcheck circle,.fxcheck path{stroke-dashoffset:0}}
 
 </style>
 </head>
@@ -1512,7 +1632,7 @@ function migrate(){
 function cacheKey(){return 'rtcache_'+(user?user.username:'anon');}
 let dataVer=0;const viewVer={};
 function verKey(v){return dataVer+'|'+todayStr()+(v==='diet'?'|'+dDate:'')+(v==='friends'||v==='today'?'|s'+SOC.v:'');}
-function save(){dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),250);pushSoon();snapSoon();}
+function save(){dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
 function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;try{localStorage.setItem(cacheKey(),JSON.stringify(S));}catch(e){}}
 function idle(fn){if(window.requestIdleCallback)requestIdleCallback(fn,{timeout:600});else setTimeout(fn,0);}
 function flushAll(){if(localT)writeLocal();if(dirty&&cloudReady)pushNow();}
@@ -1589,11 +1709,13 @@ function mergeStates(a,b){
 /* ================= UTILS ================= */
 const $=id=>document.getElementById(id);
 const ds=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-function todayStr(){return ds(new Date());}
+let TDS='',TDT=0;
+function todayStr(){const n=Date.now();if(n-TDT>1000){TDT=n;TDS=ds(new Date(n));}return TDS;}
 function parseD(s){const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c);}
 function fmtD(s){return parseD(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
 function fmtDY(s){return parseD(s).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
-function addDays(s,n){const d=parseD(s);d.setDate(d.getDate()+n);return ds(d);}
+const ADM=new Map();
+function addDays(s,n){const k=s+n;let r=ADM.get(k);if(r===undefined){const d=parseD(s);d.setDate(d.getDate()+n);r=ds(d);if(ADM.size>30000)ADM.clear();ADM.set(k,r);}return r;}
 function uid(p){return (p||'i')+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36);}
 function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -1761,7 +1883,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');loadPhotos();setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -1853,9 +1975,11 @@ function show(v){
   enteringView='';schedulePrerender(1400);
   renderHeader();wakeLock(v==='workout');
   if(v==='friends')socOnShow();
-  sc.scrollTop=0;
   if(g)startLeave(g,dir);
-  animateView(v,dir,!!prev&&prev!==el);countUp(el,true);fillRings(el,true);requestAnimationFrame(movePill);
+  animateView(v,dir,!!prev&&prev!==el);
+  sc.scrollTop=0;
+  countUp(el,true);fillRings(el,true);requestAnimationFrame(movePill);
+  if(v==='progress')fetchPhotos();
   heroDeco=el.querySelector('.hero-card .deco');
   onScroll();requestAnimationFrame(()=>setupReveal(el));
 }
@@ -1941,7 +2065,9 @@ function latestPR(){
 function curWO(){return (S.cur&&S.workouts[S.cur])?S.workouts[S.cur]:null;}
 function woHasData(w){return !!w&&Object.values(w.ex||{}).some(a=>(a||[]).some(s=>s&&s.r>0));}
 function countSets(w){return Object.values(w.ex||{}).reduce((a,arr)=>a+(arr||[]).filter(s=>s&&s.r>0).length,0);}
+let editingOld='';
 function makeWO(day){
+  editingOld='';
   const sp=activeSplit();
   const id=uid('w');
   const w={id,date:todayStr(),split:sp.id,day:day.id,dayName:day.name,gym:S.activeGym,items:clone(day.ex),ex:{},notes:'',ai:null,ended:false,ts:Date.now()};
@@ -1949,7 +2075,11 @@ function makeWO(day){
 }
 function ensureWO(){
   let w=curWO();
-  if(w&&w.ended&&w.date!==todayStr())w=null;
+  if(w&&w.ended&&w.date!==todayStr()&&w.id!==editingOld)w=null;
+  if(w&&!w.ended&&w.date!==todayStr()&&w.id!==editingOld){
+    if(!woHasData(w))w.date=todayStr();
+    else if(Date.now()-(w.ts||0)>3*3600e3){w.ended=true;if(!w.t1)w.t1=w.ts||Date.now();w=null;}
+  }
   if(!w){const sp=activeSplit();const d=plannedDay(todayStr())||sp.days[0];w=makeWO(d);save();}
   return w;
 }
@@ -2093,6 +2223,7 @@ function markDone(cb,i){
     const r=cb.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);}
   if(now&&!was){card.classList.remove('justdone');void card.offsetWidth;card.classList.add('justdone');setTimeout(()=>card.classList.remove('justdone'),1000);haptic('success');}
   updateWoProg();
+  fxSetPR(cb,i);
   if(cb.checked&&S.settings.autoRest!==false){const w=curWO();const it=w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
 }
 function syncWorkout(){
@@ -2123,27 +2254,32 @@ function endWorkout(){
     if(nb>ob&&ob>0)prs.push(exInfo(it.k).name);
   });
   w.ended=true;w.ts=Date.now();if(!was)w.t1=w.ts;save();snapSoon(2500);woButtons();renderHistory();
-  toast(was?'Workout updated':(prs.length?'New best: '+prs[0]+'! 🎉':'Workout ended — logged'));
-  if(!was){haptic('success');if(prs.length)celebrate();}
+  if(was)toast('Workout updated');
+  else fxWorkoutDone(w,prs);
   if(S.settings.aiAuto)aiFeedback(w.id);
   return was?'Updated':'Logged';
 }
+let HISTN=15;
 function renderHistory(){
-  const items=Object.values(S.workouts).filter(w=>(w.id!==S.cur||w.ended)&&woHasData(w)).sort((a,b)=>a.date!==b.date?(a.date<b.date?1:-1):((b.ts||0)-(a.ts||0))).slice(0,40);
+  const all=Object.values(S.workouts).filter(w=>(w.id!==S.cur||w.ended)&&woHasData(w)).sort((a,b)=>a.date!==b.date?(a.date<b.date?1:-1):((b.ts||0)-(a.ts||0))),items=all.slice(0,HISTN);
   if(!items.length){$('histList').innerHTML='<span class="muted">No workouts logged yet.</span>';return;}
   $('histList').innerHTML=items.map(w=>{
-    const vol=Object.values(w.ex).flat().reduce((a,s)=>a+((s&&s.w)||0)*((s&&s.r)||0),0);
     const gym=S.gyms.length>1?((S.gyms.find(g=>g.id===w.gym)||{}).name||''):'';
-    const det=Object.keys(w.ex).map(k=>{const x=exInfo(k);const f=fmtSets(w.ex[k],x.t);return f?esc(x.full)+': '+esc(f):null;}).filter(Boolean).join('<br>');
-    return '<div class="histitem" data-fk="h'+w.id+'" onclick="flip($(\'histList\'),()=>this.classList.toggle(\'open\'))"><div class="top"><span>'+esc(w.dayName||'Workout')+(gym?' <span class="tiny">· '+esc(gym)+'</span>':'')+(w.ai?' <span style="color:var(--sky)">· AI ✓</span>':'')+'</span><span class="d">'+fmtDY(w.date)+'</span></div>'+
-      '<div class="det">'+det+(w.notes?'<br><i>'+esc(w.notes)+'</i>':'')+(w.ai?'<div class="ai">'+esc(w.ai)+'</div>':'')+
-      '<br><span class="tiny">Volume ≈ '+Math.round(vol).toLocaleString()+' kg · </span>'+
-      '<span class="tiny" style="color:var(--sky);cursor:pointer" onclick="event.stopPropagation();openOld(\''+w.id+'\')">open</span><span class="tiny"> · </span>'+
-      '<span class="tiny" style="color:var(--sky);cursor:pointer" onclick="event.stopPropagation();aiFeedback(\''+w.id+'\',true)">'+(w.ai?'redo AI':'get AI feedback')+'</span><span class="tiny"> · </span>'+
-      '<span class="tiny" style="color:var(--bad);cursor:pointer" onclick="event.stopPropagation();delWorkout(\''+w.id+'\')">delete</span></div></div>';
-  }).join('');
+    return '<div class="histitem" data-fk="h'+w.id+'" onclick="histOpen(this,\''+w.id+'\')"><div class="top"><span>'+esc(w.dayName||'Workout')+(gym?' <span class="tiny">· '+esc(gym)+'</span>':'')+(w.ai?' <span style="color:var(--sky)">· AI ✓</span>':'')+'</span><span class="d">'+fmtDY(w.date)+'</span></div><div class="det"></div></div>';
+  }).join('')+(all.length>HISTN?'<button class="btn btn-ghost btn-sm histmore" onclick="event.stopPropagation();HISTN+=20;flip($(\'histList\'),renderHistory)">Show older ('+(all.length-HISTN)+')</button>':'');
 }
-function openOld(id){const w=S.workouts[id];if(!w)return;const c=curWO();if(c&&!c.ended&&!woHasData(c))delete S.workouts[c.id];S.cur=id;if(S.splits[w.split])S.activeSplit=w.split;save();renderWorkout();$('scroller').scrollTo({top:0,behavior:'smooth'});toast('Editing '+w.dayName+' from '+fmtD(w.date));}
+function histDet(w){
+  if(!w)return '';
+  const vol=Object.values(w.ex).flat().reduce((a,s)=>a+((s&&s.w)||0)*((s&&s.r)||0),0);
+  const det=Object.keys(w.ex).map(k=>{const x=exInfo(k);const f=fmtSets(w.ex[k],x.t);return f?esc(x.full)+': '+esc(f):null;}).filter(Boolean).join('<br>');
+  return det+(w.notes?'<br><i>'+esc(w.notes)+'</i>':'')+(w.ai?'<div class="ai">'+esc(w.ai)+'</div>':'')+
+    '<br><span class="tiny">Volume ≈ '+Math.round(vol).toLocaleString()+' kg · </span>'+
+    '<span class="tiny" style="color:var(--sky);cursor:pointer" onclick="event.stopPropagation();openOld(\''+w.id+'\')">open</span><span class="tiny"> · </span>'+
+    '<span class="tiny" style="color:var(--sky);cursor:pointer" onclick="event.stopPropagation();aiFeedback(\''+w.id+'\',true)">'+(w.ai?'redo AI':'get AI feedback')+'</span><span class="tiny"> · </span>'+
+    '<span class="tiny" style="color:var(--bad);cursor:pointer" onclick="event.stopPropagation();delWorkout(\''+w.id+'\')">delete</span>';
+}
+function histOpen(el,id){const d=el.querySelector('.det');if(d&&!d.dataset.f){d.innerHTML=histDet(S.workouts[id]);d.dataset.f=1;}flip($('histList'),()=>el.classList.toggle('open'));}
+function openOld(id){const w=S.workouts[id];if(!w)return;const c=curWO();if(c&&c.id!==id&&!c.ended&&!woHasData(c))delete S.workouts[c.id];S.cur=id;editingOld=id;if(S.splits[w.split])S.activeSplit=w.split;save();renderWorkout();$('scroller').scrollTo({top:0,behavior:'smooth'});toast('Editing '+w.dayName+' from '+fmtD(w.date));}
 function delWorkout(k){if(!confirm('Delete this workout?'))return;delete S.workouts[k];S.tomb[k]=Date.now();if(S.cur===k)S.cur=null;save();renderWorkout();toast('Deleted');}
 function showAi(text,thinking){const box=$('aiBox'),was=box.classList.contains('show');box.classList.add('show');const t=$('aiTxt');t.textContent=text;if(thinking)t.insertAdjacentHTML('beforeend','<span class="tdots"><i></i><i></i><i></i></span>');t.classList.toggle('thinking',!!thinking);
   if(!was)anim(box,[{opacity:0,transform:'translate3d(0,10px,0)'},{opacity:1,transform:'none'}],{duration:450,easing:EASE_OUT});else if(!thinking)anim(t,[{opacity:0},{opacity:1}],{duration:350,easing:EASE_OUT});}
@@ -2209,7 +2345,7 @@ let pick=null,pickMus='',pickQ='',pickAll=false;
 let sheetAnimT=0,sheetClosingUntil=0;
 /* opts: {tall:true} fixed full-height sheet · {top:html} pinned area above the scrolling body · {back:true} slide content back */
 function openSheet(title,html,opts){
-  opts=opts||{};
+  opts=opts||{};stopScanner();
   const sh=$('sheet'),was=sh.classList.contains('show'),top=$('sheetTop'),body=$('sheetBody');
   $('sheetTitle').textContent=title;
   top.innerHTML=opts.top||'';top.hidden=!opts.top;
@@ -2481,7 +2617,7 @@ function diffHTML(a,b){
 function applyAi(){if(!aiProposal)return;draft=aiProposal;aiProposal=null;$('aiSplitOut').innerHTML='';renderEditor();toast('Applied — review and Save split');$('scroller').scrollTo({top:0,behavior:'smooth'});}
 
 /* ================= DIET ================= */
-let dDate=todayStr(),pendingImg=null,MD=null;
+let dDate=todayStr(),dAuto=true,lastDay=todayStr(),pendingImg=null,MD=null;
 /* what each nutrient does — shown behind the ⓘ badges */
 const INFO={
  protein:{g:'Builds and repairs muscle — the main driver of a recomp together with training. Animal protein is complete and the easiest to digest and use.',s:'Beef, lamb, eggs, fish and shellfish, organ meats, Greek yogurt, cheese, A2/A2 milk.',x:'Aim for 30–50 g at every meal.'},
@@ -2548,7 +2684,7 @@ function nutRow(k,tot,anti){
   return '<div class="nrow"><div class="tgtline"><span class="nlab" onclick="openInfo(\''+k+'\')">'+esc(n.n)+' <i class="ib">i</i></span><span><b'+(anti&&p>100?' style="color:var(--bad)"':'')+'>'+fmtNum(v)+'</b> / '+fmtNum(g)+' '+n.u+'<span class="pct"> '+Math.round(p)+'%</span></span></div><div class="bar"><i class="'+cls+'" data-k="n'+k+'" data-p="'+Math.min(100,p).toFixed(1)+'"></i></div></div>';
 }
 function renderDiet(){
-  const t=todayStr();if(dDate>t)dDate=t;
+  const t=todayStr();if(dDate>t||(dAuto&&dDate!==t))dDate=t;
   $('dDate').value=dDate;$('dDate').max=t;$('dNext').disabled=dDate>=t;
   const tot=dayTotals(dDate),meals=S.food[dDate]||[];
   $('dietCount').textContent=meals.length?meals.length+' meal'+(meals.length>1?'s':''):'';
@@ -2734,7 +2870,7 @@ function renderAnCard(fresh){
 }
 function gradeFx(a){
   if(!a||!$('view-diet').classList.contains('active'))return;
-  setTimeout(()=>{const ring=document.querySelector('#anCard .gring');if(!ring)return;const r=ring.getBoundingClientRect();
+  setTimeout(()=>{const ring=document.querySelector('#anCard .gring');if(!ring)return;ring.classList.remove('stamp');void ring.offsetWidth;ring.classList.add('stamp');const r=ring.getBoundingClientRect();
     if(a.grade==='A'){burst(r.left+r.width/2,r.top+r.height/2,'#3ecf8e',true);haptic('success');}
     else if(a.grade==='D'||a.grade==='F'||(a.bad||[]).some(x=>/seed oil/i.test(x))){const c=$('anCard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');haptic('heavy');}},450);
 }
@@ -2768,7 +2904,8 @@ function dayBad(date){const t=dayTotals(date),out=[];if(t.seedoil>0.4)out.push('
 /* Today: last meal grade, seed-oil-free streak, next-meal tip */
 function dayGrade(date){const ms=(S.food[date]||[]).filter(e=>e.an);if(!ms.length)return '';const sc=ms.reduce((a,e)=>a+(e.an.score||0),0)/ms.length;const so=dayTotals(date).seedoil>0.4;const g=sc>=85?'A':sc>=70?'B':sc>=55?'C':sc>=40?'D':'F';return so&&g<'C'?'C':g;}
 function lastGradeChip(date){const ms=(S.food[date]||[]).filter(e=>e.an);const e=ms[ms.length-1];return e?'<span class="gchip g-'+e.an.grade+'">Last meal '+e.an.grade+'</span>':'';}
-function seedStreak(){let n=0;for(let i=0;i<400;i++){const d=addDays(todayStr(),-i),ms=S.food[d]||[];if(!ms.length){if(i===0)continue;break;}if(ms.some(e=>!e.q))break;if(ms.reduce((a,e)=>a+(+(e.n||{}).seedoil||0)*(e.mult||1),0)>0.4)break;n++;}return n;}
+let SSK='',SSN=0;
+function seedStreak(){const key=dataVer+'|'+todayStr();if(SSK===key)return SSN;let n=0;for(let i=0;i<400;i++){const d=addDays(todayStr(),-i),ms=S.food[d]||[];if(!ms.length){if(i===0)continue;break;}if(ms.some(e=>!e.q))break;if(ms.reduce((a,e)=>a+(+(e.n||{}).seedoil||0)*(e.mult||1),0)>0.4)break;n++;}SSK=key;return SSN=n;}
 const FLAME='<svg viewBox="0 0 24 26"><path fill="#ff9d3c" d="M12 1c1 4.5 6 6.8 6 13.2A6 6 0 0 1 6 14.6c0-2.4 1-4 2.6-5.3-.2 2 .6 3.4 2 3.9C10.1 9.3 10.6 4.6 12 1z"/><path fill="#ffd166" d="M12 12.5c.5 2 3 3 3 5.6a3 3 0 0 1-6 .2c0-1.2.6-2.1 1.5-2.7.1 1 .6 1.6 1.2 1.8-.5-1.8-.3-3.5.3-4.9z"/></svg>';
 function streakChip(){const n=seedStreak();return n>=1?'<span class="good streak">'+FLAME+n+'-day seed-oil free</span>':'';}
 function nextTip(date){if(date!==todayStr())return '';const ms=(S.food[date]||[]).filter(e=>e.an&&e.an.next);const e=ms[ms.length-1];return e?'<div class="nexttip"><b>Next meal</b> '+esc(e.an.next.replace(/^next meal:\s*/i,''))+'</div>':'';}
@@ -2778,13 +2915,17 @@ function microPace(){if(dDate!==todayStr())return 1;const n=new Date(),h=n.getHo
 function renderMicros(tot){
   const box=$('microBox');if(!box)return;
   const pace=microPace(),warn=pace>=0.45;
-  const rows=NUT.filter(n=>n[3]==='vit'||n[3]==='min').map(n=>{const g=goalFor(n[0]);return {k:n[0],p:g?tot[n[0]]/g*100:100};})
+  const rows=NUT.filter(n=>n[3]==='vit'||n[3]==='min').map(n=>{const g=goalFor(n[0]);return {k:n[0],p:g?(+tot[n[0]]||0)/g*100:0};})
     .sort((a,b)=>(b.p>=100)-(a.p>=100)||b.p-a.p);
   const low=rows.filter(r=>warn&&r.p<pace*100*0.6);
   const html=(low.length?'<p class="tiny microwarn">'+(dDate===todayStr()?'Red = falling behind for this time of day: ':'Missed: ')+esc(low.slice(-3).reverse().map(r=>NMAP[r.k].n.split(' (')[0]).join(', '))+(low.length>3?' +'+(low.length-3):'')+'</p>':'')+
-    rows.map(r=>{const n=NMAP[r.k],g=goalFor(r.k),v=tot[r.k],done=r.p>=100,lo=warn&&r.p<pace*100*0.6;
+    rows.map(r=>{const n=NMAP[r.k],g=goalFor(r.k),v=+tot[r.k]||0,done=r.p>=100,lo=warn&&r.p<pace*100*0.6;
       return '<div class="nrow mrow'+(done?' done':'')+(lo?' low':'')+'" data-fk="mi'+r.k+'"><div class="tgtline"><span class="nlab" onclick="openInfo(\''+r.k+'\')">'+(done?'<i class="mchk">✓</i>':'')+esc(n.n)+' <i class="ib">i</i></span><span><b>'+fmtNum(v)+'</b> / '+fmtNum(g)+' '+n.u+'<span class="pct"> '+Math.round(r.p)+'%</span></span></div><div class="bar"><i class="'+(done?'full':lo?'over':'')+'" data-k="n'+r.k+'" data-p="'+Math.min(100,r.p).toFixed(1)+'"></i></div></div>';}).join('');
+  const doneNow=new Set(rows.filter(r=>r.p>=100).map(r=>r.k)),prevDone=FX.md&&FX.md.d===dDate?FX.md.s:null;FX.md={d:dDate,s:doneNow};
+  const fresh=prevDone?[...doneNow].filter(k=>!prevDone.has(k)):[];
   if(box.children.length&&!enteringView&&!RM&&$('view-diet').classList.contains('active'))flip(box,()=>{box.innerHTML=html;});else box.innerHTML=html;
+  if(fresh.length&&!RM&&$('view-diet').classList.contains('active'))setTimeout(()=>fresh.forEach((k,i)=>{const el=box.querySelector('[data-fk="mi'+k+'"]');if(!el)return;el.classList.add('justdone');
+    const r=el.getBoundingClientRect();if(r.top>60&&r.bottom<innerHeight-80)setTimeout(()=>{burst(r.left+20,r.top+r.height/2,'#3ecf8e');haptic('light');},i*140);}),620);
 }
 
 /* ---------- ingredient lists: what's bad for you and your gut gets marked ---------- */
@@ -2858,7 +2999,7 @@ function camFallback(){
   const sh=$('shutter');if(sh)sh.onclick=()=>$('camIn').click();
 }
 function camBarcode(code){
-  code=String(code||'').replace(/\D/g,'');if(camFound||code.length<8)return;camFound=true;
+  code=String(code||'').replace(/\D/g,'');if(camFound||code.length<8)return;camFound=true;stopScanner();
   haptic('success');const b=$('camBox');if(b){b.classList.add('found');const r=b.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,'#3ecf8e',true);}
   const h=$('camHint');if(h)h.textContent='Barcode '+code;
   setTimeout(()=>lookupBarcode(code),380);
@@ -2918,7 +3059,7 @@ function saveMeal(md,date){
     if(d!==todayStr()){const now=new Date();const dd=parseD(d);dd.setHours(now.getHours(),now.getMinutes());ne.ts=dd.getTime();}
     (S.food[d]=S.food[d]||[]).push(ne);
   }
-  save();dDate=md.id&&e?e.d:d;closeSheet();
+  save();dDate=md.id&&e?e.d:d;dAuto=dDate===todayStr();closeSheet();setTimeout(fxProgressCheck,1400);
   if(!$('view-diet').classList.contains('active'))show('diet');else flip($('mealList'),renderDiet);
   const over=antiOver(dDate);toast(over.length?(md.id?'Saved':'Logged')+' — ⚠ '+NMAP[over[0].k].n+' over your limit':(md.id?'Saved ':'Logged ')+(md.name||'meal'));
   anFocus=mid;analyzeMeal(mid);
@@ -3206,7 +3347,7 @@ function renderWeight(){
   const line=p=>p.map((q,i)=>(i?'L':'M')+X(q.ts).toFixed(1)+' '+Y(q.w).toFixed(1)).join(' ');
   const f=data[0],l=data[data.length-1];
   box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'">'+grid+'<path class="ln" pathLength="1" d="'+line(avg)+'" fill="none" stroke="#8fb7ff" stroke-width="2.5" opacity=".5" stroke-linecap="round" stroke-linejoin="round"/><path class="ln" pathLength="1" d="'+line(data)+'" fill="none" stroke="#5b93ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
-    data.map((p,j)=>'<circle class="pt" style="--j:'+Math.min(j,40)+'" cx="'+X(p.ts).toFixed(1)+'" cy="'+Y(p.w).toFixed(1)+'" r="3.2" fill="#5b93ff"/>').join('')+
+    data.slice(-60).map((p,j)=>'<circle class="pt" style="--j:'+Math.min(j,40)+'" cx="'+X(p.ts).toFixed(1)+'" cy="'+Y(p.w).toFixed(1)+'" r="3.2" fill="#5b93ff"/>').join('')+
     '<text class="lbl" x="'+X(f.ts)+'" y="'+(Y(f.w)-9)+'" font-size="12" font-weight="700" fill="#d9e4f8">'+f.w+'</text><text class="lbl" x="'+X(l.ts)+'" y="'+(Y(l.w)-9)+'" text-anchor="end" font-size="12" font-weight="700" fill="#d9e4f8">'+l.w+'</text>'+
     '<text x="'+pL+'" y="'+(H-8)+'" font-size="11" fill="#7d8592">'+fmtD(f.d)+'</text><text x="'+(W-pR)+'" y="'+(H-8)+'" text-anchor="end" font-size="11" fill="#7d8592">'+fmtD(l.d)+'</text></svg>'+
     '<p class="tiny" style="margin-top:4px">Dark: daily · light: 7-day average (trust this one)</p>';
@@ -3219,15 +3360,17 @@ function renderWeight(){
   else msg=Math.abs(d)<0.15?'Holding steady ('+dir+') — exactly what '+(g==='maintain'?'maintaining':'recomp')+' looks like. Strength up while the scale holds = fat out, muscle in.':d>0.4?'Up '+d.toFixed(2)+' kg — faster than needed for a recomp. Hold intake a week and re-check.':d>0?'Up '+d.toFixed(2)+' kg — a lean-gaining pace. Fine while training hard.':'Down '+Math.abs(d).toFixed(2)+' kg — you may be under-fuelled. Bump carbs a little and keep protein up.';
   ins.textContent=msg;ins.style.display='block';
 }
-function saveBody(){const v=parseFloat($('bwIn').value);const d=$('bwDate').value||todayStr();if(!v||v<30||v>250){toast('Enter your weight in kg');return false;}S.body[d]=v;if(d>=((latestBody()||{}).d||''))S.settings.weight=v;$('bwIn').value='';save();renderWeight();toast('Saved '+v+' kg for '+fmtD(d));return true;}
+function saveBody(){const v=parseFloat($('bwIn').value);const d=$('bwDate').value||todayStr();if(!v||v<30||v>250){toast('Enter your weight in kg');return false;}S.body[d]=v;if(d>=((latestBody()||{}).d||''))S.settings.weight=v;$('bwIn').value='';save();renderWeight();{const pts=document.querySelectorAll('#weightChart circle.pt');if(pts.length&&d>=((latestBody()||{}).d||''))pts[pts.length-1].classList.add('newpt');}setTimeout(fxProgressCheck,1600);toast('Saved '+v+' kg for '+fmtD(d));return true;}
 let sxCur='',sxGym='';
+const SDM=new Map();let SDV=-1;
 function strengthData(gym){
+  if(SDV!==dataVer){SDM.clear();SDV=dataVer;}const mk=gym||'';if(SDM.has(mk))return SDM.get(mk);
   const per={};
   Object.values(S.workouts).forEach(w=>{
     if(!w||!w.ex)return;if(gym&&w.gym!==gym)return;
     for(const k in w.ex){const sets=(w.ex[k]||[]).filter(s=>s&&s.r>0&&s.w>0);if(!sets.length)continue;const top=Math.max(...sets.map(s=>s.w));const reps=Math.max(...sets.filter(s=>s.w===top).map(s=>s.r));(per[canon(k)]=per[canon(k)]||[]).push({d:w.date,ts:parseD(w.date).getTime(),w:top,r:reps,g:w.gym});}
   });
-  for(const k in per)per[k].sort((a,b)=>a.ts-b.ts);return per;
+  for(const k in per)per[k].sort((a,b)=>a.ts-b.ts);SDM.set(mk,per);return per;
 }
 function renderStrength(){
   $('sxGym').innerHTML='<option value="">All gyms</option>'+S.gyms.map(g=>'<option value="'+g.id+'"'+(g.id===sxGym?' selected':'')+'>'+esc(g.name)+'</option>').join('');
@@ -3250,22 +3393,35 @@ function drawStrength(data){
   let grid='';for(let i=0;i<=4;i++){const w=y0+(y1-y0)*i/4,y=Y(w);grid+='<line x1="'+pL+'" y1="'+y+'" x2="'+(W-pR)+'" y2="'+y+'" stroke="#232a33"/><text x="'+(pL-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#7d8592">'+Math.round(w)+'</text>';}
   const f=data[0],l=data[data.length-1];
   box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'">'+grid+'<path class="ln" pathLength="1" d="'+data.map((q,i)=>(i?'L':'M')+X(q.ts).toFixed(1)+' '+Y(q.w).toFixed(1)).join(' ')+'" fill="none" stroke="#5b93ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
-    data.map((p,j)=>'<circle class="pt" style="--j:'+Math.min(j,40)+'" cx="'+X(p.ts).toFixed(1)+'" cy="'+Y(p.w).toFixed(1)+'" r="3.2" fill="#5b93ff"/>').join('')+
+    data.slice(-60).map((p,j)=>'<circle class="pt" style="--j:'+Math.min(j,40)+'" cx="'+X(p.ts).toFixed(1)+'" cy="'+Y(p.w).toFixed(1)+'" r="3.2" fill="#5b93ff"/>').join('')+
     '<text class="lbl" x="'+X(f.ts)+'" y="'+(Y(f.w)-9)+'" font-size="12" font-weight="700" fill="#d9e4f8">'+f.w+' kg</text><text class="lbl" x="'+X(l.ts)+'" y="'+(Y(l.w)-9)+'" text-anchor="end" font-size="12" font-weight="700" fill="#d9e4f8">'+l.w+' kg</text>'+
     '<text x="'+pL+'" y="'+(H-8)+'" font-size="11" fill="#7d8592">'+fmtD(f.d)+'</text><text x="'+(W-pR)+'" y="'+(H-8)+'" text-anchor="end" font-size="11" fill="#7d8592">'+fmtD(l.d)+'</text></svg>'+
     '<p class="tiny" style="margin-top:4px">'+data.length+' sessions · latest '+l.w+' kg × '+l.r+'</p>';
 }
 async function loadPhotos(){
-  try{const items=await puter.fs.readdir(PDIR);photos=items.filter(f=>!f.is_dir&&/\.jpg$/.test(f.name)).map(f=>({name:f.name,path:f.path,date:(f.name.match(/(\d{4}-\d{2}-\d{2})/)||[,''])[1],url:null})).sort((a,b)=>a.name<b.name?1:-1);}catch(e){photos=[];}
-  renderPhotos();
-  for(const p of photos){if(p.url)continue;try{const b=await puter.fs.read(p.path);p.url=URL.createObjectURL(b);renderPhotos();}catch(e){}}
+  const had=new Map(photos.map(p=>[p.path,p.url]));
+  try{const items=await puter.fs.readdir(PDIR);photos=items.filter(f=>!f.is_dir&&/\.jpg$/.test(f.name)).map(f=>({name:f.name,path:f.path,date:(f.name.match(/(\d{4}-\d{2}-\d{2})/)||[,''])[1],url:had.get(f.path)||null})).sort((a,b)=>a.name<b.name?1:-1);}catch(e){photos=[];}
+  renderPhotos();if(curView==='progress')fetchPhotos();
+}
+let photoQ=false;
+async function fetchPhotos(){
+  if(photoQ||typeof puter==='undefined'||!puter.fs)return;photoQ=true;
+  try{const todo=photos.filter(p=>!p.url);let i=0;
+    const work=async()=>{while(i<todo.length){const p=todo[i++];try{const b=await puter.fs.read(p.path);p.url=URL.createObjectURL(b);photoCell(p);}catch(e){}}};
+    await Promise.all([work(),work(),work()]);
+  }finally{photoQ=false;}
+}
+function photoCell(p){
+  const i=photos.indexOf(p),el=document.querySelector('#photoGrid .pcell[data-i="'+i+'"]');if(!el||!p.url){renderPhotos();return;}
+  el.classList.remove('loading');if(!el.querySelector('img'))el.insertAdjacentHTML('afterbegin','<img src="'+p.url+'" alt="" class="fadein">');
+  if(!el.querySelector('.pshare'))el.insertAdjacentHTML('beforeend','<div class="pshare" onclick="event.stopPropagation();postPhoto('+i+')" title="Post to your profile">↗</div>');
 }
 function renderPhotos(){
   const g=$('photoGrid');if(!g)return;
   if(!photos.length){g.innerHTML='';$('compareBox').innerHTML='';return;}
   let html='',cm='';
   photos.forEach((p,i)=>{const m=p.date?parseD(p.date).toLocaleDateString('en-GB',{month:'long',year:'numeric'}):'Unknown';if(m!==cm){if(cm)html+='</div>';html+='<div class="ph-month">'+m+'</div><div class="pgrid">';cm=m;}
-    html+='<div class="pcell'+(selPhotos.includes(i)?' sel':'')+(p.url?'':' loading')+'" onclick="selPhoto('+i+')">'+(p.url?'<img src="'+p.url+'" alt="">':'')+'<div class="pd">'+(p.date?fmtD(p.date):'—')+'</div><div class="px" onclick="event.stopPropagation();delPhoto('+i+')">✕</div>'+(p.url?'<div class="pshare" onclick="event.stopPropagation();postPhoto('+i+')" title="Post to your profile">↗</div>':'')+'</div>';});
+    html+='<div class="pcell'+(selPhotos.includes(i)?' sel':'')+(p.url?'':' loading')+'" data-i="'+i+'" onclick="selPhoto('+i+')">'+(p.url?'<img src="'+p.url+'" alt="">':'')+'<div class="pd">'+(p.date?fmtD(p.date):'—')+'</div><div class="px" onclick="event.stopPropagation();delPhoto('+i+')">✕</div>'+(p.url?'<div class="pshare" onclick="event.stopPropagation();postPhoto('+i+')" title="Post to your profile">↗</div>':'')+'</div>';});
   g.innerHTML=html+'</div>';
   const c=$('compareBox');
   if(selPhotos.length===2){const pair=selPhotos.map(i=>photos[i]).filter(p=>p&&p.url).sort((x,y)=>x.date<y.date?-1:1);
@@ -3328,6 +3484,284 @@ async function eraseAll(){
   S=fresh();pushed={};photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
 }
 
+/* ================= END-TO-END ENCRYPTION for everything friends can see ================= */
+/* • This phone has an identity key pair (ECDH P-256). Only the public half goes to the Lock In server.
+   • Each category (gym, lifts, split, diet, nutr, body, photos) has its own random AES-256-GCM key; everything you
+     share in it is encrypted on this phone before upload.
+   • For every friend allowed to see a category, its key is wrapped with a key only the two of you can compute
+     (ECDH → HKDF-SHA-256). The server keeps the wrapped keys but can't open them, and still decides who may download what.
+   • Take a category away from someone (or remove them) and it gets a brand-new key they never receive.
+   • Shared-split links carry their key after the # (browsers never send that part to a server).
+   • Your private keys live on this device and in your own Puter account (so your other devices get them) — never on our server. */
+const E2E={ok:false,busy:null,err:'',st:null,priv:null,pub:'',fp:'',self:null,cat:{},pair:new Map(),fk:new Map(),postK:new Map(),fpc:new Map(),idPub:'',reloaded:false,migrated:false};
+const TE=new TextEncoder(),TD=new TextDecoder(),SUB=()=>crypto.subtle;
+const B62='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',C31='23456789ABCDEFGHJKMNPQRSTUVWXYZ',E2E_KV='e2e_v1';
+const ENCRX=/^e1\.([0-9a-f]{8})\.([A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]{22,})$/,K43=/^[A-Za-z0-9_-]{43}$/;
+function b64std(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);}
+function b64u(buf){return b64std(buf instanceof Uint8Array?buf:new Uint8Array(buf)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function ub64u(s){s=String(s||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const r=atob(s),b=new Uint8Array(r.length);for(let i=0;i<r.length;i++)b[i]=r.charCodeAt(i);return b;}
+const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+const hexs=b=>Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+function rndStr(n,abc){const lim=256-256%abc.length;let s='';while(s.length<n)for(const x of rnd(n*2)){if(x<lim&&s.length<n)s+=abc[x%abc.length];}return s;}
+const jenc=o=>TE.encode(JSON.stringify(o)),jdec=b=>JSON.parse(TD.decode(b));
+function aesKey(raw,use){return SUB().importKey('raw',raw,'AES-GCM',false,use||['encrypt','decrypt']);}
+async function encS(key,bytes,aad){const iv=rnd(12);const ct=await SUB().encrypt({name:'AES-GCM',iv,additionalData:TE.encode(aad)},key,bytes);return b64u(iv)+'.'+b64u(ct);}
+async function decS(key,str,aad){const p=String(str||'').split('.');if(p.length!==2)throw new Error('bad');return new Uint8Array(await SUB().decrypt({name:'AES-GCM',iv:ub64u(p[0]),additionalData:TE.encode(aad)},key,ub64u(p[1])));}
+async function fpOf(pub){if(E2E.fpc.has(pub))return E2E.fpc.get(pub);const f=b64u((await SUB().digest('SHA-256',TE.encode(pub))).slice(0,16));E2E.fpc.set(pub,f);return f;}
+const pubOk=async f=>!!(f&&typeof f.pub==='string'&&/^[A-Za-z0-9_-]{43}\.[A-Za-z0-9_-]{43}$/.test(f.pub)&&f.fp&&await fpOf(f.pub)===f.fp);
+
+/* ---------- your keys: this device + your Puter account ---------- */
+function e2eLK(){return 'lockin_e2e_'+(user?user.username:'anon');}
+function e2eValid(st){return !!(st&&st.v===1&&st.id&&K43.test(st.id.x)&&K43.test(st.id.y)&&K43.test(st.id.d)&&K43.test(st.self)&&st.cats&&typeof st.cats==='object');}
+async function e2eKVGet(){const raw=await puter.kv.get(E2E_KV);if(!raw)return null;const o=typeof raw==='string'?JSON.parse(raw):raw;return e2eValid(o)?o:null;}
+function e2eMerge(a,b){const out=JSON.parse(JSON.stringify(a));let ch=false;
+  for(const c of CATS){const x=b.cats&&own(b.cats,c)?b.cats[c]:null,y=own(out.cats,c)?out.cats[c]:null;if(x&&(!y||(+x.t||0)>(+y.t||0))){out.cats[c]=x;ch=true;}}
+  return {st:out,ch};}
+async function e2eGen(){const kp=await SUB().generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']),j=await SUB().exportKey('jwk',kp.privateKey);
+  return {v:1,t:Date.now(),id:{x:j.x,y:j.y,d:j.d},self:b64u(rnd(32)),cats:{}};}
+async function e2eUse(st){
+  const priv=await SUB().importKey('jwk',{kty:'EC',crv:'P-256',x:st.id.x,y:st.id.y,d:st.id.d,ext:true},{name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);
+  const self=await aesKey(ub64u(st.self)),cat={};
+  for(const c of CATS){const k=own(st.cats,c)?st.cats[c]:null;if(k&&/^[0-9a-f]{8}$/.test(k.kid)&&K43.test(k.k)){const raw=ub64u(k.k);cat[c]={kid:k.kid,t:+k.t||0,raw,key:await aesKey(raw)};}}
+  const p=st.id.x+'.'+st.id.y;
+  if(E2E.idPub&&E2E.idPub!==p){E2E.pair.clear();E2E.fk.clear();E2E.postK.clear();}
+  Object.assign(E2E,{priv,self,cat,st,pub:p,fp:await fpOf(p),idPub:p,ok:true,err:''});
+}
+async function e2eLoad(force){
+  if(E2E.ok&&!force)return true;
+  if(E2E.busy)return E2E.busy;
+  E2E.busy=(async()=>{
+    try{
+      if(!window.crypto||!crypto.subtle)throw new Error('This browser can’t encrypt — update iOS or use Safari.');
+      let loc=null;try{loc=JSON.parse(localStorage.getItem(e2eLK())||'null');}catch(e){}if(!e2eValid(loc))loc=null;
+      let kv=null,reach=false;
+      if(typeof puter!=='undefined'&&puter.kv&&navigator.onLine){try{kv=await e2eKVGet();reach=true;}catch(e){}}
+      let st,write=false;
+      if(kv){st=kv;if(loc&&loc.id.d===kv.id.d){const m=e2eMerge(kv,loc);if(m.ch){st=m.st;write=true;}}}
+      else if(reach){st=loc||await e2eGen();write=true;}
+      else if(loc)st=loc;
+      else throw new Error('Couldn’t reach your account to load your encryption keys.');
+      if(write)await puter.kv.set(E2E_KV,JSON.stringify(st));
+      try{localStorage.setItem(e2eLK(),JSON.stringify(st));}catch(e){}
+      await e2eUse(st);return true;
+    }catch(e){E2E.err=(e&&e.message)||'Encryption keys unavailable';return false;}
+    finally{E2E.busy=null;}
+  })();
+  return E2E.busy;
+}
+/* brand-new keys for some categories — saved to your account first, so your other devices can read what's sent with them */
+async function e2eNewKeys(cats){
+  let st=JSON.parse(JSON.stringify(E2E.st));
+  const kv=await e2eKVGet();
+  if(kv){if(kv.id.d!==st.id.d){await e2eLoad(true);throw new Error('Your keys changed on another device — try again');}st=e2eMerge(st,kv).st;}
+  const now=Date.now();for(const c of cats)st.cats[c]={kid:hexs(rnd(4)),k:b64u(rnd(32)),t:now};
+  await puter.kv.set(E2E_KV,JSON.stringify(st));
+  try{localStorage.setItem(e2eLK(),JSON.stringify(st));}catch(e){}
+  await e2eUse(st);
+}
+/* the server must know your public key before friends can send you anything */
+async function e2eEnsurePub(){
+  const me=SOC.me;if(!me||!E2E.ok)return false;
+  if(me.pub===E2E.pub)return true;
+  if(me.pub&&!E2E.reloaded){E2E.reloaded=true;await e2eLoad(true);if(me.pub===E2E.pub)return true;}
+  const r=await sapi('/me','PUT',{pub:E2E.pub});SOC.me=r;if(SOC.data)SOC.data.me=r;socSave();return true;
+}
+
+/* ---------- keys you and one friend share ---------- */
+async function e2ePair(peerPub,info){
+  const k=peerPub+'|'+info;let p=E2E.pair.get(k);if(p)return p;
+  const [x,y]=String(peerPub).split('.');
+  const pub=await SUB().importKey('jwk',{kty:'EC',crv:'P-256',x,y,ext:true},{name:'ECDH',namedCurve:'P-256'},false,[]);
+  const bits=await SUB().deriveBits({name:'ECDH',public:pub},E2E.priv,256);
+  const hk=await SUB().importKey('raw',bits,'HKDF',false,['deriveKey']);
+  p=await SUB().deriveKey({name:'HKDF',hash:'SHA-256',salt:TE.encode('lockin-e2e-v1'),info:TE.encode(info)},hk,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  E2E.pair.set(k,p);return p;
+}
+/* a friend's category key, unwrapped with the key only you two share */
+async function friendKey(f,c,kid){
+  const ck=f.id+'|'+c+'|'+kid;if(E2E.fk.has(ck))return E2E.fk.get(ck);
+  const r=f.keys&&own(f.keys,c)?f.keys[c]:null;
+  if(!r||r.k!==kid||!E2E.ok||r.rf!==E2E.fp||!SOC.me||!(await pubOk(f))||r.of!==f.fp)return null;
+  try{const pk=await e2ePair(f.pub,'cat|'+f.id+'|'+SOC.me.id+'|'+r.of+'|'+r.rf);
+    const key=await aesKey(await decS(pk,r.w,'k|'+c+'|'+kid),['decrypt']);E2E.fk.set(ck,key);return key;}catch(e){return null;}
+}
+async function seal(c,slot,obj){const k=E2E.cat[c];return 'e1.'+k.kid+'.'+await encS(k.key,jenc(obj),SOC.me.id+'|'+c+'|'+slot);}
+async function unsealFrom(f,c,slot,str){
+  const m=ENCRX.exec(String(str||''));if(!m)return null;const key=await friendKey(f,c,m[1]);if(!key)return null;
+  try{return jdec(await decS(key,m[2],f.id+'|'+c+'|'+slot));}catch(e){return null;}
+}
+function allowedFor(f,c){const def=Object.assign({},CATDEF,(SOC.me&&SOC.me.defaults)||{}),o=f.perms||{};return typeof o[c]==='boolean'?o[c]:!!def[c];}
+
+/* ---------- owner side: make sure exactly the right friends hold each category key ---------- */
+async function e2eKeySync(need){
+  const d=SOC.data;if(!d||!SOC.me||!E2E.ok)return null;
+  let ring=Array.isArray(d.ring)?d.ring:[];
+  // another of your devices made newer keys? pick them up before wrapping anything
+  if(ring.some(x=>E2E.cat[x.c]&&x.k!==E2E.cat[x.c].kid&&x.of===E2E.fp)&&!E2E.ringReload){E2E.ringReload=true;await e2eLoad(true);}
+  const friends=(d.friends||[]).filter(f=>sid(f.id)),ok={};
+  for(const f of friends)ok[f.id]=await pubOk(f);
+  const rot=[],del=[];
+  for(const c of CATS){
+    const want=new Set(friends.filter(f=>ok[f.id]&&allowedFor(f,c)).map(f=>f.id)),rows=ring.filter(x=>x.c===c);
+    const stale=rows.some(x=>!want.has(x.r));          // someone lost access → that category gets a new key
+    if(stale){rot.push(c);del.push(c);}
+    else if(!E2E.cat[c]&&(want.size||(need&&need[c])))rot.push(c);
+  }
+  if(rot.length)await e2eNewKeys(rot);
+  const put=[];
+  for(const c of CATS){
+    const k=E2E.cat[c];if(!k)continue;
+    const rows=del.includes(c)?[]:ring.filter(x=>x.c===c);
+    for(const f of friends){
+      if(!ok[f.id]||!allowedFor(f,c))continue;
+      const r=rows.find(x=>x.r===f.id);if(r&&r.k===k.kid&&r.rf===f.fp&&r.of===E2E.fp)continue;
+      const pk=await e2ePair(f.pub,'cat|'+SOC.me.id+'|'+f.id+'|'+E2E.fp+'|'+f.fp);
+      put.push({r:f.id,c,k:k.kid,w:await encS(pk,k.raw,'k|'+c+'|'+k.kid),rf:f.fp});
+    }
+  }
+  return {put,del,rot};
+}
+function e2eRingApply(ks){
+  const d=SOC.data;if(!d||!ks)return;let ring=(Array.isArray(d.ring)?d.ring:[]).filter(x=>!ks.del.includes(x.c));
+  for(const p of ks.put){ring=ring.filter(x=>!(x.r===p.r&&x.c===p.c));ring.push({r:p.r,c:p.c,k:p.k,rf:p.rf,of:E2E.fp});}
+  d.ring=ring;
+}
+/* everything in one snapshot, encrypted per category */
+const SUMCATS=['gym','lifts','diet','nutr','body'];
+async function e2eSealSum(sum){const s={};for(const c of SUMCATS)if(sum[c]!==undefined&&E2E.cat[c])s[c]=await seal(c,'sum',sum[c]);if(sum.live&&E2E.cat.gym)s.live=await seal('gym','live',sum.live);return s;}
+async function e2eSealFeed(feed){
+  const out=[];
+  for(const it of feed){if(!E2E.cat[it.c])continue;
+    const body={};for(const k in it)if(!['id','c','t','ts','x'].includes(k))body[k]=it[k];
+    const o={id:it.id,c:it.c,t:it.t,ts:it.ts,e:await seal(it.c,'f:'+it.id,body)};
+    if(it.x){o.x={};for(const xc in it.x)if(E2E.cat[xc])o.x[xc]=await seal(xc,'x:'+it.id,it.x[xc]);}
+    out.push(o);}
+  return out;
+}
+
+/* ---------- reader side: open what friends shared with you ---------- */
+const FEEDKEEP=['n','d','ex','sets','min','live','g','so','m','sf'];
+async function e2eOpenSum(f){
+  const s=f.sum&&typeof f.sum==='object'?f.sum:{},out={};let n=0;
+  for(const c of [...SUMCATS,'live']){if(!own(s,c)||typeof s[c]!=='string')continue;n++;
+    const v=await unsealFrom(f,c==='live'?'gym':c,c==='live'?'live':'sum',s[c]);if(v!=null&&typeof v==='object')out[c]=v;}
+  f.sum=out;f.locked=n>0&&!Object.keys(out).length;
+}
+async function e2eOpenFriends(d){
+  const me=SOC.me&&SOC.me.id,byId={};
+  const ready=await e2eLoad();
+  for(const f of d.friends||[]){byId[f.id]=f;f.pubOk=await pubOk(f);if(ready)await e2eOpenSum(f);else{f.locked=Object.keys(f.sum||{}).length>0;f.sum={};}}
+  const feed=[];
+  for(const it of d.feed||[]){
+    if(it.t==='p'){if(ready)await e2eOpenPost(it,it.by===me?null:byId[it.by]);feed.push(it);continue;}
+    if(it.by===me){feed.push(it);continue;}
+    const f=byId[it.by];if(!f||!ready||typeof it.e!=='string')continue;
+    const v=await unsealFrom(f,it.c,'f:'+it.id,it.e);if(!v||typeof v!=='object')continue;
+    const o={id:it.id,c:it.c,t:it.t,ts:it.ts,by:it.by,re:it.re||{},who:it.who||[],mine:it.mine};for(const k of FEEDKEEP)if(own(v,k))o[k]=v[k];
+    if(it.x&&typeof it.x==='object'){o.x={};for(const xc of CATS)if(own(it.x,xc)){const xv=await unsealFrom(f,xc,'x:'+it.id,it.x[xc]);if(xv&&typeof xv==='object')o.x[xc]=xv;}}
+    feed.push(o);
+  }
+  d.feed=feed;
+  for(const g of d.gifts||[])if(ready)await e2eOpenGift(g,byId[g.from&&g.from.id]);
+  return d;
+}
+async function e2eOpenProfile(p,fid){
+  if(!(await e2eLoad()))return p;
+  const f={id:fid,pub:p.pub,fp:p.fp,keys:p.keys||{},sum:p.sum};
+  await e2eOpenSum(f);p.sum=f.sum;p.locked=f.locked;
+  const data={};for(const c of DATAC)if(p.data&&own(p.data,c)){const v=await unsealFrom(f,c,'data',p.data[c]);if(v&&typeof v==='object')data[c]=v;else p.locked=true;}
+  p.data=data;return p;
+}
+const DATAC=['gym','lifts','split','diet','nutr','body'];
+
+/* ---------- progress-photo posts ---------- */
+async function postKey(pid,row,f){
+  if(E2E.postK.has(pid))return E2E.postK.get(pid);
+  let raw=null;
+  try{
+    if(row.sk&&E2E.self)raw=await decS(E2E.self,row.sk,'sk|'+pid);
+    else if(f&&row.pk&&/^[0-9a-f]{8}\./.test(row.pk)){const kid=row.pk.slice(0,8),ck=await friendKey(f,'photos',kid);if(ck)raw=await decS(ck,row.pk.slice(9),'pk|'+pid+'|'+kid);}
+  }catch(e){raw=null;}
+  if(!raw||raw.length!==32)return null;const key=await aesKey(raw);E2E.postK.set(pid,key);return key;
+}
+async function e2eOpenPost(it,f){
+  const pid=String(it.id).replace(/^p/,'');if(!/^[0-9a-f]{32}$/.test(pid))return;
+  if(!it.enc){it.capT=typeof it.cap==='string'&&!/^[A-Za-z0-9_-]{16}\./.test(it.cap)?it.cap:'';return;}   // your own, from before encryption
+  const key=await postKey(pid,it,f);if(!key){it.locked=1;it.capT='';return;}
+  try{it.capT=it.cap?TD.decode(await decS(key,it.cap,'cap|'+pid)):'';}catch(e){it.capT='';}
+}
+async function e2eSealPost(pid,jpeg,caption){
+  if(!(await e2eLoad()))throw new Error(E2E.err||'Encryption isn’t ready');
+  if(!E2E.cat.photos)await e2eNewKeys(['photos']);
+  const raw=rnd(32),key=await aesKey(raw),iv=rnd(12);
+  const ct=new Uint8Array(await SUB().encrypt({name:'AES-GCM',iv,additionalData:TE.encode('img|'+pid)},key,jpeg));
+  const all=new Uint8Array(12+ct.length);all.set(iv);all.set(ct,12);
+  const k=E2E.cat.photos;
+  return {img:b64std(all),cap:caption?await encS(key,TE.encode(caption),'cap|'+pid):'',pk:k.kid+'.'+await encS(k.key,raw,'pk|'+pid+'|'+k.kid),sk:await encS(E2E.self,raw,'sk|'+pid),key};
+}
+async function e2eOpenImg(pid,buf){
+  const key=E2E.postK.get(pid);if(!key)throw new Error('locked');
+  return new Uint8Array(await SUB().decrypt({name:'AES-GCM',iv:buf.slice(0,12),additionalData:TE.encode('img|'+pid)},key,buf.slice(12)));
+}
+/* after the photos key changes, re-wrap each post's key with the new one (the photos themselves stay as they are) */
+async function e2eRewrapPosts(){
+  const r=await sapi('/posts?u='+encodeURIComponent(SOC.me.id)),k=E2E.cat.photos,out=[];if(!k)return out;
+  for(const p of r.posts||[]){if(!p.enc||!p.sk)continue;try{const raw=await decS(E2E.self,p.sk,'sk|'+p.id);out.push({id:p.id,pk:k.kid+'.'+await encS(k.key,raw,'pk|'+p.id+'|'+k.kid)});}catch(e){}}
+  return out;
+}
+/* photos you posted before encryption: download, encrypt, replace (once per session) */
+async function e2eMigratePosts(){
+  if(E2E.migrated||!SOC.me||!E2E.ok)return;E2E.migrated=true;
+  let r;try{r=await sapi('/posts?u='+encodeURIComponent(SOC.me.id));}catch(e){E2E.migrated=false;return;}
+  for(const p of (r.posts||[]).filter(x=>!x.enc)){
+    try{const res=await fetch('/api/posts/'+p.id+'/img',{headers:{authorization:'Bearer '+socTok(),'x-lockin':'2'},cache:'no-store'});if(!res.ok)continue;
+      const s=await e2eSealPost(p.id,new Uint8Array(await res.arrayBuffer()),typeof p.cap==='string'?p.cap:'');
+      await sapi('/posts/'+p.id,'PUT',{img:s.img,cap:s.cap,pk:s.pk,sk:s.sk});E2E.postK.set(p.id,s.key);POSTIMG.delete(p.id);}catch(e){}
+  }
+}
+
+/* ---------- shared splits ---------- */
+async function shareKey(code,secret){
+  const hk=await SUB().importKey('raw',TE.encode(secret),'HKDF',false,['deriveKey']);
+  return SUB().deriveKey({name:'HKDF',hash:'SHA-256',salt:TE.encode('lockin-share-v1|'+code),info:TE.encode('split')},hk,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function e2eShare(data,friends){
+  if(friends&&!(await e2eLoad()))throw new Error(E2E.err||'Encryption isn’t ready');
+  for(let i=0;i<4;i++){
+    const code=rndStr(8,C31),secret=rndStr(11,B62),key=await shareKey(code,secret);
+    const body={kind:'split',code,data:'e1.00000000.'+await encS(key,jenc(data),'share|'+code)};
+    if(friends){
+      body.meta=await encS(key,jenc({name:data.name,days:(data.days||[]).length}),'meta|'+code);body.to=[];
+      for(const f of friends){if(!(await pubOk(f)))continue;const pk=await e2ePair(f.pub,'share|'+SOC.me.id+'|'+f.id+'|'+E2E.fp+'|'+f.fp);body.to.push({id:f.id,w:await encS(pk,TE.encode(secret),'s|'+code),rf:f.fp});}
+      if(!body.to.length)throw new Error('They need to open the latest Lock In first');
+    }
+    try{const r=await sapi('/share','POST',body);return {code,secret,sent:r.sent||0};}catch(e){if(e.status===409)continue;throw e;}
+  }
+  throw new Error('Couldn’t share — try again');
+}
+async function e2eOpenShare(code,secret,data){
+  if(typeof data!=='string')return data&&typeof data==='object'?data:{};   // shared before encryption
+  if(!/^[A-Za-z0-9]{11}$/.test(secret||''))throw new Error('This link is missing its key — ask for the full link again.');
+  const m=ENCRX.exec(data);if(!m)throw new Error('That split can’t be read.');
+  try{return jdec(await decS(await shareKey(code,secret),m[2],'share|'+code));}catch(e){throw new Error('This link’s key doesn’t match — ask for it again.');}
+}
+async function e2eOpenGift(g,f){
+  if(!g||!g.w)return;   // sent before encryption: name and days come in clear
+  g.name='Split';g.days=0;g.secret='';
+  if(!f||!(await pubOk(f))||!E2E.ok)return;
+  try{const pk=await e2ePair(f.pub,'share|'+f.id+'|'+SOC.me.id+'|'+g.of+'|'+g.rf);
+    const s=TD.decode(await decS(pk,g.w,'s|'+g.code));if(!/^[A-Za-z0-9]{11}$/.test(s))return;g.secret=s;
+    if(g.meta){const m=jdec(await decS(await shareKey(g.code,s),g.meta,'meta|'+g.code));g.name=String((m&&m.name)||'Split').slice(0,40);g.days=num(m&&m.days);}
+  }catch(e){g.secret='';}
+}
+/* a code you can compare in person: same 12 digits on both phones = nobody is in between */
+async function safetyCode(f){
+  if(!E2E.ok||!(await pubOk(f)))return '';
+  const h=new Uint8Array(await SUB().digest('SHA-256',TE.encode('lockin-safety|'+[E2E.pub,f.pub].sort().join('|'))));
+  let s='';for(let i=0;i<6;i++)s+=String(((h[i*2]<<8)|h[i*2+1])%100).padStart(2,'0');
+  return s.slice(0,4)+' '+s.slice(4,8)+' '+s.slice(8,12);
+}
+
 /* ================= FRIENDS: profiles, privacy, activity, reactions, shared splits ================= */
 /* Everything a friend sees comes from a small snapshot this device uploads; the server only hands out
    the parts each friend is allowed to see (your defaults, or what you set for that one person). */
@@ -3344,7 +3778,8 @@ const IC={
   scan:'<svg viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M7 12h10"/></svg>',
   at:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/></svg>',
   cam:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
-  copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
+  copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/><path d="M12 14.6v2"/></svg>'
 };
 let FEEDN=8;
 let SOC={data:null,me:null,t:0,v:0,busy:null,err:'',lb:'wk',myAv:'',sent:{},prof:{},open:null,addTab:'code',shared:null,mySum:null,mySumV:-1};
@@ -3375,25 +3810,30 @@ async function sapi(path,method,body){
   if(!tok)throw Object.assign(new Error('Sign in to use friends'),{code:'signin'});
   if(!navigator.onLine)throw Object.assign(new Error('You’re offline'),{code:'offline'});
   let r;
-  try{r=await fetch('/api'+path,{method:method||'GET',cache:'no-store',headers:Object.assign({authorization:'Bearer '+tok},body!==undefined?{'content-type':'application/json'}:{}),body:body!==undefined?JSON.stringify(body):undefined});}
+  try{r=await fetch('/api'+path,{method:method||'GET',cache:'no-store',headers:Object.assign({authorization:'Bearer '+tok,'x-lockin':'2'},body!==undefined?{'content-type':'application/json'}:{}),body:body!==undefined?JSON.stringify(body):undefined});}
   catch(e){throw Object.assign(new Error('Couldn’t reach the server'),{code:'net'});}
   let j={};try{j=await r.json();}catch(e){}
   if(!r.ok)throw Object.assign(new Error(j.message||('Error '+r.status)),{code:j.error||'http',status:r.status});
   return j;
 }
-function socSig(d){return d?JSON.stringify([d.friends,d.incoming,d.outgoing,d.feed,d.inbox,d.me]):'';}
+function socSig(d){return d?JSON.stringify([d.friends,d.incoming,d.outgoing,d.feed,d.inbox,d.me,d.gifts]):'';}
 async function socRefresh(force){
   if(SOC.busy)return SOC.busy;
   if(!force&&SOC.data&&!SOC.err&&Date.now()-SOC.t<15000)return SOC.data;
   if(!socTok()){if(!SOC.err){SOC.err='signin';SOC.v++;if(curView==='friends')renderView('friends');}return null;}
   SOC.busy=(async()=>{
     try{
-      const d=await sapi('/friends');
-      const changed=socSig(d)!==socSig(SOC.data)||!!SOC.err;
-      SOC.data=d;SOC.me=d.me;SOC.t=Date.now();SOC.err='';
-      if(changed){SOC.v++;socSave();socChanged();}
+      const raw=await sapi('/friends');
+      SOC.me=raw.me;SOC.t=Date.now();
+      // everything friends shared arrives encrypted: only decrypt again when something actually changed
+      const sig=socSig(raw),changed=sig!==SOC.rawSig||!!SOC.err||!SOC.data;
+      if(changed){
+        const d=await e2eOpenFriends(raw);
+        SOC.data=d;SOC.rawSig=sig;SOC.err='';SOC.v++;socSave();socChanged();
+      }else{SOC.data.me=raw.me;SOC.data.ring=raw.ring;SOC.err='';}
       socNameSync();snapSoon(4000);
-      return d;
+      if(E2E.ok){e2eEnsurePub().catch(()=>{});setTimeout(()=>e2eMigratePosts(),3000);}
+      return SOC.data;
     }catch(e){
       const c=e.code||'err';if(SOC.err!==c){SOC.err=c;SOC.v++;if(curView==='friends')renderView('friends');}
       return null;
@@ -3560,16 +4000,28 @@ function socNeeded(){
 }
 let snapT=0,snapBusy=false;
 function snapSoon(ms){if(!SOC.data||!(SOC.data.friends||[]).length)return;clearTimeout(snapT);snapT=setTimeout(()=>idle(snapPush),ms==null?20000:ms);}
+/* upload what friends may see — encrypted per category, plus the keys each friend needs (only changed parts go up) */
 async function snapPush(){
   if(snapBusy){snapSoon(5000);return;}
-  const need=socNeeded();if(!need||!S||!socTok()||!navigator.onLine)return;
-  let snap;try{snap=buildSnap(need);}catch(e){return;}
-  const body={};let n=0;
-  for(const k in snap){const s=JSON.stringify(snap[k]);if(k==='sum'?SOC.sent.sum!==JSON.stringify(Object.assign({},snap.sum,{ts:0})):SOC.sent[k]!==s){body[k]=snap[k];n++;}}
-  if(!n)return;
+  const need=socNeeded();if(!need||!S||!socTok()||!navigator.onLine||!SOC.me)return;
   snapBusy=true;
-  try{await sapi('/snap','PUT',body);for(const k in body)SOC.sent[k]=k==='sum'?JSON.stringify(Object.assign({},body.sum,{ts:0})):JSON.stringify(body[k]);}catch(e){}
-  finally{snapBusy=false;}
+  try{
+    if(!(await e2eLoad())||!(await e2eEnsurePub()))return;
+    let ks;try{ks=await e2eKeySync(need);}catch(e){snapSoon(30000);return;}
+    if(!ks)return;
+    let snap;try{snap=buildSnap(need);}catch(e){return;}
+    const kid=c=>E2E.cat[c]?E2E.cat[c].kid:'-',sig={},body={};let n=0;
+    sig.sum=JSON.stringify([Object.assign({},snap.sum,{ts:0}),SUMCATS.map(kid)]);
+    sig.feed=JSON.stringify([snap.feed,CATS.map(kid)]);
+    for(const c of DATAC)sig[c]=kid(c)+JSON.stringify(snap[c]);
+    if(SOC.sent.sum!==sig.sum){body.sum=await e2eSealSum(snap.sum);n++;}
+    if(SOC.sent.feed!==sig.feed){body.feed=await e2eSealFeed(snap.feed);n++;}
+    for(const c of DATAC)if(SOC.sent[c]!==sig[c]){body[c]=snap[c]==null||!E2E.cat[c]?null:await seal(c,'data',snap[c]);n++;}
+    if(ks.put.length||ks.del.length){body.keys={put:ks.put,del:ks.del};n++;}
+    if(ks.rot.includes('photos')){try{const p=await e2eRewrapPosts();if(p.length)body.posts=p;}catch(e){}}
+    if(!n)return;
+    try{await sapi('/snap','PUT',body);for(const k in sig)if(k in body)SOC.sent[k]=sig[k];e2eRingApply(ks);}catch(e){}
+  }finally{snapBusy=false;}
 }
 
 /* ---------- leaderboard maths (relative to today, so stale snapshots age out) ---------- */
@@ -3597,11 +4049,14 @@ function renderFriends(){
     h+=SOC.err==='offline'||SOC.err==='net'?frNote('📡','You’re offline','Friends load as soon as you’re back online.')
       :SOC.err==='signin'?frNote('🔐','Sign in to add friends','Friends use your Lock In account. <a href="#" onclick="doSignIn();return false">Sign in</a>')
       :SOC.err==='not_ready'?frNote('🛠️','Friends are almost ready','The friends server is being switched on — check back in a bit.')
+      :SOC.err==='update'?frNote('⬆️','Lock In was updated','Reload to keep using friends. <button class="linkbtn" onclick="location.reload()">Reload now</button>')
       :SOC.err?frNote('⚠️','Couldn’t load friends','<button class="linkbtn" onclick="socRefresh(true)">Try again</button>')
       :'<div class="card"><div class="skel" style="height:58px;border-radius:14px;margin:0"></div><div class="skel" style="height:58px;border-radius:14px"></div><div class="skel" style="height:58px;border-radius:14px"></div></div>';
     box.innerHTML=h;return;
   }
   if(SOC.err==='offline'||SOC.err==='net')h+='<div class="okline" style="background:#1b2230;border-color:#2b3a52;color:#b9cdf0">📡 Offline — showing what was saved on this device.</div>';
+  else if(SOC.err==='update')h+=frNote('⬆️','Lock In was updated','Reload to keep using friends. <button class="linkbtn" onclick="location.reload()">Reload now</button>');
+  if(E2E.err&&!E2E.ok)h+='<div class="okline e2ewarn">🔐 '+esc(E2E.err)+' <button class="linkbtn" onclick="e2eLoad(true).then(()=>socRefresh(true))">Try again</button></div>';
   if((d.incoming||[]).length)h+=frRequests(d.incoming);
   h+=frGifts(d);
   h+=frInbox(d);
@@ -3617,6 +4072,7 @@ function frHead(me,d){
   const n=d?(d.friends||[]).length:0;
   return '<div class="card frme"><div class="frme-row"><label class="avbtn" for="avIn" aria-label="Change profile photo">'+avHTML(me,64,'me')+'<span class="avcam">'+IC.cam+'</span></label>'+
     '<div class="grow" style="cursor:pointer" onclick="openMyProfile()"><div class="frname">'+esc(me.name||'You')+'</div><div class="tiny">'+(me.handle?'@'+esc(me.handle):'')+(d?' · '+n+' friend'+(n===1?'':'s'):'')+'</div><span class="viewme">View my profile ›</span></div>'+
+    '<button class="e2epill'+(E2E.ok?'':' off')+'" onclick="openE2EInfo()" aria-label="Encryption">'+IC.lock+'<span>'+(E2E.ok?'E2E':'…')+'</span></button>'+
     '</div><button class="btn btn-primary socbtn" style="width:100%;margin-top:14px" onclick="openAdd()">'+IC.add+' Add friends</button></div>';
 }
 function frRequests(list){
@@ -3680,7 +4136,8 @@ function feedItem(it){
   }else if(it.t==='p'){
     const pid=sid(String(it.id).slice(1));if(!pid)return '';
     txt=nm+' posted a progress photo';
-    extra='<div class="fphoto" onclick="openPost(\''+pid+'\',\''+by+'\')"><img data-post="'+pid+'" alt=""></div>'+(it.cap?'<p class="fcap">'+esc(it.cap)+'</p>':'');
+    if(it.locked)return '';
+    extra='<div class="fphoto" onclick="openPost(\''+pid+'\',\''+by+'\')"><img data-post="'+pid+'" alt=""></div>'+(it.capT?'<p class="fcap">'+esc(it.capT)+'</p>':'');
   }else return '';
   return '<div class="fitem'+(it.live?' islive':'')+'" data-fk="fd'+by+id+'"><div class="fh"'+(mine?'':' onclick="openFriend(\''+by+'\')"')+'>'+avHTML(u,38,it.live?'live':'')+
     '<div class="grow"><div class="ft">'+txt+'</div><div class="tiny">'+(it.t==='d'&&safeDate(it.d)!==todayStr()?fmtDY(safeDate(it.d)):ago(it.ts))+'</div></div><span class="fic">'+(it.t==='w'?'🏋️':it.t==='p'?'📸':'🥩')+'</span></div>'+
@@ -3700,6 +4157,8 @@ function frList(d){
 }
 function friendLine(f){
   const s=f.sum||{},p=[],l=liveOf(f);if(l)return 'Training '+l.n+' right now';
+  if(f.pubOk===false)return '@'+f.handle+' · needs the latest Lock In';
+  if(f.locked)return '🔒 Encrypted — opens when '+first(f.name)+'’s app shares the keys';
   if(s.gym){const n=inLast(s.gym.dates,7);p.push(n+' session'+(n===1?'':'s')+' this week');const st=lbVal(s,'st');if(st>1)p.push(st+'-week streak');}
   if(s.diet){const sc=lbVal(s,'diet');if(sc)p.push('food '+scoreGrade(sc));}
   return p.length?p.join(' · '):'@'+f.handle;
@@ -3945,7 +4404,7 @@ async function openFriend(id){
   openSheet(f.name,'<div id="pfBox">'+profileHTML(f,cached)+'</div>',{tall:true});
   afterProfile(true);
   try{
-    const p=await sapi('/friends/'+id);SOC.prof[id]=p;
+    const p=await e2eOpenProfile(await sapi('/friends/'+id),id);SOC.prof[id]=p;
     if(SOC.open===id&&$('pfBox')){const b=$('sheetBody'),y=b.scrollTop,same=cached&&JSON.stringify(cached)===JSON.stringify(p);
       if(!same){$('pfBox').innerHTML=profileHTML(userOf(id)||f,p);b.scrollTop=y;afterProfile(!cached);}}
   }catch(e){if(!cached&&$('pfBox')&&SOC.open===id)$('pfBox').insertAdjacentHTML('beforeend',frNote('⚠️','Couldn’t load the rest',esc(e.message)));}
@@ -4014,7 +4473,8 @@ function profileHTML(f,p,mine){
   if(tiles.length)h+='<div class="pftiles">'+tiles.slice(0,4).map(t=>'<div class="pftile"><div class="k">'+t[0]+'</div><div class="v">'+t[1]+'</div><div class="s">'+t[2]+'</div></div>').join('')+'</div>';
   if(!p)return h+'<div class="skel" style="height:110px;border-radius:16px;margin-top:16px"></div><div class="skel" style="height:70px;border-radius:16px;margin-top:12px"></div><div class="skel" style="height:70px;border-radius:16px;margin-top:12px"></div>';
   const D=p.data||{},can=mine?{photos:1}:(p.can||{});
-  if(!Object.keys(D).length&&!s.gym&&!s.diet&&!mine)h+='<div class="okline" style="background:#1b2230;border-color:#2b3a52;color:#b9cdf0;margin-top:14px">'+esc(first(f.name))+'’s stats show up after they open the latest Lock In.</div>';
+  if(!Object.keys(D).length&&!s.gym&&!s.diet&&!mine)h+='<div class="okline e2enote">'+IC.lock+'<span>'+(f.pubOk===false||!p.pub?esc(first(f.name))+'’s stats show up after they open the latest Lock In.':
+    'Everything '+esc(first(f.name))+' shares is end-to-end encrypted. It shows up as soon as their app has shared the keys with you — that happens the next time they open Lock In.')+'</span></div>';
   if(D.split)h+=pfDeck(D.split,id,mine);
   h+=pfBadges(s);
   if(can.photos)h+='<div class="pfsec"><div class="pfh">Posts <span id="pfPostN"></span></div><div class="postgrid" id="pfPosts" data-u="'+(mine?'me':id)+'"><div class="skel" style="height:90px;border-radius:12px;margin:0;grid-column:1/-1"></div></div></div>';
@@ -4026,7 +4486,9 @@ function profileHTML(f,p,mine){
   if(mine)return h;
   const hid=CATS.filter(c=>p.can&&!p.can[c]);
   if(hid.length)h+='<p class="tiny pflock">🔒 '+esc(first(f.name))+' keeps '+listJoin(hid.map(c=>CATINFO[c][0].toLowerCase()))+' private.</p>';
-  h+='<details class="fold pfprivacy"><summary>⚙️ What '+esc(first(f.name))+' can see of you</summary><div class="fb">'+pfPerms(f,p)+
+  h+='<details class="fold pfprivacy" ontoggle="if(this.open)fillSafety(\''+id+'\')"><summary>⚙️ What '+esc(first(f.name))+' can see of you</summary><div class="fb">'+pfPerms(f,p)+
+    '<div class="safety"><div class="pfh">Security code <span>end-to-end encryption</span></div><div class="scode" id="scode">····  ····  ····</div>'+
+    '<p class="tiny">Compare this with the code on '+esc(first(f.name))+'’s phone (their profile of you). If they match, nobody — not even the Lock In server — can read what you share.</p></div>'+
     '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:14px" onclick="removeFriend(\''+id+'\')">Remove friend</button></div></details>';
   return h;
 }
@@ -4157,18 +4619,20 @@ async function shareSplit(btn){
   const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp)return;
   const defs={},data=splitPayload(sp,defs);data.defs=defs;delete data.id;
   if(btn)btn.disabled=true;
-  try{const r=await sapi('/share','POST',{kind:'split',data});await nativeShare(location.origin+'/s/'+r.code,'My split “'+data.name+'” on Lock In');}
+  // the key goes after the # — it never reaches a server, so only people with the whole link can open the split
+  try{const r=await e2eShare(data);await nativeShare(location.origin+'/s/'+r.code+'#'+r.secret,'My split “'+data.name+'” on Lock In');}
   catch(e){toast(e.message,'err');}
   finally{if(btn)btn.disabled=false;}
 }
-async function previewShare(code,sendId){
+async function previewShare(code,sendId,secret){
   SOC.giftId=sendId||0;
   openSheet('Shared split','<div id="shBox">'+foundSkel()+'</div>',{tall:true});
   try{
     const r=await fetch('/api/share/'+encodeURIComponent(code),{cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||'That link doesn’t work any more.');
-    const sp=j.data||{},from=j.from||{};SOC.shared={sp,from};
+    const sp=await e2eOpenShare(String(code).toUpperCase(),secret,j.data),from=j.from||{};SOC.shared={sp,from};
     if(!$('shBox'))return;
-    $('shBox').innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+' shared a split</div><div class="fname">'+esc(sp.name||'Split')+'</div></div>'+
+    $('shBox').innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+' shared a split</div><div class="fname">'+esc(sp.name||'Split')+'</div>'+
+      (j.enc?'<div class="e2etag">'+IC.lock+' End-to-end encrypted</div>':'')+'</div>'+
       '<div style="margin-top:8px">'+splitDaysHTML(sp,sp.defs)+'</div><button class="btn btn-primary socbtn" style="margin-top:14px" onclick="importSplit(SOC.shared.sp,SOC.shared.sp.defs,SOC.shared.from.name,this);if(SOC.giftId)giftDone(SOC.giftId)">'+IC.copy+' Add to my splits</button>';
   }catch(e){if($('shBox'))$('shBox').innerHTML=frNote('🔗','Couldn’t open that split',esc(e.message));}
 }
@@ -4184,7 +4648,8 @@ function renderSocialSettings(){
     '<button class="btn btn-ghost btn-sm" onclick="saveHandle(this)"'+(ok?'':' disabled')+'>Save</button></div></div>'+
     '<label class="f" style="margin:14px 0 2px">Friends can see</label>'+
     CATS.map(c=>'<label class="checkline permrow"><span class="grow"><b>'+CATINFO[c][0]+'</b><small>'+CATINFO[c][1]+'</small></span><input type="checkbox" switch '+(def[c]?'checked ':'')+(ok?'':'disabled ')+'onchange="setDefault(\''+c+'\',this.checked,this)"></label>').join('')+
-    '<p class="tiny" style="margin-top:10px">'+(ok?'These are your defaults. To change it for one person, open Friends and tap their name. Progress photos are never shared.':'Connect to the internet to set up your friends profile.')+'</p>'+
+    '<p class="tiny" style="margin-top:10px">'+(ok?'These are your defaults. To change it for one person, open Friends and tap their name. Progress photos: only the ones you post with ↗.':'Connect to the internet to set up your friends profile.')+'</p>'+
+    '<button class="e2erow" onclick="openE2EInfo()">'+IC.lock+'<span class="grow"><b>End-to-end encrypted</b><small>'+(E2E.ok?'Everything friends see is encrypted on this phone first':esc(E2E.err||'Keys load when you’re online'))+'</small></span><i class="chev"></i></button>'+
     (ok?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:12px" onclick="deleteSocial(this)">Delete friends profile</button><p class="tiny" style="margin-top:6px">Removes your friends, requests and everything they could see, and frees your username. Your own training data stays.</p>':'');
 }
 async function deleteSocial(btn){
@@ -4260,13 +4725,13 @@ function deepLink(){
   const h=location.hash||'';let m;
   if((m=/^#add=([A-Za-z0-9-]{4,20})$/.exec(h))){clearHash();const c=m[1].replace(/-/g,'').toUpperCase();setTimeout(()=>{show('friends');setTimeout(()=>previewInvite(c),250);},350);return true;}
   if((m=/^#qr=([A-Za-z0-9]{8,16})$/.exec(h))){clearHash();const c=m[1].toUpperCase();setTimeout(()=>{show('friends');setTimeout(()=>addByQR(c),250);},350);return true;}
-  if((m=/^#split=([A-Za-z0-9-]{4,20})$/.exec(h))){clearHash();const c=m[1];setTimeout(()=>previewShare(c),350);return true;}
+  if((m=/^#split=([A-Za-z0-9]{4,16})(?:-([A-Za-z0-9]{11}))?$/.exec(h))){clearHash();const c=m[1].toUpperCase(),k=m[2]||'';setTimeout(()=>previewShare(c,0,k),350);return true;}
   return false;
 }
 function clearHash(){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
 function socInit(){
   socLoad();heroAvatar();socBadge();
-  setTimeout(()=>{socRefresh();},2500);
+  setTimeout(()=>{if(socTok())e2eLoad().then(()=>socRefresh());else socRefresh();},2500);
   deepLink();
 }
 
@@ -4289,14 +4754,14 @@ function drawShareSplit(){
 async function sendSplit(fid,btn){
   const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp)return;btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
   const defs={},data=splitPayload(sp,defs);data.defs=defs;delete data.id;
-  try{const r=await sapi('/share','POST',{kind:'split',data,to:[fid]});if(!r.sent)throw new Error('Couldn’t send it');btn.disabled=false;btn.textContent='Send';btnOk(btn,'Sent');floatEmoji(btn,'📩');}
+  try{const f=userOf(fid);if(!f)throw new Error('Not friends any more');const r=await e2eShare(data,[f]);if(!r.sent)throw new Error('Couldn’t send it');btn.disabled=false;btn.textContent='Send';btnOk(btn,'Sent');floatEmoji(btn,'📩');}
   catch(e){btn.disabled=false;btn.textContent='Send';toast(e.message,'err');}
 }
 function frGifts(d){
   const g=(d.gifts||[]).filter(x=>x&&x.from&&sid(x.code));if(!g.length)return '';
   return '<div class="card giftcard"><h2>📩 Splits for you <span class="right">'+g.length+'</span></h2>'+g.map(x=>'<div class="req" data-fk="gf'+num(x.id)+'">'+avHTML(x.from,42)+
     '<div class="grow"><b>'+esc(x.name)+'</b><div class="tiny">from '+esc(x.from.name)+' · '+num(x.days)+' days · '+ago(x.ts)+'</div></div>'+
-    '<button class="btn btn-primary btn-sm" onclick="previewShare(\''+sid(x.code)+'\','+num(x.id)+')">View</button><button class="icbtn" onclick="giftDone('+num(x.id)+',this)" aria-label="Dismiss">✕</button></div>').join('')+'</div>';
+    '<button class="btn btn-primary btn-sm" onclick="previewShare(\''+sid(x.code)+'\','+num(x.id)+',\''+(/^[A-Za-z0-9]{11}$/.test(x.secret||'')?x.secret:'')+'\')">View</button><button class="icbtn" onclick="giftDone('+num(x.id)+',this)" aria-label="Dismiss">✕</button></div>').join('')+'</div>';
 }
 async function giftDone(id,btn){
   try{await sapi('/sends/'+id+'/done','POST',{});}catch(e){}
@@ -4305,34 +4770,51 @@ async function giftDone(id,btn){
   SOC.v++;socSave();socBadge();
 }
 
-/* ---------- progress-photo posts ---------- */
+/* ---------- progress-photo posts (end-to-end encrypted: image + caption) ---------- */
 const POSTIMG=new Map();
 function postURL(id){
   if(POSTIMG.has(id))return POSTIMG.get(id);
-  const p=(async()=>{const r=await fetch('/api/posts/'+id+'/img',{headers:{authorization:'Bearer '+socTok()}});if(!r.ok)throw new Error('gone');return URL.createObjectURL(await r.blob());})();
+  const p=(async()=>{
+    const r=await fetch('/api/posts/'+id+'/img',{headers:{authorization:'Bearer '+socTok(),'x-lockin':'2'}});if(!r.ok)throw new Error('gone');
+    const ct=r.headers.get('content-type')||'',buf=new Uint8Array(await r.arrayBuffer());
+    if(/octet-stream/.test(ct))await ensurePostKey(id);
+    const bytes=/octet-stream/.test(ct)?await e2eOpenImg(id,buf):buf;
+    return URL.createObjectURL(new Blob([bytes],{type:/octet-stream/.test(ct)?'image/jpeg':ct}));})();
   POSTIMG.set(id,p);p.catch(()=>POSTIMG.delete(id));return p;
+}
+/* the key for a post: from the feed/profile row it came with (works right after the app reopens, too) */
+async function ensurePostKey(id){
+  if(E2E.postK.has(id))return true;
+  const d=SOC.data,row=(d&&(d.feed||[]).find(x=>x.id==='p'+id))||(SOC.posts||[]).find(x=>x.id===id);
+  if(!row||!(await e2eLoad()))return false;
+  const me=SOC.me&&SOC.me.id,by=row.by;
+  await e2eOpenPost(Object.assign({},row,{id:'p'+id}),by===me?null:(userOf(by)||(SOC.prof[by]&&{id:by,pub:SOC.prof[by].pub,fp:SOC.prof[by].fp,keys:SOC.prof[by].keys})));
+  return E2E.postK.has(id);
 }
 function loadPostImgs(root){
   if(!root||!socTok())return;
   root.querySelectorAll('img[data-post]:not([src])').forEach(img=>{postURL(img.dataset.post).then(u=>{img.onload=()=>img.classList.add('ok');img.src=u;}).catch(()=>{const w=img.closest('.fphoto,.ptile');if(w)w.classList.add('gone');});});
 }
 async function loadProfilePosts(){
-  const box=$('pfPosts');if(!box)return;const u=box.dataset.u==='me'?(SOC.me&&SOC.me.id):box.dataset.u;
+  const box=$('pfPosts');if(!box)return;const mine=box.dataset.u==='me',u=mine?(SOC.me&&SOC.me.id):box.dataset.u;
   if(!u){box.innerHTML='<p class="tiny" style="grid-column:1/-1">Sign in to post progress photos.</p>';return;}
   try{
-    const r=await sapi('/posts?u='+encodeURIComponent(u));SOC.posts=r.posts||[];
-    const b=$('pfPosts');if(!b)return;const n=$('pfPostN');if(n)n.textContent=SOC.posts.length?SOC.posts.length:'';
-    b.innerHTML=SOC.posts.length?SOC.posts.map((x,i)=>'<div class="ptile" style="--j:'+i+'" onclick="openPost(\''+sid(x.id)+'\',\''+(r.mine?'me':sid(u))+'\',1)"><img data-post="'+sid(x.id)+'" alt=""><span>'+fmtD(ds(new Date(+x.ts)))+'</span></div>').join('')
-      :'<p class="tiny" style="grid-column:1/-1">'+(r.mine?'No posts yet. Post a progress photo from Progress → Progress photos (the ↗ on a photo).':'No posts yet.')+'</p>';
+    const r=await sapi('/posts?u='+encodeURIComponent(u)),f=mine?null:(userOf(u)||(SOC.prof[u]&&{id:u,pub:SOC.prof[u].pub,fp:SOC.prof[u].fp,keys:SOC.prof[u].keys}));
+    if(f&&SOC.prof[u]){f.keys=SOC.prof[u].keys||f.keys;f.pub=SOC.prof[u].pub||f.pub;f.fp=SOC.prof[u].fp||f.fp;}
+    const list=[];for(const x of r.posts||[]){if(!sid(x.id))continue;const it={id:'p'+x.id,ts:x.ts,cap:x.cap,pk:x.pk,sk:x.sk,enc:x.enc};await e2eOpenPost(it,f);if(!it.locked)list.push({id:x.id,ts:x.ts,capT:it.capT||'',cap:x.cap,pk:x.pk,sk:x.sk,enc:x.enc,by:u});}
+    SOC.posts=list;
+    const b=$('pfPosts');if(!b)return;const n=$('pfPostN');if(n)n.textContent=list.length?list.length:'';
+    b.innerHTML=list.length?list.map((x,i)=>'<div class="ptile" style="--j:'+i+'" onclick="openPost(\''+sid(x.id)+'\',\''+(r.mine?'me':sid(u))+'\',1)"><img data-post="'+sid(x.id)+'" alt=""><span>'+fmtD(ds(new Date(+x.ts)))+'</span></div>').join('')
+      :'<p class="tiny" style="grid-column:1/-1">'+(r.mine?'No posts yet. Post a progress photo from Progress → Progress photos (the ↗ on a photo).':(r.posts||[]).length?'🔒 Their photos open once their app has shared the keys.':'No posts yet.')+'</p>';
     loadPostImgs(b);
   }catch(e){const b=$('pfPosts');if(b)b.innerHTML='<p class="tiny" style="grid-column:1/-1">'+esc(e.message)+'</p>';}
 }
 function openPost(id,owner,fromProfile){
   const meId=SOC.me&&SOC.me.id,mine=owner==='me'||owner===meId;
-  const x=(SOC.posts||[]).find(p=>p.id===id)||((SOC.data&&SOC.data.feed)||[]).filter(f=>f.id==='p'+id).map(f=>({ts:f.ts,cap:f.cap}))[0]||{};
+  const x=(SOC.posts||[]).find(p=>p.id===id)||((SOC.data&&SOC.data.feed)||[]).filter(f=>f.id==='p'+id).map(f=>({ts:f.ts,capT:f.capT}))[0]||{};
   const back=fromProfile?(mine?'openMyProfile()':'openFriend(\''+sid(owner)+'\')'):'';
   openSheet(mine?'Your post':'Progress photo',(back?'<button class="linkbtn" style="margin-bottom:8px" onclick="'+back+'">‹ Back to profile</button>':'')+
-    '<div class="postview"><img id="postBig" alt=""></div>'+(x.cap?'<p class="fcap" style="margin-left:0">'+esc(x.cap)+'</p>':'')+(x.ts?'<p class="tiny" style="margin-top:6px">'+fmtDY(ds(new Date(+x.ts)))+'</p>':'')+
+    '<div class="postview"><img id="postBig" alt=""></div>'+(x.capT?'<p class="fcap" style="margin-left:0">'+esc(x.capT)+'</p>':'')+(x.ts?'<p class="tiny" style="margin-top:6px">'+fmtDY(ds(new Date(+x.ts)))+' · <span class="e2etag inl">'+IC.lock+' encrypted</span></p>':'')+
     (mine?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:14px" onclick="delPost(\''+sid(id)+'\')">Delete post</button>':''),{tall:true,back:!!back});
   postURL(id).then(u=>{const im=$('postBig');if(im){im.onload=()=>im.classList.add('ok');im.src=u;}}).catch(()=>{const im=$('postBig');if(im)im.replaceWith(Object.assign(document.createElement('p'),{className:'muted',textContent:'This post is no longer available.'}));});
 }
@@ -4345,20 +4827,177 @@ function postPhoto(i){
   if(!socTok()){toast('Sign in to post','err');return;}
   openSheet('Post to your profile','<div class="postview"><img class="ok" src="'+p.url+'" alt=""></div>'+
     '<div class="field" style="margin-top:12px"><label class="f">Caption (optional)</label><input id="postCap" maxlength="200" placeholder="e.g. 8 weeks in"></div>'+
-    '<p class="tiny">Friends allowed to see <b>Progress photos</b> see it on your profile and in their feed. Change who that is in Setup → Friends &amp; privacy, or per friend.</p>'+
+    '<p class="tiny">'+IC.lock+' Encrypted on this phone. Only friends you let see <b>Progress photos</b> can open it (Setup → Friends &amp; privacy, or per friend).</p>'+
     '<button class="btn btn-primary" style="margin-top:12px" onclick="doPost('+i+',this)">Post</button>');
 }
 async function doPost(i,btn){
-  const p=photos[i];if(!p)return;btn.disabled=true;btn.innerHTML='<span class="spin"></span>Posting…';
+  const p=photos[i];if(!p)return;btn.disabled=true;btn.innerHTML='<span class="spin"></span>Encrypting…';
   try{
     const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=p.url;});
-    let max=1080,data='';
+    let max=1080,blob=null;
     for(let k=0;k<4;k++){const sc=Math.min(1,max/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);data=cv.toDataURL('image/jpeg',.8);if(data.length<1000000)break;max=Math.round(max*.75);}
-    await sapi('/posts','POST',{img:data,cap:(($('postCap')||{}).value||'').trim()});
-    haptic('success');celebrate();closeSheet();toast('Posted to your profile','ok');socRefresh(true);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',.8));if(blob&&blob.size<780000)break;max=Math.round(max*.75);}
+    const pid=hexs(rnd(16)),s=await e2eSealPost(pid,new Uint8Array(await blob.arrayBuffer()),(($('postCap')||{}).value||'').trim().slice(0,200));
+    btn.innerHTML='<span class="spin"></span>Posting…';
+    await sapi('/posts','POST',{id:pid,img:s.img,cap:s.cap,pk:s.pk,sk:s.sk});E2E.postK.set(pid,s.key);
+    haptic('success');celebrate();closeSheet();toast('Posted — encrypted for your friends','ok');socRefresh(true);snapSoon(600);
   }catch(e){btn.disabled=false;btn.textContent='Post';toast((e&&e.message)||'Couldn’t post','err');}
 }
+/* what the lock means */
+function openE2EInfo(){
+  openSheet('End-to-end encrypted','<div class="e2einfo"><div class="e2ehero">'+IC.lock+'</div>'+
+    '<p>Your stats, activity, progress photos and the splits you send are <b>encrypted on this phone</b> before they leave it. Only friends you allow can unlock them — the Lock In server just stores scrambled data it can’t read.</p>'+
+    '<ul><li><b>Per category.</b> Gym, lifts, splits, food, nutrients, bodyweight and photos each have their own key.</li>'+
+    '<li><b>Per friend.</b> A category key is handed only to friends allowed to see it, sealed with a key only the two of you can compute.</li>'+
+    '<li><b>Take it back.</b> Remove someone or switch a category off and it gets a brand-new key they never receive.</li>'+
+    '<li><b>Links.</b> A shared split link carries its key after the “#”, which is never sent to any server.</li>'+
+    '<li><b>Your keys</b> live on this device and in your own Puter account, so your other devices can read your posts. They’re never on the Lock In server.</li></ul>'+
+    '<div class="pfh" style="margin-top:16px">This device <span>'+(E2E.ok?'keys ready':'keys not loaded')+'</span></div>'+
+    '<div class="scode sm">'+(E2E.ok?esc(E2E.fp.slice(0,4)+' '+E2E.fp.slice(4,8)+' '+E2E.fp.slice(8,12)):'—')+'</div>'+
+    '<p class="tiny" style="margin-top:8px">To check a friend, open their profile → “What they can see of you” → Security code, and compare it with theirs.</p></div>');
+}
+async function fillSafety(fid){
+  const el=$('scode');if(!el)return;const f=userOf(fid);const c=f?await safetyCode(f):'';
+  el.textContent=c||'Not available yet';if(c&&!RM)anim(el,[{opacity:0,letterSpacing:'.4em'},{opacity:1,letterSpacing:'.12em'}],{duration:500,easing:EASE_OUT});
+}
+
+/* ================= EFFECTS: the big moments ================= */
+const FX={best:new Map(),prSeen:new Set(),md:null,busy:false};
+/* confetti with real physics on one canvas (cheap: one draw pass per frame, removes itself) */
+function fxConfetti(o){
+  if(RM)return;o=o||{};
+  const W=innerWidth,H=innerHeight,dpr=Math.min(2,devicePixelRatio||1),cv=document.createElement('canvas');
+  cv.className='fxcanvas';cv.width=W*dpr;cv.height=H*dpr;document.body.appendChild(cv);
+  const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const cols=o.colors||['#6ea6ff','#7b6cff','#3ecf8e','#ffd166','#ef6a56','#ffffff','#f0b941'];
+  const ox=o.x!=null?o.x:W/2,oy=o.y!=null?o.y:H*.36,n=o.n||130,P=[];
+  for(let i=0;i<n;i++){const a=-Math.PI/2+(Math.random()-.5)*Math.PI*(o.spread||1.3),v=(o.power||1)*(6+Math.random()*9);
+    P.push({x:ox,y:oy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,r:Math.random()*6.28,vr:(Math.random()-.5)*.35,w:5+Math.random()*6,h:8+Math.random()*8,c:cols[i%cols.length],t:Math.random()*10,s:Math.random()<.22});}
+  const t0=performance.now();
+  const step=t=>{const e=t-t0;g.clearRect(0,0,W,H);let alive=0;const fade=Math.max(0,Math.min(1,(2900-e)/700));
+    for(const p of P){p.vy+=.27;p.vx*=.986;p.vy*=.986;p.x+=p.vx+Math.sin(e/170+p.t)*.7;p.y+=p.vy;p.r+=p.vr;
+      if(p.y>H+30)continue;alive++;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.globalAlpha=fade;g.fillStyle=p.c;
+      if(p.s){g.beginPath();g.arc(0,0,p.w*.45,0,6.283);g.fill();}else{const k=Math.cos(e/110+p.t);g.fillRect(-p.w/2,-p.h*k/2,p.w,Math.max(.6,Math.abs(p.h*k)));}
+      g.restore();}
+    if(alive&&e<3000)requestAnimationFrame(step);else cv.remove();};
+  requestAnimationFrame(step);
+}
+function lvlXP(xp){const lv=Math.floor(Math.sqrt(Math.max(0,xp)/40))+1,lo=40*(lv-1)*(lv-1),hi=40*lv*lv;return {lv,xp,lo,hi,p:Math.min(100,(xp-lo)/(hi-lo)*100)};}
+function fxState(){try{return JSON.parse(localStorage.getItem('lockin_fx_'+(user?user.username:''))||'null')||null;}catch(e){return null;}}
+function fxSave(st){try{localStorage.setItem('lockin_fx_'+(user?user.username:''),JSON.stringify(st));}catch(e){}}
+
+/* ---------- workout complete: check draws, stats count up, PRs pop, XP fills (level up!) ---------- */
+function fxWorkoutDone(w,prs){
+  const sets=countSets(w),vol=woVol(w),min=woMin(w),ex=woExKeys(w).length,s=mySum(),L=levelOf(s),gain=10+15*prs.length,F=lvlXP(L.xp-gain),up=L.lv>F.lv;
+  const st=fxState();if(st){st.lv=Math.max(st.lv||0,L.lv);fxSave(st);}   // the level-up shows here; new badges right after closing
+  const volTxt=vol>=1000?'<b data-count="'+(vol/1000).toFixed(1)+'" data-dec="1">0</b><span>tonnes</span>':'<b data-count="'+vol+'">0</b><span>kg lifted</span>';
+  const el=document.createElement('div');el.className='fxdone';el.id='fxDone';
+  el.innerHTML='<div class="fxcard'+(up?' up':'')+'" role="dialog" aria-label="Workout complete"><div class="fxglow"></div>'+
+    '<svg class="fxcheck" viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" pathLength="1"/><path d="M25 41.5l10 10 20.5-22" pathLength="1"/></svg>'+
+    '<h2>Workout complete</h2><p class="tiny">'+esc(w.dayName||'Workout')+' · '+fmtDY(w.date)+'</p>'+
+    '<div class="fxstats"><div style="--j:0"><b data-count="'+sets+'">0</b><span>sets</span></div><div style="--j:1">'+volTxt+'</div><div style="--j:2"><b data-count="'+(min||ex)+'">0</b><span>'+(min?'minutes':'exercises')+'</span></div></div>'+
+    (prs.length?'<div class="fxprs">'+prs.slice(0,4).map((n,i)=>'<div style="--j:'+i+'"><span class="trophy">🏆</span><b>New best</b> '+esc(n)+'</div>').join('')+'</div>':'')+
+    '<div class="fxlvl"><div class="fxshield"><svg viewBox="0 0 40 46"><path d="M20 2 37 9v14c0 11-7.5 17.5-17 21C10.5 40.5 3 34 3 23V9z"/></svg><b id="fxLv">'+F.lv+'</b></div>'+
+    '<div class="grow"><div class="xpbar"><i id="fxXp"></i></div><div class="fxxp"><span>+'+gain+' XP</span><span id="fxLvTxt">Level '+F.lv+'</span></div></div></div>'+
+    '<div class="fxup" id="fxUp">LEVEL UP!</div>'+
+    '<button class="btn btn-primary" onclick="fxClose()">Nice 💪</button></div>';
+  el.addEventListener('click',e=>{if(e.target===el)fxClose();});
+  document.body.appendChild(el);document.body.classList.add('fx-open');
+  const bar=$('fxXp');bar.style.transform='translate3d('+(F.p-100)+'%,0,0)';
+  requestAnimationFrame(()=>{el.classList.add('show');setTimeout(()=>countUp(el,true),450);});
+  setTimeout(()=>{fxConfetti({y:innerHeight*.3});haptic('success');},350);
+  if(prs.length)setTimeout(()=>{const t=el.querySelector('.fxprs');if(t){const r=t.getBoundingClientRect();burst(r.left+28,r.top+18,'#f0b941',true);}haptic('heavy');},1000);
+  setTimeout(()=>{
+    if(!up){bar.style.transform='translate3d('+(L.p-100)+'%,0,0)';$('fxLvTxt').textContent='Level '+L.lv+' · '+Math.round(L.xp-L.lo)+' / '+Math.round(L.hi-L.lo)+' XP';return;}
+    bar.style.transform='translate3d(0,0,0)';
+    setTimeout(()=>{bar.style.transition='none';bar.style.transform='translate3d(-100%,0,0)';void bar.offsetWidth;bar.style.transition='';bar.style.transform='translate3d('+(L.p-100)+'%,0,0)';
+      $('fxLv').textContent=L.lv;$('fxLvTxt').textContent='Level '+L.lv;el.querySelector('.fxcard').classList.add('lvlup');haptic('heavy');
+      const sh=el.querySelector('.fxshield').getBoundingClientRect();burst(sh.left+sh.width/2,sh.top+sh.height/2,'#f0b941',true);fxConfetti({x:sh.left+sh.width/2,y:sh.top,n:90,colors:['#f0b941','#ffd978','#fff3c9','#ffffff'],power:.8});},900);
+  },1300);
+}
+function fxClose(){
+  const el=$('fxDone');if(!el)return;el.classList.remove('show');el.classList.add('hide');document.body.classList.remove('fx-open');
+  setTimeout(()=>{el.remove();fxProgressCheck(true);},RM?0:320);
+}
+
+/* ---------- a new personal best the moment you tick the set ---------- */
+function fxPrevBest(k,w){
+  const key=w.id+'|'+k;if(FX.best.has(key))return FX.best.get(key);
+  const c=canon(k);let b=0;
+  for(const id in S.workouts){const o=S.workouts[id];if(!o||o.id===w.id||o.gym!==w.gym||!o.ex)continue;for(const kk in o.ex){if(canon(kk)!==c)continue;for(const st of o.ex[kk]||[])if(st&&st.r>0&&st.w>b)b=st.w;}}
+  FX.best.set(key,b);return b;
+}
+function fxSetPR(cb,i){
+  const w=curWO();if(!w||!cb.checked)return;const it=w.items[i];if(!it)return;
+  const s=cb.id.split('_')[2],kg=parseFloat(($('w_'+i+'_'+s)||{}).value)||0,reps=parseFloat(($('r_'+i+'_'+s)||{}).value)||0;
+  if(!kg||!reps||FX.prSeen.has(w.id+'|'+it.k))return;
+  const best=fxPrevBest(it.k,w);if(!best||kg<=best)return;
+  FX.prSeen.add(w.id+'|'+it.k);
+  const row=cb.closest('.setrow');if(row){row.classList.add('prrow');row.insertAdjacentHTML('beforeend','<span class="prchip">PR 🏆 +'+fmtNum(kg-best)+' kg</span>');}
+  const r=cb.getBoundingClientRect();setTimeout(()=>{burst(r.left+r.width/2,r.top+r.height/2,'#f0b941',true);fxConfetti({x:r.left+r.width/2,y:r.top,n:44,power:.55,spread:.9,colors:['#f0b941','#ffd978','#ffffff']});},120);
+  haptic('heavy');
+}
+
+/* ---------- level ups and badges (after workouts, meals and weigh-ins) ---------- */
+function fxProgressCheck(skipLevel){
+  if(!S||!S.settings.setupDone||typeof mySum!=='function')return;
+  if($('fxDone')||document.querySelector('.fxlevel'))return;   // runs again when the big screen closes
+  let s,L;try{s=mySum();L=levelOf(s);}catch(e){return;}
+  const got=BADGES.filter(b=>b[2](s)).map(b=>b[1]),st=fxState();
+  if(!st||st.lv==null){fxSave({lv:L.lv,b:got});return;}   // first time: remember quietly
+  const fresh=got.filter(x=>!(st.b||[]).includes(x)),lvUp=!skipLevel&&L.lv>st.lv;
+  fxSave({lv:Math.max(L.lv,st.lv),b:got});
+  let t=0;if(lvUp){fxLevelUp(L.lv);t=2300;}
+  fresh.forEach(name=>{const b=BADGES.find(x=>x[1]===name);setTimeout(()=>fxBadge(b),t);t+=2700;});
+}
+function fxLevelUp(n){
+  const el=document.createElement('div');el.className='fxlevel';
+  el.innerHTML='<div class="fxrays"></div><div class="fxshield big"><svg viewBox="0 0 40 46"><path d="M20 2 37 9v14c0 11-7.5 17.5-17 21C10.5 40.5 3 34 3 23V9z"/></svg><b>'+n+'</b></div><div class="fxlt">LEVEL UP</div><div class="fxls">You’re level '+n+' now</div>';
+  document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));haptic('heavy');
+  setTimeout(()=>fxConfetti({colors:['#f0b941','#ffd978','#fff3c9','#ffffff','#7b6cff']}),250);
+  el.onclick=()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);};
+  setTimeout(()=>{if(el.isConnected){el.classList.remove('show');setTimeout(()=>el.remove(),300);}},2200);
+}
+function fxBadge(b){
+  if(!b)return;const el=document.createElement('div');el.className='fxbadge';
+  el.innerHTML='<i>'+b[0]+'</i><div><small>Badge unlocked</small><b>'+esc(b[1])+'</b></div>';
+  document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));haptic('success');
+  setTimeout(()=>{const r=el.querySelector('i').getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,'#f0b941');},380);
+  el.onclick=()=>{el.classList.remove('show');setTimeout(()=>el.remove(),350);show('friends');setTimeout(()=>openMyProfile(),400);};
+  setTimeout(()=>{if(el.isConnected){el.classList.remove('show');setTimeout(()=>el.remove(),350);}},2600);
+}
+
+/* ---------- pull down on Today or Friends to refresh ---------- */
+function initPull(){
+  const sc=$('scroller');if(!sc)return;let p=null;
+  const ind=document.createElement('div');ind.className='ptr';ind.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>';document.body.appendChild(ind);
+  const hide=()=>{ind.style.transition='transform .32s var(--out,ease),opacity .32s';ind.style.transform='translate3d(-50%,-48px,0)';ind.style.opacity='0';setTimeout(()=>{ind.style.transition='';ind.classList.remove('spin','ready');},340);};
+  sc.addEventListener('touchstart',e=>{if(FX.busy||sc.scrollTop>0||!['friends','today'].includes(curView)||document.body.classList.contains('sheet-open')||e.touches.length>1)return;p={y:e.touches[0].clientY,x:e.touches[0].clientX,d:0,on:false,h:0};},{passive:true});
+  sc.addEventListener('touchmove',e=>{
+    if(!p)return;const dy=e.touches[0].clientY-p.y,dx=Math.abs(e.touches[0].clientX-p.x);
+    if(!p.on){if(dy>10&&dy>dx*1.6&&sc.scrollTop<=0)p.on=true;else if(dx>12||dy<-6){p=null;return;}}
+    if(!p.on)return;p.d=Math.max(0,dy);const d=Math.min(120,p.d*.55);
+    ind.style.transform='translate3d(-50%,'+(d-48).toFixed(1)+'px,0) rotate('+(d*3.2).toFixed(0)+'deg)';ind.style.opacity=String(Math.min(1,d/46));
+    const rdy=d>=70;ind.classList.toggle('ready',rdy);if(rdy&&!p.h){p.h=1;haptic('light');}else if(!rdy)p.h=0;},{passive:true});
+  const end=async()=>{
+    if(!p)return;const go=p.on&&p.d*.55>=70;p=null;if(!go){hide();return;}
+    FX.busy=true;ind.classList.add('spin');ind.style.transition='transform .35s var(--spring,ease)';ind.style.transform='translate3d(-50%,22px,0)';haptic('medium');
+    const t0=Date.now();try{await Promise.all([socTok()?socRefresh(true):null,curView==='today'&&typeof bgSync==='function'?bgSync():null]);}catch(e){}
+    setTimeout(()=>{FX.busy=false;hide();if(curView==='today')quietRefresh();},Math.max(0,650-(Date.now()-t0)));
+  };
+  sc.addEventListener('touchend',end);sc.addEventListener('touchcancel',()=>{if(p){p=null;hide();}});
+}
+
+/* ---------- player card: tilt under your finger + holo shine ---------- */
+function initTilt(){
+  let c=null;
+  document.addEventListener('pointerdown',e=>{if(RM)return;c=e.target.closest&&e.target.closest('.pcard');if(c)c.classList.add('tilting');},{passive:true});
+  document.addEventListener('pointermove',e=>{if(!c)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    c.style.transform='perspective(700px) rotateX('+(-y*9).toFixed(2)+'deg) rotateY('+(x*11).toFixed(2)+'deg) scale(1.015)';c.style.setProperty('--hx',(x*100+50).toFixed(0)+'%');c.style.setProperty('--hy',(y*100+50).toFixed(0)+'%');},{passive:true});
+  const up=()=>{if(!c)return;c.classList.remove('tilting');c.style.transform='';c=null;};
+  document.addEventListener('pointerup',up,{passive:true});document.addEventListener('pointercancel',up,{passive:true});
+}
+function initFx(){initPull();initTilt();setTimeout(()=>fxProgressCheck(),6000);}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
@@ -4563,7 +5202,7 @@ function btnOk(b,txt){
 }
 
 function init(){
-  initUI();initGlass();
+  initUI();initGlass();initFx();
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
   $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);
   $('splitSel').addEventListener('change',e=>{S.activeSplit=e.target.value;const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}save();renderWorkout();renderHeader();});
@@ -4578,9 +5217,9 @@ function init(){
   $('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet();});
   $('camIn').addEventListener('change',e=>{handlePhoto(e.target.files[0]);e.target.value='';});
   $('libIn').addEventListener('change',e=>{handlePhoto(e.target.files[0]);e.target.value='';});
-  $('dPrev').addEventListener('click',()=>{dDate=addDays(dDate,-1);renderDiet();});
-  $('dNext').addEventListener('click',()=>{if(dDate<todayStr()){dDate=addDays(dDate,1);renderDiet();}});
-  $('dDate').addEventListener('change',()=>{const v=$('dDate').value;if(v){dDate=v>todayStr()?todayStr():v;renderDiet();}});
+  $('dPrev').addEventListener('click',()=>{dDate=addDays(dDate,-1);dAuto=false;renderDiet();});
+  $('dNext').addEventListener('click',()=>{if(dDate<todayStr()){dDate=addDays(dDate,1);dAuto=dDate===todayStr();renderDiet();}});
+  $('dDate').addEventListener('change',()=>{const v=$('dDate').value;if(v){dDate=v>todayStr()?todayStr():v;dAuto=dDate===todayStr();renderDiet();}});
   $('bwSave').addEventListener('click',e=>{if(saveBody())btnOk(e.currentTarget,'Saved');});
   $('sxSel').addEventListener('change',e=>{sxCur=e.target.value;renderStrength();});
   $('sxGym').addEventListener('change',e=>{sxGym=e.target.value;renderStrength();});
@@ -4601,7 +5240,8 @@ function init(){
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&$('view-workout').classList.contains('active'))wakeLock(true);});
   window.addEventListener('online',()=>{if(typeof puter==='undefined'){const s=document.createElement('script');s.src='https://js.puter.com/v2/';s.onload=()=>{window.puterReady=Promise.resolve();bgSync();};document.head.appendChild(s);}else bgSync();});
   window.addEventListener('offline',()=>{offlineMode=true;renderSync();});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();else if(S&&user&&Date.now()-lastPull>60000)bgSync();});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();else{if(S&&lastDay!==todayStr()){lastDay=todayStr();renderHeader();quietRefresh();}if(S&&user&&Date.now()-lastPull>60000)bgSync();}});
+  setInterval(()=>{if(S&&!document.hidden&&lastDay!==todayStr()){lastDay=todayStr();renderHeader();quietRefresh();}},60000);
   window.addEventListener('pagehide',flushAll);
   if(window.visualViewport){visualViewport.addEventListener('resize',vvFit);visualViewport.addEventListener('scroll',vvFit);}
   document.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(!a||!/INPUT|TEXTAREA|SELECT/.test(a.tagName)){if(window.scrollY)window.scrollTo(0,0);vvFit();}},60));
