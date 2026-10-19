@@ -6036,7 +6036,7 @@ function updGate(have,latest){
     '<div class="ugver"><div><small>You have</small><b id="updHave">'+esc(have)+'</b></div><span>→</span><div><small>Latest</small><b id="updNew">'+esc(latest)+'</b></div></div>'+
     '<ol class="ugsteps"><li>Open <b>SideStore</b></li><li>Go to <b>My Apps</b> and pull down to refresh</li><li>Tap <b>Update</b> next to Lock In</li></ol>'+
     '<button class="btn btn-primary" style="width:100%" onclick="this.innerHTML=\'<span class=spin></span>Checking…\';appVerCheck().then(()=>{if($(\'updGate\'))this.textContent=\'Still out of date — check again\';})">I’ve updated — check again</button>'+
-    (verCmp(have,'3.5.0')>=0?'<a class="btn btn-ghost" style="width:100%;margin-top:8px" href="sidestore://">Open SideStore</a>':'')+
+    (verCmp(have,'3.4.1')>=0?'<a class="btn btn-ghost" style="width:100%;margin-top:8px" href="sidestore://">Open SideStore</a>':'')+
     '<p class="tiny" style="margin-top:12px">Not in SideStore yet? Add the source <b>ipa.lockin-app.online</b> under Sources.</p></div>';
   document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));haptic('heavy');
 }
