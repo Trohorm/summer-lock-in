@@ -1248,6 +1248,13 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 .ainote{margin:0 0 12px;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.35;color:#f5c26b;background:rgba(245,194,107,.09);border:1px solid rgba(245,194,107,.22)}
 .aolist .req b{display:block}
 .aoback{text-align:right;white-space:nowrap;padding-left:10px}.aoback b{display:block;color:#f5c26b}.aoback.ok .tiny{color:#3ecf8e}
+.csseg{grid-template-columns:1fr 1fr;margin:14px 0 4px}
+.csseg button{padding:9px 6px;border-radius:9px;line-height:1.2}
+.csseg button.on{background:rgba(255,255,255,.13);box-shadow:0 2px 10px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.14)}
+.csseg button small{display:block;font-weight:600;font-size:11px;opacity:.7;margin-top:2px}
+.csexp{margin:10px 0 8px;line-height:1.45}
+.csline{margin:-2px 0 12px;padding:8px 12px;border-radius:12px;background:rgba(110,166,255,.08);border:1px solid rgba(110,166,255,.18);color:var(--slate)}
+.csline .linkbtn{font-size:inherit}
 </style>
 </head>
 <body>
@@ -1326,6 +1333,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
         <button class="btn btn-ghost btn-sm grow" onclick="newSplit()">New split</button>
         <button class="btn btn-ghost btn-sm grow socbtn" onclick="openShareSplit()"><svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> Share</button>
       </div>
+      <div class="tiny csline" id="csLine" hidden></div>
       <div class="chipbar scroll" id="dayChips"></div>
       <div class="row" style="margin-bottom:10px"><div class="grow"><label class="f">Date</label><input type="date" id="woDate"></div></div>
       <details class="warm">
@@ -1482,6 +1490,8 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
         <div class="field"><label class="f">Carbs g</label><input id="t-carbs" type="number" inputmode="numeric"></div>
         <div class="field"><label class="f">Fat g</label><input id="t-fat" type="number" inputmode="numeric"></div>
       </div>
+      <label class="checkline" style="margin:4px 0 10px"><input type="checkbox" switch id="set-kcal"> Track calories</label>
+      <div class="field" id="kcalField" hidden><label class="f">Calories kcal <span class="tiny" id="kcalHint"></span></label><input id="t-kcal" type="number" inputmode="numeric" placeholder="from your macros"></div>
       <div class="row wrapr"><button class="btn btn-ghost btn-sm" id="macroSuggest">Suggest from my stats</button><button class="btn btn-ok btn-sm" id="macroSave">Save macros</button></div>
       <details class="fold"><summary>Micronutrient goals</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Defaults are the official daily recommendations for your age and sex. Blank = default.</p><div class="tgtgrid" id="microTgt"></div></div></details>
       <details class="fold"><summary>Limits: seed oils, omega-6, sugar &amp; anti-nutrients</summary><div class="fb"><p class="tiny" style="margin-bottom:8px">Seed oils stay at zero. Omega-6 (linoleic acid) 7 g and refined sugar 15 g a day. Oxalates 40 mg (clinical low-oxalate diet), phytates 400 mg (keeps zinc absorbing well), solanine 0.1 mg/kg and cyanide 0.02 mg/kg bodyweight (EU food-safety thresholds); the rest are set at low everyday intakes. Blank = default.</p><div class="tgtgrid" id="antiTgt"></div></div></details>
@@ -1679,7 +1689,7 @@ function migrate(){
 function cacheKey(){return 'rtcache_'+(user?user.username:'anon');}
 let dataVer=0;const viewVer={};
 function verKey(v){return dataVer+'|'+todayStr()+(v==='diet'?'|'+dDate:'')+(v==='friends'||v==='today'?'|s'+SOC.v:'');}
-function save(){dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
+function save(){if(typeof csPushSoon==='function')csPushSoon();dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
 function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;try{localStorage.setItem(cacheKey(),JSON.stringify(S));}catch(e){}}
 function idle(fn){if(window.requestIdleCallback)requestIdleCallback(fn,{timeout:600});else setTimeout(fn,0);}
 function flushAll(){if(localT)writeLocal();if(dirty&&cloudReady)pushNow();}
@@ -2003,7 +2013,7 @@ function prerenderOne(){
 }
 function renderView(v){
   if(v==='today')renderToday();
-  if(v==='workout')renderWorkout();
+  if(v==='workout'){renderWorkout();csLine();}
   if(v==='diet')renderDiet();
   if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
   if(v==='friends')renderFriends();
@@ -2115,7 +2125,7 @@ function renderToday(){
   const mac='<div class="rings">'+ring(tt.protein,goalFor('protein'),'Protein','#6ea6ff')+ring(tt.carbs,goalFor('carbs'),'Carbs','#ffd166')+ring(tt.fat,goalFor('fat'),'Fat','#3ecf8e')+'</div>';
   const lastPR=latestPR(),bw=latestBody(),nextW=nextWorkoutTxt();
   $('todayHub').innerHTML=
-    '<div class="hub" style="grid-column:1/-1" onclick="show(\'diet\')"><div class="k">Nutrition today</div>'+mac+'<div class="statchips">'+(n?'<span>'+n+' meal'+(n>1?'s':'')+'</span>'+lastGradeChip(t)+'<span class="'+(mh.hit>=mh.of*0.75?'good':'')+'">Micros '+mh.hit+'/'+mh.of+'</span>'+
+    '<div class="hub" style="grid-column:1/-1" onclick="show(\'diet\')"><div class="k">Nutrition today</div>'+mac+'<div class="statchips">'+(n?(kcalOn()?'<span>'+Math.round(kcalOf(tt)).toLocaleString()+' / '+kcalGoal().toLocaleString()+' kcal</span>':'')+'<span>'+n+' meal'+(n>1?'s':'')+'</span>'+lastGradeChip(t)+'<span class="'+(mh.hit>=mh.of*0.75?'good':'')+'">Micros '+mh.hit+'/'+mh.of+'</span>'+
       ((tt.seedoil||0)>0.4?'<span class="badc">Seed oils '+fmtNum(tt.seedoil)+' g</span>':'<span class="good">No seed oils</span>')+
       (over.filter(o=>o.k!=='seedoil').length?'<span class="badc">'+over.filter(o=>o.k!=='seedoil').length+' over limit</span>':''):'<span>Nothing logged yet — snap your first meal</span>')+streakChip()+'</div>'+nextTip(t)+
     '<div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm grow" onclick="event.stopPropagation();openCam()">📷 Snap a meal</button><button class="btn btn-ghost btn-sm grow" onclick="event.stopPropagation();show(\'diet\');openDescribe()">✍️ Describe</button></div></div>'+
@@ -2317,6 +2327,7 @@ function updateWoProg(first){
   el.classList.toggle('full',full);
 }
 function markDone(cb,i){
+  clearTimeout(TYPED.get(cb.id));TYPED.delete(cb.id);
   const sn=cb.id.split('_')[2],wi=$('w_'+i+'_'+sn),ri=$('r_'+i+'_'+sn);
   if(cb.checked){
     // ticking an empty set fills it from last time; with nothing to fill, there is nothing to log yet
@@ -2337,6 +2348,17 @@ function markDone(cb,i){
   fxSetPR(cb,i);
   if(cb.checked&&S.settings.autoRest!==false){const w=curWO();const it=w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
 }
+// typing reps ticks the set: once they stop typing, do what a tap on the tick does (rest timer, haptics, PR check)
+const TYPED=new Map();
+function typedTick(cb,i){clearTimeout(TYPED.get(cb.id));TYPED.set(cb.id,setTimeout(()=>{TYPED.delete(cb.id);if(!cb.isConnected||!cb.checked)return;tickFx(cb,i);},900));}
+function tickFx(cb,i){
+  const card=$('exc_'+i);if(!card)return;
+  haptic('medium');const row=cb.closest('.setrow');if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}
+  const r=cb.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);
+  if(card.classList.contains('exdone')){card.classList.remove('justdone');void card.offsetWidth;card.classList.add('justdone');setTimeout(()=>card.classList.remove('justdone'),1000);}
+  fxSetPR(cb,i);
+  if(S.settings.autoRest!==false){const w=curWO();const it=w&&w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
+}
 function syncWorkout(){
   const w=curWO();if(!w)return;let tick=false;
   w.items.forEach((it,i)=>{
@@ -2345,7 +2367,7 @@ function syncWorkout(){
     for(let s=0;s<n;s++){
       const wi=$('w_'+i+'_'+s),ri=$('r_'+i+'_'+s),di=$('d_'+i+'_'+s);
       const wv=wi?parseFloat(wi.value):NaN;let rv=ri?parseFloat(ri.value):NaN;
-      const has=!isNaN(rv)&&rv>0;if(di&&di.checked!==has){di.checked=has;tick=true;}   // the tick always shows whether the set is logged
+      const has=!isNaN(rv)&&rv>0;if(di&&di.checked!==has){di.checked=has;tick=true;if(has)typedTick(di,i);}   // the tick always shows whether the set is logged
       arr.push({w:wi&&!isNaN(parseFloat(wi.value))?parseFloat(wi.value):0,r:isNaN(rv)?0:rv});
     }
     w.ex[it.k]=arr;
@@ -2610,7 +2632,7 @@ function saveEditor(){
   if(!draft.days.length){toast('Add at least one day');return;}
   draft.sched=(draft.sched||[]).map(id=>draft.days.some(d=>d.id===id)?id:'');
   (draft.links||[]).forEach(([a,b])=>linkEx(a,b));const lk=draft.links||[];delete draft.links;
-  S.splits[draft.id]=draft;S.activeSplit=draft.id;
+  csEditorMerge(draft);S.splits[draft.id]=draft;S.activeSplit=draft.id;
   const w=curWO();
   if(w&&!w.ended&&!woHasData(w)&&w.split===draft.id){const d=draft.days.find(x=>x.id===w.day);if(d){w.items=clone(d.ex);w.dayName=d.name;}}
   else if(w&&!w.ended&&lk.length){lk.forEach(([a,b])=>{w.items.forEach(it=>{if(it.k===a&&!w.items.some(x=>x.k===b)){if(w.ex[a]){w.ex[b]=w.ex[a];delete w.ex[a];}it.k=b;}});});}
@@ -2671,9 +2693,10 @@ function createSplit(t){
   const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
   openEditor();
 }
-function dupSplit(){const sp=clone(draft);sp.id=uid('s');sp.name=(sp.name||'Split')+' (copy)';S.splits[sp.id]=sp;S.activeSplit=sp.id;save();draft=clone(sp);renderEditor();toast('Duplicated — now editing the copy');}
+function dupSplit(){const sp=clone(draft);delete sp.cs;sp.id=uid('s');sp.name=(sp.name||'Split')+' (copy)';S.splits[sp.id]=sp;S.activeSplit=sp.id;save();draft=clone(sp);renderEditor();toast('Duplicated — now editing the copy');}
 function delSplit(){
   if(Object.keys(S.splits).length<2){toast('You need at least one split');return;}
+  if(draft.cs){csDeleteSplit();return;}
   if(!confirm('Delete the split "'+draft.name+'"? Logged workouts stay in your history.'))return;
   delete S.splits[draft.id];S.activeSplit=Object.keys(S.splits)[0];
   const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
@@ -2811,7 +2834,7 @@ function renderDiet(){
   $('dDate').value=dDate;$('dDate').max=t;$('dNext').disabled=dDate>=t;
   const tot=dayTotals(dDate),meals=S.food[dDate]||[];
   $('dietCount').textContent=meals.length?meals.length+' meal'+(meals.length>1?'s':''):'';
-  $('macroBox').innerHTML=['protein','carbs','fat'].map(k=>nutRow(k,tot)).join('');
+  $('macroBox').innerHTML=(kcalOn()?kcalRow(tot):'')+['protein','carbs','fat'].map(k=>nutRow(k,tot)).join('');
   $('badBox').innerHTML=NUT.filter(n=>n[3]==='bad'&&n[0]!=='caffeine').map(n=>nutRow(n[0],tot,true)).join('');renderCaffeine(tot);
   $('antiBox').innerHTML=NUT.filter(n=>n[3]==='anti').map(n=>nutRow(n[0],tot,true)).join('')+'<p class="tiny" style="margin-top:10px">Tap any name to see what it does and where today’s amount came from.</p>';
   const mh=microHits(dDate);$('microScore').textContent=mh.hit+'/'+mh.of+' goals hit';
@@ -3166,7 +3189,7 @@ function mealHTML(e){
   const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0),fl=mealFlags(e);
   const desc=e.parts&&e.parts.length?e.parts.map(p=>p.name+(p.g?' '+Math.round(p.g)+' g':'')).join(', '):(e.items||'');
   return '<div class="meal'+(fl.includes('seed_oil')?' hasbad':'')+'" id="m_'+e.id+'" data-fk="'+e.id+'"><div class="top" onclick="this.parentNode.classList.toggle(\'open\')"><div class="grow"><div class="nm">'+gradePill(e)+esc(e.name)+(m!==1?' <span class="tiny">×'+m+'</span>':'')+(e.src==='barcode'?' <span class="tiny">· barcode</span>':e.src==='queued'?' <span class="tiny">· analyzed later</span>':'')+'</div>'+
-    '<div class="mm">P '+Math.round(v('protein'))+' g · C '+Math.round(v('carbs'))+' g · F '+Math.round(v('fat'))+' g'+(anti.length?' · '+anti.length+' anti-nutrient'+(anti.length>1?'s':''):'')+'</div>'+flagChips(fl)+'</div>'+
+    '<div class="mm">'+(kcalOn()?Math.round(kcalOf({protein:v('protein'),carbs:v('carbs'),fat:v('fat')}))+' kcal · ':'')+'P '+Math.round(v('protein'))+' g · C '+Math.round(v('carbs'))+' g · F '+Math.round(v('fat'))+' g'+(anti.length?' · '+anti.length+' anti-nutrient'+(anti.length>1?'s':''):'')+'</div>'+flagChips(fl)+'</div>'+
     '<div class="t">'+new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'+
     '<div class="det">'+anMini(e)+(desc?'<p class="tiny" style="margin-bottom:6px">'+esc(desc)+'</p>':'')+(e.parts||[]).map(ingBlock).join('')+
     '<div class="ngrid">'+NUT.map(x=>'<div class="'+((x[3]==='anti'&&v(x[0])>0)||(x[0]==='seedoil'&&v(x[0])>0.4)||(x[0]==='addsugar'&&v(x[0])>8)||(x[0]==='la'&&v(x[0])>4)?'bad':'')+'"><span>'+esc(x[1])+'</span><b>'+fmtNum(v(x[0]))+' '+x[2]+'</b></div>').join('')+'</div>'+
@@ -3591,7 +3614,7 @@ function renderSettings(){
   setGoal='recomp';
   $('set-ai').checked=s.aiAuto!==false;$('set-autorest').checked=s.autoRest!==false;$('set-wake').checked=!!s.wake;
   $('set-notify').checked=s.restNotify!==false;$('notifyLine').style.display=hasNative()?'':'none';
-  $('t-protein').value=S.targets.protein||'';$('t-carbs').value=S.targets.carbs||'';$('t-fat').value=S.targets.fat||'';
+  $('t-protein').value=S.targets.protein||'';$('t-carbs').value=S.targets.carbs||'';$('t-fat').value=S.targets.fat||'';kcalSetup();
   const AD=antiDefaults();
   $('microTgt').innerHTML=NUT.filter(n=>['vit','min','oth','good'].includes(n[3])).map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-mi="'+n[0]+'" placeholder="'+microDefault(n[0])+'" value="'+((S.targets.micro||{})[n[0]]||'')+'">').join('');
   $('antiTgt').innerHTML=NUT.filter(n=>n[3]==='bad'||n[3]==='anti').map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-an="'+n[0]+'" placeholder="'+AD[n[0]]+'" value="'+((S.targets.anti||{})[n[0]]||'')+'">').join('');
@@ -3603,6 +3626,13 @@ function renderGyms(){
 function renameGym(i,v){if(v.trim()){S.gyms[i].name=v.trim();save();toast('Renamed');}}
 function addGym(name){name=(name||'').trim();if(!name)return null;const g={id:uid('g'),name};S.gyms.push(g);save();return g;}
 function delGym(i){const g=S.gyms[i];const n=Object.values(S.workouts).filter(w=>w.gym===g.id).length;if(!confirm('Remove '+g.name+'?'+(n?' Its '+n+' logged workouts stay in your history.':'')))return;S.gyms.splice(i,1);if(S.activeGym===g.id)S.activeGym=S.gyms[0].id;save();renderGyms();}
+const kcalOn=()=>!!(S&&S.settings.kcal);
+const kcalOf=n=>4*(+(n&&n.protein)||0)+4*(+(n&&n.carbs)||0)+9*(+(n&&n.fat)||0);
+function kcalMacroGoal(){const T=S.targets;return Math.round(4*(T.protein||0)+4*(T.carbs||0)+9*(T.fat||0));}
+function kcalGoal(){return S.targets.kcal>0?S.targets.kcal:kcalMacroGoal();}
+function kcalSetup(){const on=kcalOn();$('set-kcal').checked=on;$('kcalField').hidden=!on;$('t-kcal').value=S.targets.kcal||'';$('kcalHint').textContent='· blank = '+kcalMacroGoal()+' from your macros';}
+function kcalRow(tot){const v=Math.round(kcalOf(tot)),g=kcalGoal(),p=g?v/g*100:0;
+  return '<div class="nrow kcalrow"><div class="tgtline"><span class="nlab">Calories</span><span><b>'+v.toLocaleString()+'</b> / '+g.toLocaleString()+' kcal<span class="pct"> '+Math.round(p)+'%</span></span></div><div class="bar"><i class="'+(p>=100?'full':'')+'" style="width:'+Math.min(100,p).toFixed(1)+'%;background:linear-gradient(90deg,#ff9f6e,#ffcf6e)"></i></div></div>';}
 function saveSettings(){
   const s=S.settings;const name=$('set-name').value.trim();if(name)s.name=name;
   const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),dob=$('set-dob').value,a=ageFrom(dob);
@@ -3610,6 +3640,7 @@ function saveSettings(){
   save();renderHeader();renderSettings();socNameSync();
 }
 function saveTargets(){
+  {const v=parseInt(($('t-kcal')||{}).value);S.targets.kcal=v>0?v:0;}
   ['protein','carbs','fat'].forEach(k=>{const v=parseInt($('t-'+k).value);if(v>0)S.targets[k]=v;});
   S.targets.micro={};document.querySelectorAll('[data-mi]').forEach(el=>{const v=parseFloat(el.value);if(v>0)S.targets.micro[el.dataset.mi]=v;});
   S.targets.anti={};document.querySelectorAll('[data-an]').forEach(el=>{const v=parseFloat(el.value);if(v>0)S.targets.anti[el.dataset.an]=v;});
@@ -3965,7 +3996,7 @@ async function socRefresh(force){
   if(!socTok()){if(!SOC.err){SOC.err='signin';SOC.v++;if(curView==='friends')renderView('friends');}return null;}
   SOC.busy=(async()=>{
     try{
-      const raw=await sapi('/friends');
+      CS.reqAt=Date.now();const raw=await sapi('/friends');
       SOC.me=raw.me;SOC.t=Date.now();
       // everything friends shared arrives encrypted: only decrypt again when something actually changed
       const sig=socSig(raw),changed=sig!==SOC.rawSig||!!SOC.err||!SOC.data;
@@ -3973,7 +4004,7 @@ async function socRefresh(force){
         const d=await e2eOpenFriends(raw);
         SOC.data=d;SOC.rawSig=sig;SOC.err='';SOC.v++;socSave();socChanged();
       }else{SOC.data.me=raw.me;SOC.data.ring=raw.ring;SOC.err='';}
-      socNameSync();snapSoon(4000);
+      socNameSync();snapSoon(4000);try{csIngest(raw);}catch(e){console.warn(e);}
       if(E2E.ok){e2eEnsurePub().catch(()=>{});setTimeout(()=>e2eMigratePosts(),3000);}
       return SOC.data;
     }catch(e){
@@ -4775,7 +4806,7 @@ async function previewShare(code,sendId,secret){
     if(!$('shBox'))return;
     $('shBox').innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+' shared a split</div><div class="fname">'+esc(sp.name||'Split')+'</div>'+
       (j.enc?'<div class="e2etag">'+IC.lock+' End-to-end encrypted</div>':'')+'</div>'+
-      '<div style="margin-top:8px">'+splitDaysHTML(sp,sp.defs)+'</div><button class="btn btn-primary socbtn" style="margin-top:14px" onclick="importSplit(SOC.shared.sp,SOC.shared.sp.defs,SOC.shared.from.name,this);if(SOC.giftId)giftDone(SOC.giftId)">'+IC.copy+' Add to my splits</button>';
+      '<button class="btn btn-primary socbtn" style="margin-top:6px" onclick="importSplit(SOC.shared.sp,SOC.shared.sp.defs,SOC.shared.from.name,this);if(SOC.giftId)giftDone(SOC.giftId)">'+IC.copy+' Add to my splits</button><p class="tiny" style="text-align:center;margin-top:6px">A copy that’s yours — changing it won’t change theirs.</p><div style="margin-top:12px">'+splitDaysHTML(sp,sp.defs)+'</div>';
   }catch(e){if($('shBox'))$('shBox').innerHTML=frNote('🔗','Couldn’t open that split',esc(e.message));}
 }
 
@@ -5241,6 +5272,308 @@ async function aiAdminCheck(){
     '</div><p class="tiny" style="margin:12px 0 0">The full list is in Setup → AI credit.</p><button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="sapi(\'/admin/aiout/seen\',\'POST\',{}).catch(()=>{});closeSheet()">Got it</button>');
   haptic('heavy');
 }
+/* ================= SHARED SPLITS: send a copy, or edit one split together (end-to-end encrypted) ================= */
+// A collaborative split lives on the server as one encrypted blob. Its AES key is wrapped for every member
+// (ECDH pair key with whoever wrapped it, or your own self key once you've joined). Edits are pushed with the
+// version they were based on; a conflict is merged per day (the side that changed a day wins).
+const CS={rows:[],keys:new Map(),busy:null,again:false,pushT:0,fetchedAt:0,mode:'copy',sent:{},notified:null};
+const csAAD=(id,kv)=>'cs|'+id+'|'+kv,csKAAD=(id,kv)=>'csk|'+id+'|'+kv;
+function csFind(id){for(const k in S.splits){const L=S.splits[k];if(L&&L.cs&&L.cs.id===id)return L;}return null;}
+function csSplits(){return Object.values(S.splits).filter(L=>L&&L.cs);}
+function csContent(sp){const defs={},d=splitPayload(sp,defs);delete d.id;d.defs=defs;return d;}
+const csJSON=sp=>JSON.stringify(csContent(sp));
+const csMe=()=>SOC.me&&SOC.me.id;
+function csWho(r,uid){const m=(r&&r.members||[]).find(x=>x.id===uid);return m||userOf(uid)||{id:uid,name:'Someone',handle:''};}
+
+/* ---- keys ---- */
+async function csKey(r){
+  const ck=r.id+'|'+r.kv+'|'+r.w;if(CS.keys.has(ck))return CS.keys.get(ck);
+  if(!E2E.ok||!csMe()||!/^[0-9a-f]{8}$/.test(r.kv||''))return null;
+  let raw=null;
+  try{
+    if(r.wb===csMe())raw=await decS(E2E.self,r.w,csKAAD(r.id,r.kv));
+    else{const m=(r.members||[]).find(x=>x.id===r.wb);
+      if(!m||!(await pubOk(m))||m.fp!==r.of||r.rf!==E2E.fp)return null;
+      raw=await decS(await e2ePair(m.pub,'cs|'+r.wb+'|'+csMe()+'|'+r.of+'|'+r.rf),r.w,csKAAD(r.id,r.kv));}
+  }catch(e){return null;}
+  const k={raw,key:await aesKey(raw)};CS.keys.set(ck,k);CS.keys.set(r.id+'|'+r.kv,k);return k;
+}
+async function csWrapFor(f,raw,id,kv){
+  if(!(await pubOk(f)))return null;
+  const pk=await e2ePair(f.pub,'cs|'+csMe()+'|'+f.id+'|'+E2E.fp+'|'+f.fp);
+  return {id:f.id,w:await encS(pk,raw,csKAAD(id,kv)),rf:f.fp};
+}
+const csSeal=async(k,id,kv,content)=>'e1.'+kv+'.'+await encS(k.key,jenc(content),csAAD(id,kv));
+async function csOpenData(r,k){const m=ENCRX.exec(String(r.data||''));if(!m||m[1]!==r.kv)throw new Error('bad');return jdec(await decS(k.key,m[2],csAAD(r.id,r.kv)));}
+
+/* ---- applying remote content to a local split (same checks as importing a shared split) ---- */
+function csClean(R){
+  const used=new Set();
+  const days=(Array.isArray(R&&R.days)?R.days:[]).slice(0,14).map(d=>{let id=/^[A-Za-z0-9_-]{1,24}$/.test(d&&d.id)?d.id:uid('d');if(used.has(id))id=uid('d');used.add(id);
+    return {id,name:String((d&&d.name)||'Day').slice(0,40),ex:(Array.isArray(d&&d.ex)?d.ex:[]).slice(0,30).filter(it=>it&&okKey(it.k)).map(it=>{
+      const o=I(it.k,clampN(it.sets,1,10,3),clampN(it.lo,1,300,8),clampN(it.hi,1,300,12),clampN(it.rest,0,900,120));if(o.hi<o.lo)o.hi=o.lo;if(it.ps)o.ps=1;if(it.note)o.note=String(it.note).slice(0,200);return o;})};});
+  const sched=(Array.isArray(R&&R.sched)?R.sched:[]).slice(0,7).map(x=>used.has(x)?x:'');while(sched.length<7)sched.push('');
+  return {name:String((R&&R.name)||'Shared split').slice(0,40),days,sched,defs:R&&typeof R.defs==='object'&&R.defs?R.defs:{}};
+}
+function csDefs(defs){
+  for(const b in defs){const d=defs[b];if(!d||typeof d!=='object'||(b in Object.prototype)||own(EX,b)||own(S.custom,b)||own(S.libcache,b)||!/^[A-Za-z0-9_-]{1,60}$/.test(b))continue;
+    const e={n:String(d.n||b).slice(0,60),m:MUSCLES.includes(d.m)?d.m:'',t:['c','i','b','t','d'].includes(d.t)?d.t:'i',i:typeof d.i==='string'&&/^[ef]:[A-Za-z0-9_.-]{1,80}\*?$/.test(d.i)?d.i:null,c:String(d.c||'').slice(0,300)};
+    if(d.cu)S.custom[b]=e;else S.libcache[b]=e;}
+}
+function csApply(L,R){
+  const c=csClean(R);csDefs(c.defs);L.name=c.name;L.days=c.days;L.sched=c.sched;
+  // a workout that hasn't started yet follows the new version of its day
+  const w=S.cur&&S.workouts[S.cur];
+  if(w&&!w.ended&&!woHasData(w)&&w.split===L.id){const d=L.days.find(x=>x.id===w.day);if(d){w.items=clone(d.ex);w.dayName=d.name;}}
+}
+// three-way merge: base = last version both sides had
+function csMerge(B,Lc,R){
+  const by=a=>{const m={};(a&&a.days||[]).forEach(d=>m[d.id]=JSON.stringify(d));return m;};
+  const b=by(B),l=by(Lc),r=by(R),pick=(lv,bv,rv)=>lv===bv?rv:rv===bv?lv:lv;
+  const order=JSON.stringify((Lc.days||[]).map(d=>d.id))!==JSON.stringify((B.days||[]).map(d=>d.id))?Lc.days.map(d=>d.id):(R.days||[]).map(d=>d.id);
+  const ids=[...new Set([...order,...(R.days||[]).map(d=>d.id),...(Lc.days||[]).map(d=>d.id)])];
+  const days=[];for(const id of ids){const v=pick(l[id],b[id],r[id]);if(v)days.push(JSON.parse(v));}
+  const s=k=>JSON.stringify(Lc[k])!==JSON.stringify(B[k])?Lc[k]:R[k];
+  return {name:s('name'),sched:s('sched'),days,defs:Object.assign({},R.defs||{},Lc.defs||{})};
+}
+
+/* ---- sync ---- */
+function csIngest(raw){
+  if(!raw||!Array.isArray(raw.cs))return;
+  const sig=JSON.stringify(raw.cs.map(r=>[r.id,r.ver,r.kv,r.state,r.w,(r.members||[]).map(m=>m.id+m.state)]));
+  const changed=sig!==CS.sig;CS.sig=sig;CS.rows=raw.cs;CS.fetchedAt=CS.reqAt||Date.now();
+  if(changed){SOC.v++;if(curView==='friends')renderView('friends');}
+  csSync();csNotify();
+}
+function csSync(){
+  if(CS.busy){CS.again=true;return CS.busy;}
+  CS.busy=(async()=>{try{
+    if(!S||!socTok()||!(await e2eLoad()))return;
+    const seen=new Set();let touched=false;
+    for(const r of CS.rows){
+      seen.add(r.id);if(r.state!=='in')continue;
+      const k=await csKey(r);if(!k)continue;
+      let R;try{R=await csOpenData(r,k);}catch(e){continue;}
+      // after joining (or after the owner re-keyed) keep our own wrap, so we never depend on the inviter again
+      if(r.wb!==csMe()){try{const w=await encS(E2E.self,k.raw,csKAAD(r.id,r.kv));await sapi('/cs/'+r.id+'/join','POST',{w});r.w=w;r.wb=csMe();CS.keys.set(r.id+'|'+r.kv+'|'+w,k);}catch(e){}}
+      let L=csFind(r.id);
+      const info={id:r.id,owner:r.owner,members:(r.members||[]).map(m=>({id:m.id,name:m.name,handle:m.handle,av:m.av,state:m.state}))};
+      if(!L){
+        const lid='cs_'+r.id;L={id:lid,name:'',days:[],sched:[]};csApply(L,R);
+        L.cs=Object.assign(info,{ver:r.ver,kv:r.kv,t:Date.now()});L.cs.base=csJSON(L);S.splits[lid]=L;touched=true;continue;
+      }
+      Object.assign(L.cs,info);
+      if(r.ver!==L.cs.ver||r.kv!==L.cs.kv){
+        const local=csJSON(L)!==L.cs.base;
+        if(local){
+          const tmp={id:L.id,name:'',days:[],sched:[]};csApply(tmp,R);const rb=csJSON(tmp);
+          const merged=csMerge(JSON.parse(L.cs.base),csContent(L),JSON.parse(rb));csApply(L,merged);L.cs.base=rb;
+        }else{csApply(L,R);L.cs.base=csJSON(L);if(r.by&&r.by!==csMe()&&r.ver>L.cs.ver)csUpdatedToast(L,r);}
+        L.cs.ver=r.ver;L.cs.kv=r.kv;touched=true;
+      }
+      if(csJSON(L)!==L.cs.base)await csPush(L,r,k);
+    }
+    // gone from the server: the owner stopped sharing, or removed you. Your copy stays as a normal split.
+    for(const L of csSplits()){
+      if(seen.has(L.cs.id)||!(CS.fetchedAt>(L.cs.t||0)+3000))continue;
+      const nm=L.name;delete L.cs;touched=true;toast('“'+nm+'” isn’t shared any more — you kept your own copy');
+    }
+    if(touched){save();if(curView==='workout')renderWorkout();csLine();}
+  }finally{CS.busy=null;if(CS.again){CS.again=false;setTimeout(csSync,50);}}})();
+  return CS.busy;
+}
+async function csPush(L,r,k){
+  r=r||CS.rows.find(x=>x.id===L.cs.id);k=k||(r&&await csKey(r))||CS.keys.get(L.cs.id+'|'+L.cs.kv);if(!k)return false;
+  const content=csContent(L),json=JSON.stringify(content);
+  try{const res=await sapi('/cs/'+L.cs.id,'PUT',{ver:L.cs.ver,kv:L.cs.kv,data:await csSeal(k,L.cs.id,L.cs.kv,content)});
+    L.cs.ver=res.ver;L.cs.base=json;if(r){r.ver=res.ver;r.data=null;}L.cs.synced=Date.now();save();csLine();return true;}
+  catch(e){
+    if(e.status===409){setTimeout(()=>socRefresh(true),200);return false;}  // someone else saved first: fetch, merge, try again
+    if(e.code==='cs_gone'){setTimeout(()=>socRefresh(true),200);}
+    return false;
+  }
+}
+function csPushSoon(){
+  if(!S||!csSplits().length)return;clearTimeout(CS.pushT);
+  CS.pushT=setTimeout(async()=>{if(CS.busy)return csPushSoon();
+    for(const L of csSplits())if(L.cs.base&&csJSON(L)!==L.cs.base){const r=CS.rows.find(x=>x.id===L.cs.id);if(r&&r.state==='in')await csPush(L,r);}},1200);
+}
+let csLastToast=0;
+function csUpdatedToast(L,r){const n=Date.now();if(n-csLastToast<4000)return;csLastToast=n;const u=csWho(r,r.by);toast(first(u.name)+' updated “'+L.name+'”','ok');haptic('light');}
+
+/* ---- starting, inviting, joining, leaving ---- */
+async function csStart(sp){
+  if(sp.cs)return sp;
+  if(!socTok())throw new Error('Sign in to share splits');
+  if(!(await e2eLoad()))throw new Error(E2E.err||'Encryption isn’t ready — try again in a moment');
+  const id=hexs(rnd(8)),kv=hexs(rnd(4)),raw=rnd(32),k={raw,key:await aesKey(raw)},content=csContent(sp);
+  await sapi('/cs','POST',{id,kv,data:await csSeal(k,id,kv,content),w:await encS(E2E.self,raw,csKAAD(id,kv))});
+  CS.keys.set(id+'|'+kv,k);
+  sp.cs={id,owner:csMe(),ver:1,kv,base:JSON.stringify(content),t:Date.now(),members:[{id:csMe(),name:socMe().name,handle:(SOC.me||{}).handle,state:'in'}]};
+  save();return sp;
+}
+async function csInvite(fid,btn){
+  const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp)return;
+  const f=userOf(fid);if(!f){toast('Not friends any more','err');return;}
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
+  try{
+    await csStart(sp);
+    if(sp.cs.owner!==csMe())throw new Error('Only the owner can invite people');
+    const k=CS.keys.get(sp.cs.id+'|'+sp.cs.kv)||await csKey(CS.rows.find(x=>x.id===sp.cs.id)||{});
+    if(!k)throw new Error('Couldn’t unlock this split — try again');
+    const to=await csWrapFor(f,k.raw,sp.cs.id,sp.cs.kv);if(!to)throw new Error(first(f.name)+' needs to open the latest Lock In first');
+    await sapi('/cs/'+sp.cs.id+'/invite','POST',{to:[to]});
+    sp.cs.members=(sp.cs.members||[]).filter(m=>m.id!==fid).concat([{id:fid,name:f.name,handle:f.handle,av:f.av,state:'invited'}]);save();
+    haptic('success');if(btn)floatEmoji(btn,'🤝');toast('Invited '+first(f.name)+' — it pops up on their phone','ok');
+    socRefresh(true);
+  }catch(e){toast(e.message,'err');}
+  drawShareSplit();
+}
+async function csJoin(id,btn){
+  const r=CS.rows.find(x=>x.id===id);if(!r)return;
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
+  try{
+    const k=await csKey(r);if(!k)throw new Error('This invite can’t be unlocked — ask them to invite you again');
+    const w=await encS(E2E.self,k.raw,csKAAD(r.id,r.kv));await sapi('/cs/'+id+'/join','POST',{w});
+    r.state='in';r.w=w;r.wb=csMe();CS.keys.set(r.id+'|'+r.kv+'|'+w,k);
+    await csSync();const L=csFind(id);closeSheet();haptic('success');
+    if(L){S.activeSplit=L.id;const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}save();renderHeader();if(curView==='workout')renderWorkout();
+      toast('Joined “'+L.name+'” — you’re training with it now','ok');celebrate();}
+    SOC.v++;if(curView==='friends')renderView('friends');
+  }catch(e){if(btn){btn.disabled=false;btn.textContent='Join';}toast(e.message,'err');}
+}
+async function csDecline(id,btn){
+  if(btn)btn.disabled=true;
+  try{await sapi('/cs/'+id+'/leave','POST',{});CS.rows=CS.rows.filter(x=>x.id!==id);closeSheet();toast('Invite declined');SOC.v++;if(curView==='friends')renderView('friends');}
+  catch(e){if(btn)btn.disabled=false;toast(e.message,'err');}
+}
+async function csLeave(lid){
+  const L=S.splits[lid];if(!L||!L.cs)return;const owner=L.cs.owner===csMe();
+  if(!confirm(owner?'Stop sharing “'+L.name+'”? Everyone keeps their own copy, but edits stop syncing.':'Leave “'+L.name+'”? You keep your own copy, but edits stop syncing.'))return;
+  try{await sapi('/cs/'+L.cs.id+(owner?'':'/leave'),owner?'DELETE':'POST',owner?undefined:{});}
+  catch(e){if(e.code!=='cs_gone'){toast(e.message,'err');return;}}
+  CS.rows=CS.rows.filter(x=>x.id!==L.cs.id);delete L.cs;save();toast(owner?'Stopped sharing — it’s just yours again':'Left — the split is just yours now','ok');drawShareSplit();csLine();
+}
+async function csRemove(uidR,btn){
+  const L=S.splits[SOC.shareSp];if(!L||!L.cs||L.cs.owner!==csMe())return;
+  const m=(L.cs.members||[]).find(x=>x.id===uidR);if(!confirm('Remove '+(m?first(m.name):'them')+' from “'+L.name+'”? They keep the copy they have, but won’t see new changes.'))return;
+  if(btn)btn.disabled=true;
+  try{
+    const r=CS.rows.find(x=>x.id===L.cs.id);if(!r)throw new Error('Refresh and try again');
+    const kv=hexs(rnd(4)),raw=rnd(32),k={raw,key:await aesKey(raw)},keys=[{id:csMe(),w:await encS(E2E.self,raw,csKAAD(L.cs.id,kv)),rf:E2E.fp}];
+    for(const x of r.members||[]){if(x.id===csMe()||x.id===uidR)continue;const wr=await csWrapFor(x,raw,L.cs.id,kv);if(wr)keys.push(wr);}
+    const res=await sapi('/cs/'+L.cs.id+'/rekey','POST',{ver:L.cs.ver,kv,data:await csSeal(k,L.cs.id,kv,csContent(L)),keys});
+    CS.keys.set(L.cs.id+'|'+kv,k);L.cs.kv=kv;L.cs.ver=res.ver;L.cs.base=csJSON(L);L.cs.members=(L.cs.members||[]).filter(x=>x.id!==uidR);save();
+    toast('Removed — new changes are locked to them','ok');socRefresh(true);
+  }catch(e){toast(e.status===409?'Someone just edited it — try again in a second':e.message,'err');if(e.status===409)socRefresh(true);}
+  drawShareSplit();
+}
+
+/* ---- the share window ---- */
+function openShareSplit(){
+  if(!Object.keys(S.splits).length)return;
+  SOC.shareSp=S.activeSplit;CS.mode=(activeSplit()||{}).cs?'together':'copy';
+  openSheet('Share a split','<div id="shSplit"></div>',{tall:true});drawShareSplit();
+  if(socTok())socRefresh(!SOC.data).then(drawShareSplit);
+}
+function csMode(m){CS.mode=m;haptic('selection');drawShareSplit();}
+function drawShareSplit(){
+  const box=$('shSplit');if(!box)return;const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp)return;
+  const fr=((SOC.data&&SOC.data.friends)||[]).filter(f=>sid(f.id)),signed=!!socTok(),cs=sp.cs,owner=cs&&cs.owner===csMe();
+  const nEx=sp.days.reduce((a,d)=>a+d.ex.length,0);
+  let h=(Object.keys(S.splits).length>1?'<div class="chipbar scroll">'+Object.values(S.splits).map(x=>'<button class="chip sm'+(x.id===sp.id?' on':'')+'" onclick="SOC.shareSp=\''+x.id+'\';CS.sent={};drawShareSplit()">'+(x.cs?'👥 ':'')+esc(x.name||'Split')+'</button>').join('')+'</div>':'')+
+    '<div class="shsum"><b>'+esc(sp.name||'Split')+'</b><span class="tiny">'+sp.days.length+' days · '+nEx+' exercises'+(cs?' · 👥 shared':'')+'</span><div class="dcards mini">'+deckCards(sp.days[0],{})+'</div></div>'+
+    '<div class="seg csseg"><button class="'+(CS.mode==='copy'?'on':'')+'" onclick="csMode(\'copy\')"><b>Send a copy</b><small>They get their own version</small></button><button class="'+(CS.mode==='together'?'on':'')+'" onclick="csMode(\'together\')"><b>Edit together</b><small>One split, synced for everyone</small></button></div>';
+  if(CS.mode==='copy'){
+    h+='<p class="tiny csexp">Your friend gets a copy that’s theirs to change — your split stays exactly as it is. It pops up on their phone straight away.</p>';
+    h+=fr.length?fr.map(f=>{const s=CS.sent[f.id];return '<div class="req">'+avHTML(f,40)+'<div class="grow"><b>'+esc(f.name)+'</b><div class="tiny">@'+esc(f.handle)+'</div></div><button class="btn '+(s?'btn-ok':'btn-ghost')+' btn-sm" onclick="sendSplit(\''+f.id+'\',this)"'+(s?' disabled':'')+'>'+(s?'Sent ✓':'Send')+'</button></div>';}).join('')
+      :(signed?'<p class="tiny" style="margin-top:6px">Add friends to send splits straight to them.</p>':'');
+    h+='<button class="btn btn-primary socbtn" style="margin-top:16px" onclick="shareSplit(this)">'+IC.share+' Share a link (AirDrop, Messages…)</button><p class="tiny" style="margin-top:6px;text-align:center">Anyone with the link can add a copy. The link holds the key, so the server can’t read it.</p>';
+  }else{
+    if(!signed){h+='<p class="tiny csexp">Sign in to edit splits together with friends.</p>';}
+    else{
+      h+='<p class="tiny csexp">Everyone you invite trains from this same split. When anyone changes it — exercises, sets, days — it updates for all of you within seconds. Encrypted end to end.</p>';
+      const mem=(cs&&cs.members)||[],mids=new Set(mem.map(m=>m.id));
+      if(cs){h+='<label class="f" style="margin-top:4px">People</label>'+mem.map(m=>{const isMe=m.id===csMe(),own_=m.id===cs.owner;
+          return '<div class="req">'+avHTML(isMe?socMe():(userOf(m.id)||m),40)+'<div class="grow"><b>'+esc(isMe?'You':m.name)+'</b><div class="tiny">'+(own_?'Owner':m.state==='invited'?'Invited — waiting':'Can edit')+'</div></div>'+
+            (owner&&!isMe?'<button class="btn btn-ghost btn-xs" onclick="csRemove(\''+m.id+'\',this)">Remove</button>':'')+'</div>';}).join('');}
+      if(!cs||owner){
+        const cand=fr.filter(f=>!mids.has(f.id));
+        h+=cand.length?'<label class="f" style="margin-top:14px">Invite</label>'+cand.map(f=>'<div class="req">'+avHTML(f,40)+'<div class="grow"><b>'+esc(f.name)+'</b><div class="tiny">@'+esc(f.handle)+'</div></div><button class="btn btn-ghost btn-sm" onclick="csInvite(\''+f.id+'\',this)">Invite</button></div>').join('')
+          :(fr.length?'':'<p class="tiny" style="margin-top:8px">Add friends first — then invite them here.</p>');
+      }else h+='<p class="tiny" style="margin-top:10px">Only '+esc(first(csWho(CS.rows.find(x=>x.id===cs.id),cs.owner).name))+' (the owner) can invite people.</p>';
+      if(cs)h+='<button class="btn btn-danger btn-sm" style="width:100%;margin-top:16px" onclick="csLeave(\''+sp.id+'\')">'+(owner?'Stop sharing':'Leave this split')+'</button>';
+    }
+  }
+  box.innerHTML=h;
+}
+async function sendSplit(fid,btn){
+  const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp)return;btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  const defs={},data=splitPayload(sp,defs);data.defs=defs;delete data.id;
+  try{const f=userOf(fid);if(!f)throw new Error('Not friends any more');const r=await e2eShare(data,[f]);if(!r.sent)throw new Error('Couldn’t send it');
+    CS.sent[fid]=1;haptic('success');floatEmoji(btn,'📩');toast('Sent to '+first(f.name)+' — it pops up on their phone','ok');drawShareSplit();}
+  catch(e){btn.disabled=false;btn.textContent='Send';toast(e.message,'err');}
+}
+
+/* ---- arriving: pop up new splits and invites right away ---- */
+function csSeenKey(){return 'lockin_seen_'+(user?user.username:'anon');}
+function csSeen(){if(!CS.notified){try{CS.notified=new Set(JSON.parse(localStorage.getItem(csSeenKey())||'[]'));}catch(e){CS.notified=new Set();}}return CS.notified;}
+function csMark(k){const s=csSeen();s.add(k);try{localStorage.setItem(csSeenKey(),JSON.stringify([...s].slice(-200)));}catch(e){}}
+function csNotify(){
+  if(!S||document.hidden)return;
+  if($('sheet').classList.contains('show')||$('view-wizard').classList.contains('active')){clearTimeout(CS.nT);CS.nT=setTimeout(csNotify,5000);return;}
+  const seen=csSeen();
+  const inv=CS.rows.find(r=>r.state==='invited'&&!seen.has('cs'+r.id));
+  if(inv){csMark('cs'+inv.id);csInvitePopup(inv.id);return;}
+  const g=((SOC.data&&SOC.data.gifts)||[]).find(x=>x&&x.id&&!seen.has('g'+x.id)&&sid(x.code));
+  if(g){csMark('g'+g.id);haptic('medium');toast('📩 '+first(g.from.name)+' sent you a split','ok');setTimeout(()=>previewShare(sid(g.code),num(g.id),/^[A-Za-z0-9]{11}$/.test(g.secret||'')?g.secret:''),300);}
+}
+async function csInvitePopup(id){
+  const r=CS.rows.find(x=>x.id===id);if(!r)return;const from=csWho(r,r.owner);
+  openSheet('Edit a split together','<div id="csInv">'+foundSkel()+'</div>',{tall:true});haptic('medium');
+  let R=null;try{const k=await csKey(r);if(k)R=await csOpenData(r,k);}catch(e){}
+  const box=$('csInv');if(!box)return;
+  box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(userOf(r.owner)||from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name)+' invited you to edit a split together</div><div class="fname">'+esc(R?R.name||'Split':'Shared split')+'</div><div class="e2etag">'+IC.lock+' End-to-end encrypted</div></div>'+
+    '<p class="tiny" style="margin-top:12px">You both train from the same split — any change either of you makes shows up for the other. Your logged workouts stay yours.</p>'+
+    '<div class="row" style="margin-top:12px"><button class="btn btn-ghost grow" onclick="csDecline(\''+r.id+'\',this)">Decline</button><button class="btn btn-primary grow" onclick="csJoin(\''+r.id+'\',this)">Join</button></div>'+
+    (R?'<div style="margin-top:14px">'+splitDaysHTML(R,R.defs)+'</div>':'<p class="tiny" style="text-align:center">Join to see it.</p>');
+}
+// Friends tab: invites sit with the splits people sent you
+function frGifts(d){
+  const g=(d.gifts||[]).filter(x=>x&&x.from&&sid(x.code)),inv=CS.rows.filter(r=>r.state==='invited');
+  if(!g.length&&!inv.length)return '';
+  return '<div class="card giftcard"><h2>📩 Splits for you <span class="right">'+(g.length+inv.length)+'</span></h2>'+
+    inv.map(r=>{const f=csWho(r,r.owner);return '<div class="req">'+avHTML(userOf(r.owner)||f,42)+'<div class="grow"><b>Edit together</b><div class="tiny">'+esc(f.name)+' invited you · '+ago(r.upd)+'</div></div><button class="btn btn-primary btn-sm" onclick="csInvitePopup(\''+r.id+'\')">View</button></div>';}).join('')+
+    g.map(x=>'<div class="req" data-fk="gf'+num(x.id)+'">'+avHTML(x.from,42)+
+    '<div class="grow"><b>'+esc(x.name)+'</b><div class="tiny">from '+esc(x.from.name)+' · '+num(x.days)+' days · '+ago(x.ts)+'</div></div>'+
+    '<button class="btn btn-primary btn-sm" onclick="previewShare(\''+sid(x.code)+'\','+num(x.id)+',\''+(/^[A-Za-z0-9]{11}$/.test(x.secret||'')?x.secret:'')+'\')">View</button><button class="icbtn" onclick="giftDone('+num(x.id)+',this)" aria-label="Dismiss">✕</button></div>').join('')+'</div>';
+}
+// Lift tab: who you share the current split with
+function csLine(){
+  const el=$('csLine');if(!el||!S)return;const sp=activeSplit(),cs=sp&&sp.cs;
+  if(!cs){el.hidden=true;return;}
+  const others=(cs.members||[]).filter(m=>m.id!==csMe()&&m.state==='in'),inv=(cs.members||[]).filter(m=>m.state==='invited'&&m.id!==csMe()).length;
+  el.hidden=false;el.innerHTML='👥 '+(others.length?'Shared with '+others.map(m=>esc(first(m.name))).join(', '):'Shared split')+(inv?' · '+inv+' invited':'')+' · <button class="linkbtn" onclick="openShareSplit()">Manage</button>';
+}
+// keep friends (and shared splits) fresh while the app is open
+function csPoll(){clearInterval(CS.pollT);CS.pollT=setInterval(()=>{if(document.hidden||!S||!socTok()||!navigator.onLine)return;if(Date.now()-SOC.t>25000)socRefresh();},30000);}
+// the split editor saves over the split: fold in anything a friend changed while it was open
+function csEditorMerge(dr){
+  const cur=S.splits[dr.id];if(!cur||!cur.cs||!dr.cs)return;
+  if(cur.cs.ver===dr.cs.ver&&cur.cs.kv===dr.cs.kv){dr.cs=cur.cs;return;}
+  const m=csMerge(JSON.parse(dr.cs.base),csContent(dr),csContent(cur));csApply(dr,m);dr.cs=cur.cs;
+}
+async function csDeleteSplit(){
+  const L=S.splits[draft.id];if(!L||!L.cs)return;const owner=L.cs.owner===csMe();
+  if(!confirm(owner?'Delete “'+L.name+'”? It stops being shared — your friends keep their own copy.':'Delete “'+L.name+'”? You’ll leave the shared split; the others keep it.'))return;
+  try{await sapi('/cs/'+L.cs.id+(owner?'':'/leave'),owner?'DELETE':'POST',owner?undefined:{});}catch(e){if(e.code!=='cs_gone'){toast(e.message,'err');return;}}
+  CS.rows=CS.rows.filter(x=>x.id!==L.cs.id);
+  if(Object.keys(S.splits).length<2){delete L.cs;draft=null;save();show('workout');toast('Left the shared split — kept it as your own (you need at least one)');return;}
+  delete S.splits[L.id];S.activeSplit=Object.keys(S.splits)[0];
+  const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
+  draft=null;save();show('workout');toast('Split deleted');
+}
+
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','friends','settings'];
@@ -5444,7 +5777,7 @@ function btnOk(b,txt){
 }
 
 function init(){
-  initUI();initGlass();initFx();setTimeout(()=>{if(aiOutGet()){const el=$('aiOutNote');if(el)el.hidden=false;aiOutReport();}},1500);setTimeout(aiAdminCheck,4500);
+  initUI();initGlass();initFx();csPoll();setTimeout(()=>{if(aiOutGet()){const el=$('aiOutNote');if(el)el.hidden=false;aiOutReport();}},1500);setTimeout(aiAdminCheck,4500);
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
   $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);
   $('splitSel').addEventListener('change',e=>{S.activeSplit=e.target.value;const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}save();renderWorkout();renderHeader();});
@@ -5474,6 +5807,7 @@ function init(){
   $('macroSave').addEventListener('click',e=>{saveTargets();btnOk(e.currentTarget,'Saved');});$('tgtSave').addEventListener('click',e=>{saveTargets();btnOk(e.currentTarget,'Saved');});
   $('tgtReset').addEventListener('click',()=>{if(!confirm('Reset micro goals and anti-nutrient limits to defaults?'))return;S.targets.micro={};S.targets.anti={};save();renderSettings();toast('Reset to defaults');});
   $('gymAdd').addEventListener('click',()=>{const g=addGym($('gymNew').value);if(g){$('gymNew').value='';renderGyms();toast('Added '+g.name);}});
+  $('set-kcal').addEventListener('change',()=>{S.settings.kcal=$('set-kcal').checked;save();kcalSetup();toast(S.settings.kcal?'Calories on — shown in Diet and Today':'Calories off');});
   ['set-ai','set-autorest','set-wake','set-notify'].forEach(id=>$(id).addEventListener('change',()=>{S.settings.aiAuto=$('set-ai').checked;S.settings.autoRest=$('set-autorest').checked;S.settings.wake=$('set-wake').checked;S.settings.restNotify=$('set-notify').checked;save();toast('Saved');if(id==='set-notify'&&S.settings.restNotify)nat({action:'auth'});}));
   $('srcCopy').addEventListener('click',()=>{const v=$('srcUrl').value;if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>toast('Copied'),()=>prompt('Copy:',v));else prompt('Copy:',v);});
   $('signOutBtn').addEventListener('click',doSignOut);$('exportBtn').addEventListener('click',exportData);

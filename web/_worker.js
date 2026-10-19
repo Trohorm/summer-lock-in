@@ -72,7 +72,7 @@ const RX = {
   uid: /^[a-z0-9]{8,32}$/
 };
 
-const SCHEMA_V = '4';
+const SCHEMA_V = '5';
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, puid TEXT NOT NULL UNIQUE, handle TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '',
      av INTEGER NOT NULL DEFAULT 0, invite TEXT NOT NULL UNIQUE, defaults TEXT NOT NULL DEFAULT '{}', created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, pub TEXT, fp TEXT)`,
@@ -99,7 +99,11 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS rl(k TEXT PRIMARY KEY, n INTEGER NOT NULL, reset INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT)`,
   // someone's Puter AI credit ran out (one row per person per month) — shown to the admin
-  `CREATE TABLE IF NOT EXISTS aiout(uid TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL, first INTEGER NOT NULL, last INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, back INTEGER, PRIMARY KEY(uid,month))`
+  `CREATE TABLE IF NOT EXISTS aiout(uid TEXT NOT NULL, month TEXT NOT NULL, n INTEGER NOT NULL, first INTEGER NOT NULL, last INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, back INTEGER, PRIMARY KEY(uid,month))`,
+  // collaborative splits: one encrypted copy everyone edits; its key is wrapped per member (w, wrapped by wb)
+  `CREATE TABLE IF NOT EXISTS cs(id TEXT PRIMARY KEY, owner TEXT NOT NULL, ver INTEGER NOT NULL, kv TEXT NOT NULL, data TEXT NOT NULL, upd INTEGER NOT NULL, by TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS csm(sid TEXT NOT NULL, uid TEXT NOT NULL, state TEXT NOT NULL, w TEXT NOT NULL, wb TEXT NOT NULL, rf TEXT NOT NULL, "of" TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY(sid,uid))`,
+  `CREATE INDEX IF NOT EXISTS csm_uid ON csm(uid)`
 ];
 // columns added after the first release (fresh databases get them from SCHEMA, the ALTERs then just fail)
 const MIGRATE = [
@@ -340,6 +344,7 @@ async function api(req, env, ctx, url) {
       if (!m[2] && M === 'PUT') return await upgradePost(db, id, m[1], b);
       if (!m[2] && M === 'DELETE') { await db.prepare('DELETE FROM posts WHERE id=? AND uid=?').bind(m[1], id).run(); return J({ ok: true }); }
     }
+    if (p.startsWith('/api/cs')) { const r = await csApi(db, id, M, p, b); if (r) return r; }
     if ((m = /^\/api\/sends\/(\d{1,12})\/done$/.exec(p)) && M === 'POST') {
       await db.prepare('UPDATE sends SET done=1 WHERE id=? AND to_uid=?').bind(+m[1], id).run();
       return J({ ok: true });
@@ -545,6 +550,7 @@ async function friendsOut(db, me) {
     }
   }
   out.inbox = inboxRows.map(x => ({ item: x.item, emoji: x.emoji, ts: x.ts, from: pub(x) }));
+  out.cs = await csOut(db, me);
   return out;
 }
 
@@ -597,6 +603,8 @@ async function deleteMe(db, id) {
     db.prepare('DELETE FROM posts WHERE uid=?').bind(id),
     db.prepare('DELETE FROM sends WHERE from_uid=? OR to_uid=?').bind(id, id),
     db.prepare('DELETE FROM keyring WHERE owner=? OR reader=?').bind(id, id),
+    db.prepare('DELETE FROM csm WHERE uid=? OR sid IN (SELECT id FROM cs WHERE owner=?)').bind(id, id),
+    db.prepare('DELETE FROM cs WHERE owner=?').bind(id),
     db.prepare('DELETE FROM tokens WHERE id=?').bind(id),
     db.prepare('DELETE FROM users WHERE id=?').bind(id)]);
   for (const [k, v] of MEM) if (v.id === id) MEM.delete(k);
@@ -682,6 +690,100 @@ async function share(db, me, b) {
   try { await db.batch(st); }
   catch (e) { if (/unique|constraint/i.test(String(e && e.message))) throw new HttpError(409, 'code_taken', 'Try again.'); throw e; }
   return J({ code: c, sent });
+}
+
+/* ---------- collaborative splits (end-to-end encrypted; the server only sees members and ciphertext) ---------- */
+const CSID = /^[0-9a-f]{16}$/;
+async function csOut(db, me) {
+  const rows = (await db.prepare(`SELECT c.id, c.owner, c.ver, c.kv, c.data, c.upd, c.by, m.state, m.w, m.wb, m.rf, m."of" AS ofp
+      FROM csm m JOIN cs c ON c.id=m.sid WHERE m.uid=? ORDER BY c.upd DESC LIMIT 30`).bind(me).all()).results || [];
+  if (!rows.length) return [];
+  const mem = await selectIn(db, 'SELECT m.sid, m.uid, m.state, u.handle, u.name, u.av, u.pub, u.fp FROM csm m JOIN users u ON u.id=m.uid WHERE m.sid IN ', rows.map(r => r.id));
+  const M = {};
+  for (const x of mem) (M[x.sid] = M[x.sid] || []).push({ id: x.uid, handle: x.handle, name: x.name || x.handle, av: x.av || 0, state: x.state, pub: x.pub || null, fp: x.fp || null });
+  return rows.map(r => ({ id: r.id, owner: r.owner, ver: r.ver, kv: r.kv, data: r.data, upd: r.upd, by: r.by, state: r.state, w: r.w, wb: r.wb, rf: r.rf, of: r.ofp, members: M[r.id] || [] }));
+}
+async function csRow(db, id) { return await db.prepare('SELECT id, owner, ver, kv, data, upd, by FROM cs WHERE id=?').bind(id).first(); }
+async function csMember(db, sid, uid) { return await db.prepare('SELECT state FROM csm WHERE sid=? AND uid=?').bind(sid, uid).first(); }
+const csData = d => typeof d === 'string' && d.length <= 80000 && RX.enc.test(d);
+async function myFp(db, me) { const u = await db.prepare('SELECT fp FROM users WHERE id=?').bind(me).first(); return (u && u.fp) || ''; }
+async function csApi(db, me, M, p, b) {
+  let m;
+  if (M === 'POST' && p === '/api/cs') {
+    await limit(db, 'u:' + me + ':csnew', 30, DAY);
+    if (!b || !CSID.test(String(b.id)) || !RX.kid.test(String(b.kv)) || !csData(b.data) || !RX.wrap.test(String(b.w))) throw new HttpError(400, 'bad', 'Couldn’t start sharing that split.');
+    const fp = await myFp(db, me), now = Date.now();
+    if (!fp) throw new HttpError(400, 'keys', 'Encryption isn’t ready yet — try again in a moment.');
+    try {
+      await db.batch([db.prepare('INSERT INTO cs(id,owner,ver,kv,data,upd,by) VALUES(?,?,1,?,?,?,?)').bind(b.id, me, b.kv, b.data, now, me),
+        db.prepare('INSERT INTO csm(sid,uid,state,w,wb,rf,"of",ts) VALUES(?,?,?,?,?,?,?,?)').bind(b.id, me, 'in', b.w, me, fp, fp, now)]);
+    } catch (e) { if (/unique|constraint/i.test(String(e && e.message))) throw new HttpError(409, 'taken', 'Try again.'); throw e; }
+    return J({ ok: true, ver: 1 });
+  }
+  if (!(m = /^\/api\/cs\/([0-9a-f]{16})(?:\/(invite|join|leave|rekey))?$/.exec(p))) return null;
+  const id = m[1], act = m[2] || '', c = await csRow(db, id);
+  if (!c) throw new HttpError(404, 'cs_gone', 'That shared split was deleted.');
+  const mine = await csMember(db, id, me), owner = c.owner === me;
+  if (!mine) throw new HttpError(404, 'cs_gone', 'You’re not in that shared split any more.');
+  const now = Date.now();
+  if (M === 'PUT' && !act) {
+    await limit(db, 'u:' + me + ':csput', 240, HOUR);
+    if (mine.state !== 'in') throw new HttpError(403, 'cs_join', 'Join the split first.');
+    if (!b || !csData(b.data) || b.kv !== c.kv) throw new HttpError(400, 'bad', 'Couldn’t save that change.');
+    const r = await db.prepare('UPDATE cs SET data=?, ver=ver+1, upd=?, by=? WHERE id=? AND ver=?').bind(b.data, now, me, id, +b.ver || 0).run();
+    if (!r.meta || !r.meta.changes) { const cur = await csRow(db, id); return J({ error: 'conflict', ver: cur.ver, kv: cur.kv, data: cur.data, by: cur.by, upd: cur.upd }, 409); }
+    return J({ ok: true, ver: (+b.ver || 0) + 1 });
+  }
+  if (M === 'POST' && act === 'invite') {
+    if (!owner) throw new HttpError(403, 'cs_owner', 'Only the owner can invite people.');
+    await limit(db, 'u:' + me + ':csinv', 60, HOUR);
+    const to = Array.isArray(b && b.to) ? b.to.slice(0, 20).filter(x => x && RX.uid.test(String(x.id)) && x.id !== me && RX.wrap.test(String(x.w)) && RX.fp.test(String(x.rf))) : [];
+    if (!to.length) throw new HttpError(400, 'bad', 'Pick someone to invite.');
+    const ok = new Set((await selectIn(db, "SELECT b FROM links WHERE a=? AND state='friend' AND b IN ", to.map(x => x.id), '', [me])).map(x => x.b));
+    const fp = await myFp(db, me), st = [];
+    const cnt = await db.prepare('SELECT COUNT(*) AS n FROM csm WHERE sid=?').bind(id).first();
+    let room = 12 - ((cnt && cnt.n) || 0), sent = 0;
+    for (const x of to) {
+      if (!ok.has(x.id)) continue;
+      const ex = await csMember(db, id, x.id);
+      if (ex && ex.state === 'in') continue;
+      if (!ex) { if (room <= 0) break; room--; }
+      st.push(db.prepare('INSERT OR REPLACE INTO csm(sid,uid,state,w,wb,rf,"of",ts) VALUES(?,?,?,?,?,?,?,?)').bind(id, x.id, 'invited', x.w, me, x.rf, fp, now)); sent++;
+    }
+    if (st.length) await db.batch(st);
+    return J({ ok: true, sent });
+  }
+  if (M === 'POST' && act === 'join') {
+    if (!b || !RX.wrap.test(String(b.w))) throw new HttpError(400, 'bad', 'Couldn’t join.');
+    const fp = await myFp(db, me);
+    await db.prepare('UPDATE csm SET state=\'in\', w=?, wb=?, rf=?, "of"=?, ts=? WHERE sid=? AND uid=?').bind(b.w, me, fp, fp, now, id, me).run();
+    return J({ ok: true });
+  }
+  if (M === 'POST' && act === 'leave') {
+    if (owner) throw new HttpError(400, 'cs_owner', 'You own this split — stop sharing it instead.');
+    await db.prepare('DELETE FROM csm WHERE sid=? AND uid=?').bind(id, me).run();
+    return J({ ok: true });
+  }
+  if (M === 'POST' && act === 'rekey') {
+    // owner removes people: new key, data re-encrypted, key re-wrapped only for who stays
+    if (!owner) throw new HttpError(403, 'cs_owner', 'Only the owner can remove people.');
+    if (!b || !RX.kid.test(String(b.kv)) || !csData(b.data) || !Array.isArray(b.keys)) throw new HttpError(400, 'bad', 'Couldn’t update the split.');
+    const keys = b.keys.slice(0, 20).filter(x => x && RX.uid.test(String(x.id)) && RX.wrap.test(String(x.w)) && RX.fp.test(String(x.rf)));
+    if (!keys.some(x => x.id === me)) throw new HttpError(400, 'bad', 'Missing your own key.');
+    const fp = await myFp(db, me), keep = keys.map(x => x.id);
+    const r = await db.prepare('UPDATE cs SET data=?, kv=?, ver=ver+1, upd=?, by=? WHERE id=? AND ver=?').bind(b.data, b.kv, now, me, id, +b.ver || 0).run();
+    if (!r.meta || !r.meta.changes) { const cur = await csRow(db, id); return J({ error: 'conflict', ver: cur.ver, kv: cur.kv, data: cur.data, by: cur.by, upd: cur.upd }, 409); }
+    const st = [db.prepare('DELETE FROM csm WHERE sid=? AND uid NOT IN (' + keep.map(() => '?').join(',') + ')').bind(id, ...keep)];
+    for (const x of keys) st.push(db.prepare('UPDATE csm SET w=?, wb=?, rf=?, "of"=? WHERE sid=? AND uid=?').bind(x.w, me, x.rf, fp, id, x.id));
+    await db.batch(st);
+    return J({ ok: true, ver: (+b.ver || 0) + 1 });
+  }
+  if (M === 'DELETE' && !act) {
+    if (!owner) throw new HttpError(403, 'cs_owner', 'Only the owner can stop sharing.');
+    await db.batch([db.prepare('DELETE FROM csm WHERE sid=?').bind(id), db.prepare('DELETE FROM cs WHERE id=?').bind(id)]);
+    return J({ ok: true });
+  }
+  return null;
 }
 
 /* ---------- progress-photo posts: encrypted image + caption, the post key wrapped with the owner's photos key ---------- */
