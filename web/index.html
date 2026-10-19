@@ -1335,6 +1335,23 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 .where.done{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08)}
 .wchips{display:flex;flex-wrap:wrap;gap:6px}
 .wst{margin-top:8px}.wst.ok{color:#7ee2b1;font-weight:700}.wst.bad{color:#ff9d8c;font-weight:700}
+.needsplit #view-workout>.card:not(#splitIntro){display:none}
+.sbhero{text-align:center;padding:8px 4px}.sbicon{font-size:42px;margin-bottom:8px;animation:float 3s ease-in-out infinite}.sbhero h3{font-size:22px;color:#fff;margin-bottom:6px}
+.sbsteps{display:flex;gap:6px;margin-bottom:14px}.sbsteps i{flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.1);transition:background .4s}.sbsteps i.on{background:linear-gradient(90deg,#6ea6ff,#7b6cff)}
+.arch{padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:8px;cursor:pointer;transition:border-color .25s,background .25s}
+.arch.open{border-color:rgba(110,166,255,.45);background:rgba(110,166,255,.07)}
+.archtop{display:flex;gap:12px;align-items:center}.archi{font-size:26px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.06);flex:none}
+.archtop b{font-size:15px;color:#fff}.archbest{margin-left:8px;padding:2px 7px;border-radius:7px;font-size:10px;font-weight:900;letter-spacing:.05em;color:#08210f;background:#7ee2b1;vertical-align:2px}
+.archmore{margin-top:10px;animation:dOpen .3s ease both}.archmore p{font-size:13.5px;color:#d9e4f8;line-height:1.45;margin-bottom:6px}
+.archdays{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.archdays span{padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.07);font-size:12px;color:#d9e4f8}
+.sbload{text-align:center;padding:40px 10px}.sbload b{display:block;margin-top:14px;color:#fff}.spin.big{width:34px;height:34px;border-width:3px;display:inline-block}
+.sbhow{margin-top:10px;padding:12px;border-radius:14px;background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.18)}.sbhow b{color:#7ee2b1;font-size:13px}.sbhow ul{margin:6px 0 0 18px;font-size:13px;color:#d9e4f8;line-height:1.5}
+#tourOv{position:fixed;inset:0;z-index:9000;opacity:0;transition:opacity .3s}#tourOv.show{opacity:1}
+.tspot{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(5,7,10,.72),0 0 0 2px rgba(110,166,255,.85),0 0 24px rgba(110,166,255,.5);transition:all .42s cubic-bezier(.3,1.2,.5,1);pointer-events:auto}
+.tbub{position:fixed;left:16px;right:16px;padding:14px 16px;border-radius:18px;background:#171b22;border:1px solid rgba(255,255,255,.12);box-shadow:0 16px 50px rgba(0,0,0,.5);transition:top .42s cubic-bezier(.3,1.2,.5,1)}
+.tbub.pop{animation:sh-in .35s ease both}.ttop{display:flex;justify-content:space-between;align-items:center}.ttop b{color:#fff;font-size:15.5px}.ttop span{font-size:11.5px;color:var(--slate);font-weight:700}
+.tbub p{font-size:13.5px;color:#d9e4f8;line-height:1.45;margin:6px 0 10px}.tbtns{display:flex;justify-content:space-between;align-items:center}.tbtns .btn{width:auto;padding:8px 18px}
+@media (prefers-reduced-motion:reduce){.tspot,.tbub{transition:none}.sbicon{animation:none}}
 </style>
 </head>
 <body>
@@ -1403,6 +1420,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 
   <!-- LIFT -->
   <section class="view" id="view-workout">
+    <div class="card" id="splitIntro" hidden></div>
     <div class="card">
       <div class="grid2" style="margin-bottom:10px">
         <div><label class="f">Split</label><select id="splitSel"></select></div>
@@ -1556,6 +1574,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
         <div class="field"><label class="f">Height cm</label><input id="set-height" type="number" inputmode="numeric"></div>
         <div class="field"><label class="f">Birthday <span class="tiny" id="ageLbl"></span></label><input id="set-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="set-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
+        <div class="field" style="grid-column:1/-1"><label class="f">Other sports <span class="tiny">optional · the AI plans around them</span></label><input id="set-sport" maxlength="60" placeholder="e.g. skiing, football, climbing"></div>
       </div>
       <button class="btn btn-primary" id="setSaveBtn">Save profile</button>
     </div>
@@ -2050,7 +2069,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){setTimeout(whatsNewCheck,2600);setTimeout(appVerCheck,900);setTimeout(dobLoad,3000);migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';}setTimeout(whatsNewCheck,2600);setTimeout(appVerCheck,900);setTimeout(dobLoad,3000);migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -2070,9 +2089,9 @@ function finishWizard(){
   if(!weight||weight<30||weight>250){err.textContent='Enter your weight in kg.';return;}
   if(!height||height<120||height>230){err.textContent='Enter your height in cm.';return;}
   if(!age||age<10||age>90){err.textContent='Enter your birthday.';return;}
-  Object.assign(S.settings,{name,weight,height,age,sex:$('wz-sex').value,goal:wzGoal,aiAuto:$('wz-ai').checked,setupDone:true});
+  Object.assign(S.settings,{name,weight,height,age,sex:$('wz-sex').value,goal:wzGoal,aiAuto:$('wz-ai').checked,setupDone:true});if(!S.settings.tours&&!Object.values(S.workouts).some(w=>woHasData(w)))S.settings.tours={};
   const gym=$('wz-gym').value.trim();
-  migrate();if(gym)S.gyms[0].name=gym;
+  migrate();if(gym)S.gyms[0].name=gym;if(!Object.values(S.workouts).some(w=>woHasData(w))&&Object.keys(S.splits).length<=1)S.settings.needSplit=S.activeSplit||true;
   const m=suggestMacros(weight,wzGoal);Object.assign(S.targets,m);
   S.body[todayStr()]=weight;
   save();dobSet(dob);enterApp();toast('You\'re set, '+name+' — locked in.');
@@ -2095,7 +2114,7 @@ function prerenderOne(){
 }
 function renderView(v){
   if(v==='today')renderToday();
-  if(v==='workout'){renderWorkout();csLine();}
+  if(v==='workout'){renderWorkout();csLine();splitIntro();}
   if(v==='diet')renderDiet();
   if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
   if(v==='friends')renderFriends();
@@ -2191,7 +2210,9 @@ function renderToday(){
   const over=antiOver(t);
   $('todayAlert').innerHTML=(over.length?'<div class="alert">⚠ <b>Over your limits today:</b> '+over.map(o=>esc(NMAP[o.k].n)+' '+limTxt(o.k,o.v)).join(' · ')+'</div>':'');
   let main='';
-  if(active){
+  if(S.settings.needSplit){
+    main='<div class="card hero-card"><div class="kicker">Get started</div><h3>Build your split</h3><p class="muted">Pick how often you train and a style — the AI picks exercises for your body and explains how it works.</p><div style="margin-top:12px"><button class="btn btn-primary" onclick="show(\'workout\');setTimeout(openSplitBuilder,350)">Build my split</button></div></div>';
+  }else if(active){
     main='<div class="card hero-card"><svg class="deco" viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg><div class="kicker"><i class="dot"></i>Workout in progress</div><h3>'+esc(cur.dayName)+'</h3><p class="muted">'+countSets(cur)+' sets logged · '+esc(gym?gym.name:'')+'</p><div style="margin-top:12px"><button class="btn btn-primary" onclick="show(\'workout\')">Continue workout</button></div></div>';
   }else if(pd){
     const done=today.some(w=>w.day===pd.id);
@@ -2801,7 +2822,7 @@ async function aiSplit(){
   const q=$('aiSplitIn').value.trim();if(!q){toast('Describe what you want first');return;}
   const btn=$('aiSplitBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Thinking…';$('aiSplitOut').innerHTML='';
   const cur={name:draft.name,days:draft.days.map(d=>({id:d.id,name:d.name,ex:d.ex.map(e=>({k:e.k,sets:e.sets,lo:e.lo,hi:e.hi,rest:e.rest,ps:e.ps?1:0}))})),sched:draft.sched};
-  const p='You are an expert strength coach editing a gym split for a lifter ('+(S.settings.age||'')+' y/o, '+(S.settings.weight||'')+' kg, also an expert skier). Machines and supported exercises preferred, double progression, ~2 reps in reserve, no 1RM work.\n\n'+
+  const p='You are an expert strength coach editing a gym split for a '+whoLine()+'. Machines and supported exercises preferred, double progression, ~2 reps in reserve, no 1RM work.\n\n'+
     'CURRENT SPLIT (JSON):\n'+JSON.stringify(cur)+'\n\nREQUEST: '+q+'\n\n'+
     'Exercise keys MUST be "base.variant" using ONLY this catalogue (base: name [variants]):\n'+catalogueText()+'\n\n'+
     'Return ONLY JSON, no prose, in exactly this shape: {"name":"...","days":[{"id":"keep existing ids for days you keep, new short ids for new days","name":"Day name","ex":[{"k":"base.variant","sets":3,"lo":8,"hi":12,"rest":120,"ps":0}]}],"sched":["dayId or empty string for rest", x7 starting Sunday],"summary":"one or two sentences explaining the changes"}. '+
@@ -3000,7 +3021,7 @@ const FOOD_RULES='Nutrition principles of this app. State them as plain fact; ne
  '10. Magnesium is the usual gap: magnesium-rich mineral water fixes it. Vitamin D comes from sun, fatty fish and egg yolks.\n'+
  '11. Caffeine: a little and early — wait 1–2 hours after waking, nothing after 1 pm (half of it is still in you 5–6 hours later and it cuts deep sleep), one coffee rather than three.\n'+
  '12. Reward the compounds a body thrives on: glycine and collagen (bone broth, gelatin, slow-cooked connective tissue), creatine and taurine (red meat, seafood), CoQ10 (heart), vitamin K2 (egg yolks, aged cheese, butter), carotenoids (carrots, egg yolks, wild salmon) and fruit polyphenols (berries, dates).';
-function whoLine(){const s=S.settings;return (s.age?s.age+'-year-old ':'')+(s.sex==='f'?'female':'male')+' lifter'+(s.height?', '+s.height+' cm':'')+(s.weight?', '+s.weight+' kg':'')+', training for body recomposition and expert-level skiing'+((s.age||25)<19?', still growing':'');}
+function whoLine(){const s=S.settings;return (s.age?s.age+'-year-old ':'')+(s.sex==='f'?'female':'male')+' lifter'+(s.height?', '+s.height+' cm':'')+(s.weight?', '+s.weight+' kg':'')+', training for '+({cut:'fat loss',bulk:'muscle gain',maintain:'staying in shape'}[s.goal]||'body recomposition')+(s.sport?' and '+s.sport:'')+((s.age||25)<19?', still growing':'');}
 function mealFlags(e){
   const out=new Set();(e.parts||[]).forEach(p=>(p.flags||[]).forEach(f=>out.add(f)));
   const m=e.mult||1,n=e.n||{};if((+n.seedoil||0)*m>0.4)out.add('seed_oil');if((+n.addsugar||0)*m>8)out.add('refined_sugar');
@@ -3305,7 +3326,7 @@ function cleanN(n){const o={};NK.forEach(k=>{const v=+((n||{})[k]);if(v>0)o[k]=M
 function saveMeal(md,date){
   const d=date||dDate;
   const parts=(md.parts||[]).map(p=>{const ing=p.ing?String(p.ing).slice(0,1500):undefined,fl=[...new Set([...(p.flags||[]),...ingFlags(ing)])];
-    return {name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined,ing,flags:fl.length?fl:undefined,cooked:p.cooked?1:undefined,wh:p.wh?1:undefined};});
+    return {name:String(p.name||'Food'),g:p.g>0?Math.round(p.g*10)/10:null,n:cleanN(p.n),per100:p.per100?cleanN(p.per100):undefined,fat:p.fat?1:undefined,ing,flags:fl.length?fl:undefined,cooked:p.cooked?1:undefined,wh:p.wh?1:undefined,sure:p.sure?1:undefined};});
   let e=md.id?findMeal(md.id):null,mid;
   if(e){Object.assign(e.e,{name:md.name||'Meal',parts,n:partsTotal(parts),mult:md.mult||1,ts:e.e.ts,q:1});if(md.where)e.e.where=md.where;delete e.e.items;delete e.e.an;mid=e.e.id;}
   else{
@@ -3360,12 +3381,14 @@ const COOK={
 /* ---------- where was it made? The camera can't see the pan, so ask — and count seed oils from the answer ---------- */
 const WHERE_FATS=[['butter','Butter'],['ghee','Ghee'],['tallow','Beef tallow'],['olive','Olive oil'],['coconut','Coconut oil'],['lard','Lard'],['duck','Duck fat'],['avocado','Avocado oil'],['none','No added fat']];
 const COOKRX=/steak|potato|fries|chips|chicken|egg|fried|roast|grill|schnitzel|burger|bacon|sausage|pancake|omelet|stir|saut|pork|beef|lamb|fish|salmon|cutlet|wings|nugget|veg|mushroom|rice|noodle|toast/i;
-const isCookedPart=p=>!p.fat&&(p.cooked||COOKRX.test(p.name||''));
+const SURERX=/doughnut|donut|crisps|pringles|dorito|cheeto|nugget|mcdonald|kfc|burger king|fast.?food|mayonnaise|\bmayo\b|margarine|instant noodle|potato chips|onion rings|corn dog|churro/i;
+const isSure=p=>!!p.sure||SURERX.test(p.name||'');
+const isCookedPart=p=>!p.fat&&!isSure(p)&&(p.cooked||COOKRX.test(p.name||''));
 const isOilPart=p=>!!p.fat||(/\b(oil|margarine|shortening|frying fat)\b/i.test(p.name||'')&&(+((p.n||{}).seedoil)||0)>=0.6*Math.max(1,+((p.n||{}).fat)||0));
 function whereTxt(w){if(w==='rest')return 'restaurant / takeaway — seed oils likely';const f=WHERE_FATS.find(x=>x[0]===w);return w==='none'?'at home with no added fat — no seed oils':'at home with '+(f?f[1].toLowerCase():w)+' — no seed oils';}
 function needsWhere(){
   if(!MD||['barcode','quick','again'].includes(MD.src))return false;
-  const ps=MD.orig||MD.parts||[];return ps.some(p=>isCookedPart(p)||(+((p.n||{}).seedoil)||0)>0||(p.flags||[]).includes('seed_oil'));
+  const ps=(MD.orig||MD.parts||[]).filter(p=>!isSure(p));return ps.some(p=>isCookedPart(p)||(+((p.n||{}).seedoil)||0)>0||(p.flags||[]).includes('seed_oil'));
 }
 function fatPart(k,g,name){const f=FATS[k],per100={},n={};for(const x in f[2])per100[x]=f[2][x]/f[1]*100;for(const x in per100)n[x]=per100[x]*g/100;
   return {name,g:Math.round(g*10)/10,n,per100,fat:1,flags:f[3]?['seed_oil']:undefined,wh:1};}
@@ -3380,6 +3403,7 @@ function whereApply(w){
     // home: the seed oil the AI assumed becomes the fat you used (or nothing)
     let moved=0;const out=[];
     for(const p of parts){
+      if(isSure(p)){out.push(p);continue;}   // doughnuts stay doughnuts
       if(isOilPart(p)){moved+=(+p.g||+((p.n||{}).fat)||0);continue;}
       const so=+((p.n||{}).seedoil)||0;
       if(so>0){p.n=Object.assign({},p.n);p.n.fat=Math.max(0,(+p.n.fat||0)-so);p.n.la=Math.max(0,(+p.n.la||0)-so*0.5);delete p.n.seedoil;moved+=so;}
@@ -3448,7 +3472,7 @@ async function addPart(){
 function toParts(r){
   if(!r)return [];
   if(Array.isArray(r.items)&&r.items.length&&typeof r.items[0]==='object')return r.items.map(it=>{const ing=typeof it.ing==='string'&&it.ing.trim().length>3?it.ing.trim().slice(0,1500):undefined;
-    const fl=[...new Set([...(cleanFlags(it.flags,it.n)||[]),...ingFlags(ing)])];return {name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),ing,flags:fl.length?fl:undefined,cooked:it.cooked?1:undefined};});
+    const fl=[...new Set([...(cleanFlags(it.flags,it.n)||[]),...ingFlags(ing)])];return {name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),ing,flags:fl.length?fl:undefined,cooked:it.cooked?1:undefined,sure:it.sure_seed_oil?1:undefined};});
   if(r.n)return [{name:r.name||'Meal',g:null,n:cleanN(r.n)}];
   return [];
 }
@@ -3494,7 +3518,7 @@ function nutrientPrompt(hint,photo){
     'taurine=mg (red meat and fish 40–80 per 100 g, dark poultry meat ~170, clams, scallops and octopus 500–800), coq10=mg (beef heart ~11 per 100 g, liver ~4, beef ~3, sardines ~6), '+
     'k2=µg vitamin K2/menaquinones (egg yolk ~15 each, gouda ~75 per 100 g, butter ~15, goose liver ~370, chicken thigh ~10), carotenoids=mg total of beta-carotene, lutein, zeaxanthin, lycopene and astaxanthin (raw carrot ~8 per 100 g, sweet potato ~9, egg yolk ~0.4), '+
     'polyphenols=mg total (Phenol-Explorer: berries 200–600 per 100 g, dates ~250, apples ~200, coffee ~200 a mug). '+SEEDRULES+
-    ' Add "cooked":true to any item that was cooked in a pan, fryer, oven or on a grill (so cooking fat may be in it). Add a top-level "place": "restaurant" for restaurant, takeaway or fast food, "home" when it is clearly home-cooked, otherwise "unknown".';
+    ' Add "cooked":true to any item that was cooked in a pan, fryer, oven or on a grill (so cooking fat may be in it). Add "sure_seed_oil":true when the item is made with seed oils whoever makes it — doughnuts, bagged crisps, fast-food fries and nuggets, packaged snacks, biscuits and pastries from a shop, mayonnaise, margarine, store-bought dressings. Add a top-level "place": "restaurant" for restaurant, takeaway or fast food, "home" when it is clearly home-cooked, otherwise "unknown".';
 }
 async function analyze(photo){
   const hint=($('mealHint')&&$('mealHint').value.trim())||'';
@@ -3791,7 +3815,7 @@ let setGoal='recomp';
 function renderSettings(){
   $('acctLine').textContent=user?'Signed in as @'+user.username:'—';renderSync();
   const s=S.settings;
-  $('set-name').value=s.name;$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-dob').value=DOB||'';$('set-dob').max=addDays(todayStr(),-3650);$('ageLbl').textContent=s.age?'· age '+s.age:'';$('set-sex').value=s.sex||'m';
+  $('set-name').value=s.name;if($('set-sport'))$('set-sport').value=s.sport||'';$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-dob').value=DOB||'';$('set-dob').max=addDays(todayStr(),-3650);$('ageLbl').textContent=s.age?'· age '+s.age:'';$('set-sex').value=s.sex||'m';
   setGoal='recomp';
   $('set-ai').checked=s.aiAuto!==false;$('set-autorest').checked=s.autoRest!==false;$('set-wake').checked=!!s.wake;
   $('set-notify').checked=s.restNotify!==false;$('notifyLine').style.display=hasNative()?'':'none';
@@ -3842,7 +3866,7 @@ function kcalHero(tot,label,compact){
 function saveSettings(){
   const s=S.settings;const name=$('set-name').value.trim();if(name)s.name=name;
   const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),dob=$('set-dob').value,a=ageFrom(dob);
-  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;s.goal=setGoal;
+  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;{const sp=$('set-sport');if(sp){const v=sp.value.trim().slice(0,60);if(v)s.sport=v;else delete s.sport;}}s.goal=setGoal;
   save();renderHeader();renderSettings();socNameSync();
 }
 function saveTargets(){
@@ -5947,8 +5971,13 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.19.4';
+const WEB_VER='2026.10.19.5';
 const WHATSNEW=[
+ {v:'2026.10.19.5',d:'19 Oct',items:[
+  ['🏗️','Split builder','New here? Pick your days, experience and a style — Full Body, Upper / Lower, PPL, Bro split, Arnold — and the AI picks exercises for your body.'],
+  ['🧭','Quick tours','The first time you open Lift, Diet, Friends or the split editor, a few spotlights show what everything does.'],
+  ['🍩','Fewer questions','Doughnuts, crisps and fast food are counted as seed oils without asking.'],
+  ['⛷️','Your sports','Add other sports in Setup → Profile and the AI plans around them.']]},
  {v:'2026.10.19.4',d:'19 Oct',items:[
   ['🍳','Where was it made?','Scanned a steak and potatoes? Tell it: restaurant (seed oils) or home-made with butter, ghee, tallow, olive oil… and seed oils are counted right.']]},
  {v:'2026.10.19.3',d:'19 Oct',items:[
@@ -6011,6 +6040,223 @@ function updGate(have,latest){
     '<p class="tiny" style="margin-top:12px">Not in SideStore yet? Add the source <b>ipa.lockin-app.online</b> under Sources.</p></div>';
   document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));haptic('heavy');
 }
+/* ================= SPLIT BUILDER: new lifters pick a style, the AI fills it in for their body ================= */
+const ARCH=[
+ {k:'fb',name:'Full Body',icon:'🧍',days:[2,3],freq:'every muscle 2–3× a week',best:'beg',
+  for:'Beginners and busy weeks.',
+  how:'Every workout trains your whole body with 5–7 exercises — legs, a push, a pull, plus a little extra. Each muscle gets worked 2–3 times a week, so you practise the lifts a lot and get stronger fast.',
+  pros:'Most practice per lift · miss a day and nothing gets skipped',cons:'Longer workouts, less room for extra arm and shoulder work'},
+ {k:'ul',name:'Upper / Lower',icon:'↕️',days:[4],freq:'every muscle 2× a week',best:'beg int adv',
+  for:'The classic 4-day split — good at every level.',
+  how:'Two upper-body days (chest, back, shoulders, arms) and two lower-body days (quads, hamstrings, glutes, calves). Every muscle twice a week with a good amount of rest in between.',
+  pros:'Balanced, easy to recover from, flexible',cons:'Upper days can get long'},
+ {k:'ppl',name:'Push / Pull / Legs',icon:'🔁',days:[3,6],freq:'1× a week (3 days) or 2× a week (6 days)',best:'int adv',
+  for:'Intermediate lifters — 6 days is a lot of gym time.',
+  how:'Push = chest, shoulders, triceps. Pull = back, rear delts, biceps. Legs = everything below the waist. Run it once a week on 3 days, or twice on 6 days.',
+  pros:'Simple to follow, lots of volume per muscle',cons:'3-day version hits each muscle only once; 6 days needs good recovery'},
+ {k:'ulppl',name:'UL / PPL hybrid',icon:'⚡',days:[5],freq:'every muscle about 2× a week',best:'int adv',
+  for:'5 days a week, the best of both.',
+  how:'Upper, Lower, rest, then Push, Pull, Legs. You hit everything about twice a week with variety between the two halves.',
+  pros:'High frequency and variety in 5 days',cons:'Needs a fixed weekly rhythm'},
+ {k:'bro',name:'Bro split',icon:'💪',days:[5],freq:'each muscle 1× a week',best:'adv',
+  for:'Experienced lifters who like one big muscle a day.',
+  how:'Chest day, back day, shoulders, arms, legs. Each muscle gets one hard session and a full week to recover.',
+  pros:'Big pump, short focused sessions',cons:'Once a week per muscle is slower for beginners'},
+ {k:'arnold',name:'Arnold split',icon:'🏆',days:[6],freq:'every muscle 2× a week',best:'adv',
+  for:'Advanced, 6 days a week.',
+  how:'Chest & back, shoulders & arms, legs — twice through the week. Lots of volume, made famous by Arnold.',
+  pros:'Very high volume, antagonist pairing saves time',cons:'Demanding — needs sleep and food on point'}
+];
+// day layouts: names + which weekday (0 = Sunday) each day lands on
+function archDays(k,n){
+  const L={fb2:[['Full Body A',1],['Full Body B',4]],fb3:[['Full Body A',1],['Full Body B',3],['Full Body C',5]],
+    ul4:[['Upper A',1],['Lower A',2],['Upper B',4],['Lower B',5]],ppl3:[['Push',1],['Pull',3],['Legs',5]],
+    ppl6:[['Push A',1],['Pull A',2],['Legs A',3],['Push B',4],['Pull B',5],['Legs B',6]],ulppl5:[['Upper',1],['Lower',2],['Push',4],['Pull',5],['Legs',6]],
+    bro5:[['Chest',1],['Back',2],['Shoulders',3],['Arms',4],['Legs',5]],arnold6:[['Chest & Back',1],['Shoulders & Arms',2],['Legs',3],['Chest & Back',4],['Shoulders & Arms',5],['Legs',6]]};
+  const key=k==='fb'?(n<=2?'fb2':'fb3'):k==='ul'?'ul4':k==='ppl'?(n>=6?'ppl6':'ppl3'):k==='ulppl'?'ulppl5':k==='bro'?'bro5':'arnold6';
+  return L[key].map(([name,wd],i)=>({id:'d'+(i+1),name,wd}));
+}
+// a sensible plan without the AI (offline / no credit): machines first, compounds first
+const POOL={
+ legs:['leg_press.sled45','leg_curl.seated','split_squat.bulgarian_db','leg_extension.machine','hip_thrust.machine','calf_raise.standing_machine'],
+ legsB:['hack_squat.machine','rdl.dumbbell','lunge.reverse_db','leg_curl.lying','hip_adduction.machine','calf_raise.seated_machine'],
+ push:['chest_press.seated','incline_press.machine','shoulder_press.machine','chest_fly.pec_deck','lateral_raise.cable','triceps_pushdown.rope','overhead_triceps.cable_rope'],
+ pull:['lat_pulldown.neutral','machine_row.chest_supported','cable_row.v_bar','rear_delt_fly.reverse_pec_deck','biceps_curl.cable','hammer_curl.dumbbell'],
+ chest:['chest_press.seated','incline_press.machine','chest_fly.pec_deck','dip.assisted_machine','chest_fly.cable_mid'],
+ back:['lat_pulldown.neutral','machine_row.chest_supported','cable_row.v_bar','pull_up.assisted_machine','straight_arm_pulldown.rope','shrug.dumbbell'],
+ shoulders:['shoulder_press.machine','lateral_raise.cable','rear_delt_fly.reverse_pec_deck','lateral_raise.dumbbell','face_pull.cable_rope'],
+ arms:['biceps_curl.cable','triceps_pushdown.rope','preacher_curl.machine','overhead_triceps.cable_rope','hammer_curl.dumbbell','triceps_machine.extension'],
+ core:['crunch.cable_kneeling','leg_raise.hanging_knee']};
+function poolFor(name){
+  const n=name.toLowerCase(),pick=(a,c)=>a.filter(okEx).slice(0,c);
+  if(/full body/.test(n)){const b=/b$/.test(n);return [...pick(b?POOL.legsB:POOL.legs,2),...pick(POOL.push,2),...pick(POOL.pull,2),...pick(POOL.core,1)];}
+  if(/chest & back/.test(n))return [...pick(POOL.chest,3),...pick(POOL.back,3)];
+  if(/shoulders & arms/.test(n))return [...pick(POOL.shoulders,3),...pick(POOL.arms,4)];
+  if(/upper/.test(n))return [...pick(POOL.push,1),...pick(POOL.pull,2),...pick(POOL.push.slice(1),2),...pick(POOL.arms,2)];
+  if(/lower|legs/.test(n))return [...pick(/b$/.test(n)?POOL.legsB:POOL.legs,5),...pick(POOL.core,1)];
+  if(/push/.test(n))return pick(POOL.push,7);if(/pull/.test(n))return pick(POOL.pull,6);
+  if(/chest/.test(n))return pick(POOL.chest,5);if(/back/.test(n))return pick(POOL.back,6);
+  if(/shoulder/.test(n))return pick(POOL.shoulders,5);if(/arms/.test(n))return pick(POOL.arms,6);
+  return pick(POOL.push,3);
+}
+function okEx(k){const [b,v]=splitKey(String(k||''));return !!(EX[b]&&EX[b].v.some(x=>x[0]===v));}
+function exDefaults(k,lvl){const x=exInfo(k),c=x.t==='c';return I(k,c?3:(lvl==='beg'?2:3),c?6:10,c?10:15,c?150:75);}
+function archPlan(a,n,lvl){
+  const days=archDays(a.k,n),sched=['','','','','','',''];
+  days.forEach(d=>{sched[d.wd]=d.id;});
+  return {name:a.name+' ('+days.length+' days)',days:days.map(d=>({id:d.id,name:d.name,ex:poolFor(d.name).map(k=>exDefaults(k,lvl))})),sched};
+}
+const SB={step:1,days:0,lvl:'',eq:'machines',arch:null,plan:null,why:'',tips:[],busy:false};
+function openSplitBuilder(){SB.step=1;SB.plan=null;openSheet('Build your split','<div id="sbBox"></div>',{tall:true});drawSB();}
+function sbSet(k,v){SB[k]=v;haptic('selection');drawSB();}
+function sbRec(){
+  // recommended styles for the days and experience picked
+  const n=SB.days,l=SB.lvl||'beg';
+  return ARCH.filter(a=>a.days.includes(n)||(a.k==='fb'&&n<=3)).sort((x,y)=>(y.best.includes(l)?1:0)-(x.best.includes(l)?1:0));
+}
+function drawSB(){
+  const box=$('sbBox');if(!box)return;
+  const chip=(k,v,l)=>'<button class="chip'+(SB[k]===v?' on':'')+'" onclick="sbSet(\''+k+'\','+(typeof v==='number'?v:'\''+v+'\'')+')">'+l+'</button>';
+  let h='<div class="sbsteps">'+[1,2,3].map(i=>'<i class="'+(SB.step>=i?'on':'')+'"></i>').join('')+'</div>';
+  if(SB.step===1){
+    h+='<p class="muted" style="margin-bottom:14px">A <b>split</b> is your weekly plan: which days you train and what you do on each. Three quick questions and the AI builds one for your body.</p>'+
+      '<label class="f">How many days a week can you train?</label><div class="wchips">'+[2,3,4,5,6].map(n=>chip('days',n,n+' days')).join('')+'</div>'+
+      '<label class="f" style="margin-top:14px">How long have you been lifting?</label><div class="wchips">'+chip('lvl','beg','New to it')+chip('lvl','int','6 months – 2 years')+chip('lvl','adv','2+ years')+'</div>'+
+      '<label class="f" style="margin-top:14px">What do you like to train with?</label><div class="wchips">'+chip('eq','machines','Mostly machines')+chip('eq','mix','Machines + free weights')+chip('eq','free','Free weights')+'</div>'+
+      '<p class="tiny" style="margin-top:12px">New to lifting? Machines are easiest to learn and safest to push hard on.</p>'+
+      '<button class="btn btn-primary" style="width:100%;margin-top:16px"'+(SB.days&&SB.lvl?'':' disabled')+' onclick="SB.step=2;drawSB()">Next</button>';
+  }else if(SB.step===2){
+    const recs=sbRec();
+    h+='<p class="muted" style="margin-bottom:12px">Pick a style for <b>'+SB.days+' days</b> a week. Tap one to see how it works.</p>'+
+      recs.map((a,i)=>'<div class="arch'+(SB.arch===a.k?' open':'')+'" onclick="SB.arch=\''+a.k+'\';drawSB()"><div class="archtop"><span class="archi">'+a.icon+'</span><div class="grow"><b>'+a.name+'</b>'+(i===0?'<span class="archbest">Best for you</span>':'')+'<div class="tiny">'+esc(a.freq)+' · '+esc(a.for)+'</div></div></div>'+
+        (SB.arch===a.k?'<div class="archmore"><p>'+esc(a.how)+'</p><p class="tiny"><b style="color:#7ee2b1">+</b> '+esc(a.pros)+'<br><b style="color:#ff9d8c">−</b> '+esc(a.cons)+'</p>'+
+          '<div class="archdays">'+archDays(a.k,SB.days).map(d=>'<span>'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.wd]+' · '+esc(d.name)+'</span>').join('')+'</div>'+
+          '<button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="event.stopPropagation();sbBuild()">✨ Build it for me</button></div>':'')+'</div>').join('')+
+      '<button class="linkbtn" style="margin-top:10px" onclick="SB.step=1;drawSB()">‹ Back</button>';
+  }else{
+    if(SB.busy){h+='<div class="sbload"><div class="spin big"></div><b>Building your split…</b><p class="tiny">Picking exercises for '+esc(whoLine())+'.</p></div>';}
+    else if(SB.plan){
+      h+='<div class="shsum"><b>'+esc(SB.plan.name)+'</b><span class="tiny">'+SB.plan.days.length+' days · '+SB.plan.days.reduce((a,d)=>a+d.ex.length,0)+' exercises'+(SB.ai?' · picked by AI for you':'')+'</span></div>'+
+        (SB.why?'<p class="muted" style="margin:10px 0">'+esc(SB.why)+'</p>':'')+
+        '<div class="sbhow"><b>How to use it</b><ul>'+(SB.tips.length?SB.tips:['Each exercise shows sets × a rep range (e.g. 3 × 8–12). Pick a weight you can do for the low end with about 2 reps left in the tank.',
+          'Every time you hit the top of the range on all sets, add a little weight next time. That’s progressive overload — how muscles grow.',
+          'Rest 2–3 minutes on big lifts, 1–1.5 on small ones. The app starts the rest timer for you.',
+          'Form first. Stop a set if anything hurts sharply.']).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>'+
+        '<div style="margin-top:12px">'+splitDaysHTML(SB.plan,{})+'</div>'+
+        '<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="sbUse()">Use this split</button>'+
+        '<div class="row" style="margin-top:8px"><button class="btn btn-ghost grow" onclick="sbBuild()">Try again</button><button class="btn btn-ghost grow" onclick="SB.step=2;drawSB()">Other style</button></div>';
+    }
+  }
+  box.innerHTML=h;
+}
+async function sbBuild(){
+  const a=ARCH.find(x=>x.k===SB.arch);if(!a)return;SB.step=3;SB.busy=true;SB.ai=false;SB.why='';SB.tips=[];drawSB();
+  const base=archPlan(a,SB.days,SB.lvl);let plan=base;
+  if(online()){
+    const st=S.settings,eq={machines:'mostly machines and cables (easy to learn, safe)',mix:'machines, cables and some free weights',free:'mainly free weights (dumbbells, barbells) with some machines'}[SB.eq];
+    const p='You are an expert strength coach building a first gym split for a '+whoLine()+'. Experience: '+({beg:'beginner (new to lifting)',int:'intermediate (6 months to 2 years)',adv:'advanced (2+ years)'}[SB.lvl])+'. Equipment preference: '+eq+'.\n'+
+      'Style: '+a.name+', '+SB.days+' days a week. Use EXACTLY these days (keep the ids): '+JSON.stringify(base.days.map(d=>({id:d.id,name:d.name})))+'.\n'+
+      'Choose 5–8 exercises per day, big compound movements first, isolation after. Fit the choices to the body: e.g. tall lifters or long legs often do better with leg press / hack squat than barbell squats; beginners get stable machines; '+((st.age||25)<19?'still growing: controlled machine work, no maximal lifts, ':'')+'cover every muscle over the week. Sets 2–4, rep ranges like 6–10 for compounds and 10–15 / 12–20 for isolation, rest in seconds (compound 120–180, isolation 60–90). ps=1 for exercises done one side at a time.\n'+
+      'Exercise keys MUST be "base.variant" from ONLY this catalogue (base: name [variants]):\n'+catalogueText()+'\n\n'+
+      'Return ONLY JSON: {"name":"short split name","days":[{"id":"d1","name":"...","ex":[{"k":"base.variant","sets":3,"lo":8,"hi":12,"rest":120,"ps":0}]}],"why":"2 sentences on why this split and these exercises suit this person","tips":["3–4 short beginner-friendly tips on how to run it"]}';
+    try{const r=parseJSON(await ai(p));
+      if(r&&Array.isArray(r.days)){
+        const days=base.days.map(d=>{const g=r.days.find(x=>String(x.id)===d.id)||r.days[base.days.indexOf(d)];const ex=((g&&g.ex)||[]).filter(e=>okEx(e.k)).slice(0,9)
+          .map(e=>I(String(e.k),Math.max(1,Math.min(6,+e.sets||3)),Math.max(1,+e.lo||8),Math.max(1,+e.hi||12),Math.max(0,Math.min(600,+e.rest||90)),e.ps?{ps:1}:null));
+          return {id:d.id,name:String((g&&g.name)||d.name).slice(0,40),ex:ex.length>=3?ex:d.ex};});
+        plan={name:String(r.name||base.name).slice(0,40),days,sched:base.sched};SB.ai=true;SB.why=String(r.why||'').slice(0,400);
+        SB.tips=(Array.isArray(r.tips)?r.tips:[]).map(t=>String(t).slice(0,220)).filter(Boolean).slice(0,4);
+      }
+    }catch(e){}
+  }
+  SB.plan=plan;SB.busy=false;drawSB();
+}
+function sbUse(){
+  const p=SB.plan;if(!p)return;const id=uid('s');
+  S.splits[id]={id,name:p.name,days:clone(p.days),sched:p.sched.slice()};
+  // the placeholder split new accounts got is removed if it was never used
+  const ph=S.settings.needSplit;if(typeof ph==='string'&&S.splits[ph]&&!Object.values(S.workouts).some(w=>w.split===ph&&woHasData(w)))delete S.splits[ph];
+  delete S.settings.needSplit;S.activeSplit=id;
+  const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
+  save();closeSheet();celebrate();haptic('success');document.body.classList.remove('needsplit');
+  show('workout');renderWorkout();renderHeader();toast('Your split is ready — '+p.name,'ok');
+  setTimeout(()=>tourStart('lift'),900);
+}
+function splitIntro(){
+  const on=!!(S&&S.settings.needSplit);document.body.classList.toggle('needsplit',on);
+  const el=$('splitIntro');if(!el)return;el.hidden=!on;if(!on)return;
+  el.innerHTML='<div class="sbhero"><div class="sbicon">🏋️</div><h3>Let’s build your split</h3><p class="muted">Tell us how often you can train and your experience — pick a style (Full Body, Upper / Lower, PPL, Bro split…) and the AI picks exercises for your body. Everything is explained as you go.</p>'+
+    '<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="openSplitBuilder()">Build my split</button>'+
+    '<button class="linkbtn" style="margin-top:10px" onclick="sbSkip()">Skip — start with a ready-made UL / PPL</button></div>';
+}
+function sbSkip(){delete S.settings.needSplit;save();splitIntro();renderWorkout();toast('Using UL / PPL — change it any time with New split');}
+
+/* ================= TOURS: first time somewhere, a few spotlights explain what does what ================= */
+const TOURS={
+ lift:[['#splitSel','Your split & gym','Switch splits here. Weights are remembered per gym, so pick the gym you’re in.'],
+  ['#dayChips','Today’s day','Pick which day of your split you’re doing. Today’s planned day is chosen for you.'],
+  ['#view-workout .setrow:not(:first-of-type)','Log a set','Type the kg and reps. The set ticks itself and the rest timer starts. Tap the box to repeat last time’s numbers.'],
+  ['#view-workout .lastline','What to do next','Last session’s numbers and a hint: add a rep, or add weight once you hit the top of the range on every set.'],
+  ['#saveWoBtn','Save it','End workout saves it to your history. Close opens a fresh page; the bin deletes a workout you haven’t saved.']],
+ editor:[['#edName','Name','Call your split anything you like.'],
+  ['#edDays .edday','Days','Tap a day to open it — swap exercises, change sets, reps and rest, or pick a variant. ✕ removes the day.'],
+  ['#edAddDayBtn','Add a day','Add as many days as you like — then put them on your week below.'],
+  ['#edSortBtn','Rearrange','Drag days and exercises into the order you want.'],
+  ['#edSched','Your week','Choose which day you train on each weekday. Empty means rest.'],
+  ['#edMus','Sets per muscle','How many sets each muscle gets per week. Aim for the green 10–20 zone for muscles you want to grow.'],
+  ['#aiSplitIn','AI helper','Describe a change — “swap the pec deck for cable flyes”, “add a second arm day” — and confirm what it proposes.'],
+  ['#view-editor .btn-primary[onclick="saveEditor()"]','Save','Nothing changes until you save.']],
+ diet:[['up:#view-diet .addbtn','Log a meal','Scan a barcode or snap your plate, Describe it in words, or log something Again in one tap. The AI estimates everything.'],
+  ['#kcalCard','Calories','What you’ve eaten against your goal, and where it came from. Turn calories off in Setup if you don’t want them.'],
+  ['#badBox','Keep these out','Seed oils, omega-6 and refined sugar are limits — the app warns you when a day goes over.'],
+  ['#cafCard','Caffeine','A little and early: quick-add your coffee, with a 1 pm cutoff for good sleep.'],
+  ['#microBox','Micronutrients','Vitamins and minerals for the day. Red ones are falling behind for the time of day — tap any name to see the best sources.'],
+  ['#mealList','Your meals','Every meal gets a grade. Tap one to change grams, see the foods, or delete it.']],
+ friends:[['#view-friends .frme','Your player card','Your level, XP and badges. Tap View my profile to see what friends see.'],
+  ['#view-friends .frme .socbtn','Add friends','Show your QR code, send a link or find someone by username.'],
+  ['card:Leaderboard','Leaderboard','Compete on sessions, volume and streaks this week.'],
+  ['card:Activity','Activity','Friends’ workouts, PRs and meals. React with 💪 🔥 👏.'],
+  ['#view-friends .e2epill','Private by design','Everything friends see is end-to-end encrypted. Choose what each friend can see in Setup → Friends & privacy.']]
+};
+const TOUR={k:null,i:0,steps:[]};
+function tourSeen(k){return !!(S&&S.settings.tours&&S.settings.tours[k]);}
+function tourFind(sel){
+  if(sel.startsWith('up:')){const e=tourFind(sel.slice(3));return e?e.parentElement:null;}
+  if(sel.startsWith('card:')){const t=sel.slice(5).toLowerCase();return [...document.querySelectorAll('.view.active .card')].find(c=>{const h=c.querySelector('h2');return h&&h.textContent.toLowerCase().includes(t);})||null;}
+  const el=[...document.querySelectorAll(sel)].find(e=>e.offsetParent!==null||e.getClientRects().length);return el||null;
+}
+function tourStart(k,force){
+  if(!S||!TOURS[k]||(!force&&tourSeen(k))||TOUR.k||$('updGate'))return;
+  if($('sheet').classList.contains('show')||$('fxDone')||document.querySelector('.fxlevel')){setTimeout(()=>tourStart(k,force),2500);return;}
+  const steps=TOURS[k].map(s=>({sel:s[0],t:s[1],d:s[2]})).filter(s=>tourFind(s.sel));if(!steps.length)return;
+  (S.settings.tours=S.settings.tours||{})[k]=1;save();
+  TOUR.k=k;TOUR.i=0;TOUR.steps=steps;
+  const o=document.createElement('div');o.id='tourOv';o.innerHTML='<div class="tspot"></div><div class="tbub"><div class="ttop"><b></b><span></span></div><p></p><div class="tbtns"><button class="linkbtn" onclick="tourEnd()">Skip</button><button class="btn btn-primary btn-sm" onclick="tourNext()">Next</button></div></div>';
+  o.addEventListener('click',e=>{if(e.target===o||e.target.classList.contains('tspot'))tourNext();});
+  document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('show'));tourShow();
+}
+function tourShow(){
+  const s=TOUR.steps[TOUR.i],o=$('tourOv');if(!s||!o){tourEnd();return;}
+  const el=tourFind(s.sel);if(!el){TOUR.i++;tourShow();return;}
+  el.scrollIntoView({block:'center',behavior:RM?'auto':'smooth'});
+  setTimeout(()=>{if(!$('tourOv'))return;const r=el.getBoundingClientRect(),pad=8,sp=o.querySelector('.tspot'),bub=o.querySelector('.tbub');
+    Object.assign(sp.style,{left:(r.left-pad)+'px',top:(r.top-pad)+'px',width:(r.width+pad*2)+'px',height:Math.min(r.height+pad*2,innerHeight*.55)+'px'});
+    bub.querySelector('b').textContent=s.t;bub.querySelector('span').textContent=(TOUR.i+1)+' / '+TOUR.steps.length;bub.querySelector('p').textContent=s.d;
+    bub.querySelector('.btn').textContent=TOUR.i===TOUR.steps.length-1?'Got it':'Next';
+    const below=r.top+Math.min(r.height,innerHeight*.55)+pad+14,bh=bub.offsetHeight||150;
+    bub.style.top=(below+bh<innerHeight-90?below:Math.max(70,r.top-pad-14-bh))+'px';
+    bub.classList.remove('pop');void bub.offsetWidth;bub.classList.add('pop');haptic('selection');},RM?60:380);
+}
+function tourNext(){TOUR.i++;if(TOUR.i>=TOUR.steps.length)tourEnd();else tourShow();}
+function tourEnd(){const o=$('tourOv');TOUR.k=null;if(o){o.classList.remove('show');setTimeout(()=>o.remove(),300);}}
+function tourAuto(v){
+  if(!S||!S.settings.setupDone)return;
+  if(v==='workout'&&!S.settings.needSplit)setTimeout(()=>{if(curView==='workout')tourStart('lift');},800);
+  if(v==='diet')setTimeout(()=>{if(curView==='diet')tourStart('diet');},800);
+  if(v==='friends')setTimeout(()=>{if(curView==='friends'&&document.querySelector('#view-friends .frme'))tourStart('friends');},1400);
+  if(v==='editor')setTimeout(()=>{if(document.querySelector('#view-editor.active'))tourStart('editor');},700);
+}
+
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','friends','settings'];
@@ -6219,6 +6465,7 @@ function init(){
   document.addEventListener('input',e=>{const t=e.target;if(!t||t.tagName!=='INPUT'||t.inputMode!=='decimal')return;
     const v=t.value,n=v.replace(/,/g,'.').replace(/[^0-9.]/g,'').replace(/^(\d*\.\d*)\./,'$1').replace(/(\..*)\./g,'$1');
     if(n!==v){const p=Math.max(0,(t.selectionStart||n.length)-(v.length-n.length));t.value=n;try{t.setSelectionRange(p,p);}catch(_){}}},true);
+  {const _show=show;show=function(v){const r=_show.apply(this,arguments);try{tourAuto(v);}catch(e){}return r;};}
   initUI();initGlass();initFx();csPoll();setTimeout(()=>{if(aiOutGet()){const el=$('aiOutNote');if(el)el.hidden=false;aiOutReport();}},1500);setTimeout(aiAdminCheck,4500);
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
   $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);

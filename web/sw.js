@@ -1,6 +1,6 @@
 /* Lock In — offline shell. App shell + puter.js cached; exercise demos (ExerciseDB / free-exercise-db)
    cached as you view them in a separate long-lived cache. Puter API calls always hit the network. */
-const CACHE = 'lockin-v32';
+const CACHE = 'lockin-v33';
 const MEDIA_CACHE = 'lockin-media-v1';
 const SHELL = ['./', './index.html', './exlib.json', './manifest.webmanifest'];
 const ICONS = ['./icon-192.png', './icon-512.png', './apple-touch-icon.png'];
