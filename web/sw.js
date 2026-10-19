@@ -1,6 +1,6 @@
 /* Lock In — offline shell. App shell + puter.js cached; exercise demos (ExerciseDB / free-exercise-db)
    cached as you view them in a separate long-lived cache. Puter API calls always hit the network. */
-const CACHE = 'lockin-v34';
+const CACHE = 'lockin-v35';
 const MEDIA_CACHE = 'lockin-media-v1';
 const SHELL = ['./', './index.html', './exlib.json', './manifest.webmanifest'];
 const ICONS = ['./icon-192.png', './icon-512.png', './apple-touch-icon.png'];
@@ -25,6 +25,9 @@ self.addEventListener('activate', e => {
   })());
 });
 
+// keep the worker alive for a background write; never let it break the response
+const keep = (e, p) => { try { e.waitUntil(p.catch(() => {})); } catch (_) { p.catch(() => {}); } };
+
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -47,16 +50,25 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') {
     // only the app itself becomes the offline copy — never an invite / shared-split page
     const isApp = url.pathname === '/' || url.pathname === '/index.html';
-    e.respondWith(
-      fetch(req)
-        .then(res => { if (isApp && res.ok) { const cl = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', cl)); } return res; })
-        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
-    );
+    const offline = () => caches.match('./index.html').then(r => r || caches.match('./'));
+    const net = fetch(req).then(res => { if (isApp && res.ok) { const cl = res.clone(); keep(e, caches.open(CACHE).then(c => c.put('./index.html', cl))); } return res; });
+    if (!isApp) { e.respondWith(net.catch(offline)); return; }
+    // network first, but a slow connection (gym Wi-Fi…) gets the saved copy after 2.5 s; the download still finishes
+    // in the background and the next start is up to date
+    e.waitUntil(net.then(() => {}, () => {}));
+    e.respondWith(new Promise(resolve => {
+      let done = false;
+      const t = setTimeout(() => offline().then(r => { if (r && !done) { done = true; resolve(r); } }), 2500);
+      net.then(res => { if (!done) { done = true; clearTimeout(t); resolve(res); } },
+               () => offline().then(r => { if (!done) { done = true; clearTimeout(t); resolve(r || Response.error()); } }));
+    }));
     return;
   }
-  // exlib.json: network-first so library updates arrive; everything else cache-first
+  // exlib.json: the saved copy answers at once and a fresh one is fetched for next time (it rarely changes)
   if (sameOrigin && url.pathname.endsWith('exlib.json')) {
-    e.respondWith(fetch(req).then(res => { const cl = res.clone(); caches.open(CACHE).then(c => c.put(req, cl)); return res; }).catch(() => caches.match(req)));
+    const fresh = fetch(req).then(res => { if (res && res.ok) { const cl = res.clone(); keep(e, caches.open(CACHE).then(c => c.put(req, cl))); } return res; });
+    e.waitUntil(fresh.then(() => {}, () => {}));
+    e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => hit || fresh));
     return;
   }
   e.respondWith(

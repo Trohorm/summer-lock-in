@@ -13,6 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <script>window.addEventListener("error",function(e){window.__lastErr=(e.message||"error")+" @"+(e.lineno||"")});</script>
 <script>window.puterReady=new Promise(function(res){window.__puterRes=res;setTimeout(res,9000);});</script>
+<script>(function(){var n=window.__lockinNative;if(!n||!n.version||!navigator.onLine||!window.fetch)return;try{var c=window.AbortController?new AbortController():null;if(c)setTimeout(function(){c.abort()},5000);window.__appvP=fetch("/api/appver",{cache:"no-store",signal:c?c.signal:undefined}).then(function(r){return r.ok?r.json():null}).catch(function(){return null});}catch(e){}})();</script>
 <script async src="https://js.puter.com/v2/" onload="window.__puterRes()" onerror="window.__puterRes()"></script>
 <style>
 :root{
@@ -1352,6 +1353,52 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 .tbub.pop{animation:sh-in .35s ease both}.ttop{display:flex;justify-content:space-between;align-items:center}.ttop b{color:#fff;font-size:15.5px}.ttop span{font-size:11.5px;color:var(--slate);font-weight:700}
 .tbub p{font-size:13.5px;color:#d9e4f8;line-height:1.45;margin:6px 0 10px}.tbtns{display:flex;justify-content:space-between;align-items:center}.tbtns .btn{width:auto;padding:8px 18px}
 @media (prefers-reduced-motion:reduce){.tspot,.tbub{transition:none}.sbicon{animation:none}}
+.goalchips{display:grid;grid-template-columns:1fr 1fr;gap:8px}.goalchips .chip{text-align:center;padding:9px 10px}
+.goalhint{margin-top:6px;min-height:1.2em;transition:opacity .25s}
+/* ---- tab icons: each one moves its own way when you switch to it ---- */
+@media (prefers-reduced-motion:no-preference){
+nav button.on svg *{transform-box:fill-box;transform-origin:center}
+nav button[data-v=today].on svg{animation:nv-home .6s var(--sp-bounce)}
+nav button[data-v=workout].on svg{animation:nv-lift .75s var(--sp-bounce)}
+nav button[data-v=diet].on svg{animation:nv-wob .8s ease-out;transform-origin:50% 90%}
+nav button[data-v=progress].on svg{animation:iconpop .5s var(--spring)}
+nav button[data-v=progress].on svg path{stroke-dasharray:34;animation:nv-draw .7s cubic-bezier(.3,.7,.3,1) both}
+nav button[data-v=progress].on svg path+path{animation-delay:.28s}
+nav button[data-v=friends].on svg{animation:iconpop .5s var(--spring)}
+nav button[data-v=friends].on svg circle:nth-of-type(2),nav button[data-v=friends].on svg path:nth-of-type(2){animation:nv-hop .55s .12s var(--sp-bounce) both}
+nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
+}
+@keyframes nv-home{0%{transform:translateY(2px) scale(.8,.7)}45%{transform:translateY(-4px) scale(1.06,1.18)}100%{transform:translateY(-1px) scale(1.1)}}
+@keyframes nv-lift{0%{transform:scale(.8)}35%{transform:translateY(-6px) rotate(-16deg) scale(1.14)}65%{transform:translateY(1px) rotate(5deg) scale(1.08)}100%{transform:translateY(-1px) scale(1.1)}}
+@keyframes nv-wob{0%{transform:scale(.8) rotate(0)}25%{transform:scale(1.12) rotate(-14deg)}50%{transform:scale(1.1) rotate(10deg)}75%{transform:scale(1.1) rotate(-5deg)}100%{transform:translateY(-1px) scale(1.1)}}
+@keyframes nv-draw{from{stroke-dashoffset:34}to{stroke-dashoffset:0}}
+@keyframes nv-hop{0%{transform:none}40%{transform:translateY(-3.5px)}100%{transform:none}}
+@keyframes nv-gear{0%{transform:rotate(-120deg) scale(.8)}100%{transform:translateY(-1px) scale(1.1) rotate(0)}}
+/* ---- Lift: the selected day rides a sliding pill ---- */
+#dayChips{position:relative}
+#dayChips .dpill{position:absolute;left:0;top:0;border-radius:999px;background:var(--grad);box-shadow:0 4px 14px rgba(79,124,247,.3);pointer-events:none;z-index:0;
+  transition:transform .5s var(--sp-bounce),width .5s var(--sp-bounce)}
+#dayChips.haspill .chip{position:relative;z-index:1}
+#dayChips.haspill .chip.on{background:transparent;border-color:transparent;box-shadow:none}
+/* ---- set counter rolls, the progress bar shines on each logged set ---- */
+.woprog .wpt b{display:inline-block}
+.woprog .wpt b.rollup{animation:nroll-up .38s var(--out)}
+.woprog .wpt b.rolldn{animation:nroll-dn .38s var(--out)}
+@keyframes nroll-up{from{transform:translateY(70%);opacity:0}to{transform:none;opacity:1}}
+@keyframes nroll-dn{from{transform:translateY(-70%);opacity:0}to{transform:none;opacity:1}}
+.wpb{position:relative}
+.wpb::after{content:'';position:absolute;inset:0;transform:translateX(-110%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);pointer-events:none}
+.woprog.sweep .wpb::after{animation:wpsweep .85s var(--out)}
+@keyframes wpsweep{to{transform:translateX(110%)}}
+/* ---- a logged set: the tick pops with a ring ---- */
+.setrow input.done-in.ck:checked{animation:ckpop .55s var(--sp-bounce)}
+@keyframes ckpop{0%{background-size:0 0;box-shadow:0 0 0 0 rgba(62,207,142,.6)}55%{background-size:21px 21px}100%{background-size:17px 17px;box-shadow:0 0 0 13px rgba(62,207,142,0)}}
+/* ---- a logged meal's calories fly into the ring ---- */
+.kfly{position:fixed;z-index:120;pointer-events:none;padding:7px 13px;border-radius:999px;font-weight:800;font-size:14px;letter-spacing:-.01em;color:#2a1405;
+  background:linear-gradient(135deg,#ffd58a,#ff9f6e);box-shadow:0 10px 28px rgba(255,140,90,.45);white-space:nowrap;will-change:transform,opacity}
+.kh.kfhit .khring{animation:kfhit .65s var(--sp-bounce)}
+@keyframes kfhit{0%{transform:scale(1)}30%{transform:scale(1.1)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#dayChips .dpill{transition:none}}
 </style>
 </head>
 <body>
@@ -1400,6 +1447,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
         <div class="field"><label class="f">Birthday</label><input id="wz-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="wz-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
       </div>
+      <div class="field"><label class="f">Goal</label><div class="wchips goalchips" id="wz-goals"></div><p class="tiny goalhint" id="wz-goalhint"></p></div>
       <div class="field"><label class="f">Gym name</label><input id="wz-gym" maxlength="30" placeholder="e.g. Fitness Trnava"></div>
       <label class="checkline" style="margin-bottom:14px"><input type="checkbox" switch id="wz-ai" checked> AI coach feedback after each workout</label>
       <button class="btn btn-primary" id="wzSaveBtn">Start</button>
@@ -1575,6 +1623,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
         <div class="field"><label class="f">Birthday <span class="tiny" id="ageLbl"></span></label><input id="set-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="set-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
         <div class="field" style="grid-column:1/-1"><label class="f">Other sports <span class="tiny">optional · the AI plans around them</span></label><input id="set-sport" maxlength="60" placeholder="e.g. skiing, football, climbing"></div>
+        <div class="field" style="grid-column:1/-1"><label class="f">Goal</label><div class="wchips goalchips" id="set-goals"></div><p class="tiny goalhint" id="set-goalhint"></p></div>
       </div>
       <button class="btn btn-primary" id="setSaveBtn">Save profile</button>
     </div>
@@ -1764,6 +1813,7 @@ function merge(base,d){
 }
 /* v1 (fixed plan) → v2 (splits, gyms, diet). Never drops logged data. */
 function migrate(){
+  delete S.cardio;delete S.sharded;
   if(!S.gyms.length)S.gyms=[{id:'g1',name:'My gym'}];
   if(!S.activeGym||!S.gyms.find(g=>g.id===S.activeGym))S.activeGym=S.gyms[0].id;
   if(!Object.keys(S.splits).length){const t=templateSplit('ulppl');S.splits.ulppl=Object.assign({id:'ulppl'},t);S.activeSplit='ulppl';}
@@ -1791,7 +1841,19 @@ function cacheKey(){return 'rtcache_'+(user?user.username:'anon');}
 let dataVer=0;const viewVer={};
 function verKey(v){return dataVer+'|'+todayStr()+(v==='diet'?'|'+dDate:'')+(v==='friends'||v==='today'?'|s'+SOC.v:'');}
 function save(){if(typeof csPushSoon==='function')csPushSoon();if(typeof pubPushSoon==='function')pubPushSoon();dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
-function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;try{localStorage.setItem(cacheKey(),JSON.stringify(S));}catch(e){}}
+function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;const k=cacheKey();let j;try{j=JSON.stringify(S);}catch(e){return;}
+  if(j.length<LBIG){try{localStorage.setItem(k,j);if(LIDB.used||localStorage.getItem(k+'_idb')){localStorage.removeItem(k+'_idb');lidbDel(k);LIDB.used=false;}LIDB.data=null;return;}catch(e){}}
+  // too big for localStorage, or it's full: IndexedDB holds it. Only once it's safely written does the old copy go
+  // (that frees the space) and the marker go up; without a marker the boot still looks in IndexedDB if localStorage is empty.
+  LIDB.data=j;LIDB.key=k;LIDB.used=true;lidbPut(k,j).then(()=>{try{localStorage.removeItem(k);}catch(e){}try{localStorage.setItem(k+'_idb','1');}catch(e){}}).catch(()=>{});
+}
+const LBIG=1.2e6,LIDB={db:null,data:null,key:'',used:false};
+function lidbOpen(){return LIDB.db||(LIDB.db=new Promise((res,rej)=>{try{const r=indexedDB.open('lockin',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}}));}
+async function lidbGet(k){const db=await lidbOpen();return new Promise((res,rej)=>{const q=db.transaction('kv','readonly').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+async function lidbPut(k,v){const db=await lidbOpen();return new Promise((res,rej)=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=t.onabort=()=>rej(t.error);});}
+async function lidbDel(k){try{const db=await lidbOpen();db.transaction('kv','readwrite').objectStore('kv').delete(k);}catch(e){}}
+async function localPreload(force){const k=cacheKey();try{if(LIDB.key===k&&LIDB.data)return;if(!force&&!localStorage.getItem(k+'_idb'))return;const v=await lidbGet(k);if(typeof v==='string'){LIDB.data=v;LIDB.key=k;LIDB.used=true;}}catch(e){}}
+async function loadLocalAny(){await localPreload();let l=loadLocal();if(!l&&window.indexedDB){await localPreload(true);l=loadLocal();}return l;}
 function idle(fn){if(window.requestIdleCallback)requestIdleCallback(fn,{timeout:600});else setTimeout(fn,0);}
 function flushAll(){if(localT)writeLocal();if(dirty&&cloudReady)pushNow();}
 function pushSoon(){const was=dirty;dirty=true;if(!was)renderSync();clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1500);}
@@ -1843,10 +1905,23 @@ function renderSync(){
   el.textContent=dirty?'Syncing…':(lastSync?'Synced to your account at '+lastSync.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'.':'Synced to your account.');
 }
 /* reconcile two saved states: union of logs (newest edit wins), tombstones remove deleted items, newer save wins settings */
+function deepEq(a,b){
+  if(a===b)return true;
+  if(a===null||b===null||typeof a!=='object'||typeof b!=='object'){
+    const na=v=>typeof v==='number'&&!isFinite(v)?null:v;return na(a)===na(b);}
+  const aa=Array.isArray(a);if(aa!==Array.isArray(b))return false;
+  const nv=v=>v===undefined||typeof v==='function'?null:v;
+  if(aa){if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(!deepEq(nv(a[i]),nv(b[i])))return false;return true;}
+  let n=0;for(const k in a){const v=a[k];if(v===undefined||typeof v==='function')continue;n++;const w=b[k];if(w===undefined||typeof w==='function'||!deepEq(v,w))return false;}
+  for(const k in b){const v=b[k];if(v===undefined||typeof v==='function')continue;n--;}
+  return n===0;
+}
+function cloudEq(st,cloud){const x=Object.assign({},st),y=Object.assign({},cloud);['sharded','checkins','cardio'].forEach(k=>{delete x[k];delete y[k];});return deepEq(x,y);}
 function mergeStates(a,b){
   if(!a)return b;if(!b)return a;
   const aU=a.updatedAt||0,bU=b.updatedAt||0,newer=aU>=bU?a:b,older=aU>=bU?b:a;
-  const out=merge(fresh(),JSON.parse(JSON.stringify(newer)));
+  const nc=Object.assign({},newer);delete nc.workouts;delete nc.food;   // the logs are rebuilt below: copy only the rest
+  const out=merge(fresh(),JSON.parse(JSON.stringify(nc)));
   out.tomb=Object.assign({},older.tomb||{},newer.tomb||{});
   const ow=older.workouts||{};out.workouts=Object.assign({},ow);
   const nw=newer.workouts||{};
@@ -1860,6 +1935,7 @@ function mergeStates(a,b){
   out.checkins=Object.assign({},older.checkins||{},newer.checkins||{});
   out.libcache=Object.assign({},older.libcache||{},newer.libcache||{});
   out.alias=Object.assign({},older.alias||{},newer.alias||{});
+  delete out.sharded;delete out.cardio;
   out.updatedAt=Math.max(aU,bU);
   return out;
 }
@@ -2002,12 +2078,13 @@ function restTxt(s){return s>=120?(s%60?(s/60).toFixed(1).replace('.0',''):s/60)
 function defaultsFor(t){return t==='c'?{sets:3,lo:8,hi:12,rest:150}:t==='b'?{sets:3,lo:8,hi:15,rest:90}:t==='t'?{sets:3,lo:30,hi:60,rest:60}:t==='d'?{sets:1,lo:20,hi:40,rest:0}:{sets:3,lo:10,hi:15,rest:90};}
 
 /* ================= AUTH & BOOT ================= */
-function loadLocal(){try{const c=localStorage.getItem(cacheKey());if(c)return JSON.parse(c);}catch(e){}return null;}
-function runLocalOnly(){S=merge(fresh(),loadLocal());offlineMode=true;dirty=true;renderSync();if(!S.settings.setupDone){openWizard();return;}enterApp();}
+function loadLocal(){const k=cacheKey();const fromDB=()=>LIDB.key===k&&LIDB.data?JSON.parse(LIDB.data):null;try{if(localStorage.getItem(k+'_idb')&&LIDB.key===k&&LIDB.data)return fromDB();const c=localStorage.getItem(k);if(c)return JSON.parse(c);return fromDB();}catch(e){}return null;}
+function runLocalOnly(){S=merge(fresh(),loadLocal());offlineMode=true;dirty=true;renderSync();if(!S.settings.setupDone){openWizard();return;}LOCAL_FRESH=true;enterApp();}
+let LOCAL_FRESH=false;
 async function boot(){
   const lastUser=localStorage.getItem('rt_lastuser');
-  if(lastUser&&!S){user={username:lastUser};const local=loadLocal();
-    if(local){S=merge(fresh(),local);if(S.settings.setupDone){enterApp();bgSync();return;}}}
+  if(lastUser&&!S){user={username:lastUser};const local=await loadLocalAny();
+    if(local){S=merge(fresh(),local);if(S.settings.setupDone){LOCAL_FRESH=true;enterApp();bgSync();return;}}}
   await window.puterReady;
   if(lastUser&&(!navigator.onLine||typeof puter==='undefined'||window.__offlineCopy)){user={username:lastUser};runLocalOnly();return;}
   if(typeof puter==='undefined'){
@@ -2020,14 +2097,14 @@ async function boot(){
   try{user=await puter.auth.getUser();}
   catch(e){if(lastUser)user={username:lastUser};else{show('login');$('loginMsg').textContent='Could not reach your account — check your connection.';return;}}
   localStorage.setItem('rt_lastuser',user.username);
-  const local=loadLocal();
+  const local=await loadLocalAny();
   let cloud=null,reached=false;
   try{cloud=await loadCloud();reached=true;}catch(e){}
   let loaded;cloudReady=reached;
   if(reached){loaded=mergeStates(cloud,local);offlineMode=false;}
   else{loaded=local;offlineMode=true;dirty=true;}
   S=merge(fresh(),loaded);
-  if(reached&&(!cloud||!cloud.sharded||JSON.stringify(loaded)!==JSON.stringify(cloud)))pushSoon();
+  if(reached&&(!cloud||!cloud.sharded||!cloudEq(loaded,cloud)))pushSoon();
   renderSync();
   if(!S.settings.setupDone){openWizard();return;}
   enterApp();
@@ -2044,12 +2121,11 @@ async function bgSync(){
     if(u&&user&&u.username!==user.username){location.reload();return;}
     if(u){user=u;localStorage.setItem('rt_lastuser',u.username);}
     let cloud;try{cloud=await loadCloud();}catch(e){offlineMode=true;dirty=true;return;}
-    const before=JSON.stringify(S);
-    const merged=merge(fresh(),mergeStates(cloud,S));
+    // merge, then migrate the result too, so an old-format cloud copy doesn't look like a change on every open
+    const prev=S;S=merge(fresh(),mergeStates(cloud,prev));migrate();const merged=S;
     cloudReady=true;offlineMode=false;lastPull=Date.now();
-    const after=JSON.stringify(merged);
-    if(after!==before){S=merged;migrate();dataVer++;writeLocal();quietRefresh();}
-    if(!cloud||!cloud.sharded||after!==JSON.stringify(cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
+    if(deepEq(merged,prev))S=prev;else{dataVer++;writeLocal();quietRefresh();}
+    if(!cloud||!cloud.sharded||!cloudEq(merged,cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
     processQueue();setTimeout(runPendingAnalyses,4000);
   }finally{syncing=false;renderSync();}
 }
@@ -2069,18 +2145,22 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';}setTimeout(whatsNewCheck,2600);setTimeout(appVerCheck,900);setTimeout(dobLoad,3000);migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
   $('wz-weight').value=S.settings.weight||'';$('wz-height').value=S.settings.height||'';$('wz-dob').value=DOB||'';$('wz-dob').max=addDays(todayStr(),-3650);
   $('wz-sex').value=S.settings.sex||'m';$('wz-gym').value=(S.gyms[0]&&S.gyms[0].name)||'';
-  wzGoal=S.settings.goal||'recomp';
+  wzGoal=S.settings.goal||'recomp';renderGoalChips('wz-goals',wzGoal,g=>{wzGoal=g;});
   $('wz-ai').checked=S.settings.aiAuto!==false;show('wizard');
 }
+const GOALHINT={cut:'Lose fat, keep muscle: about 20% under maintenance calories, protein high.',recomp:'Lose fat and build muscle at the same time: eat around maintenance, train hard.',
+  bulk:'Build muscle with little fat: about 10% over maintenance.',maintain:'Hold your weight: eat at maintenance.'};
 function renderGoalChips(elId,cur,onPick){
-  $(elId).innerHTML=Object.keys(GOALS).map(g=>'<button type="button" class="chip'+(g===cur?' on':'')+'" data-g="'+g+'">'+GOALS[g]+'</button>').join('');
-  $(elId).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>onPick(b.dataset.g)));
+  const el=$(elId);if(!el)return;
+  el.innerHTML=Object.keys(GOALS).map(g=>'<button type="button" class="chip'+(g===cur?' on':'')+'" data-g="'+g+'">'+GOALS[g]+'</button>').join('');
+  const hint=$(elId.replace('goals','goalhint'));if(hint){const was=hint.textContent;hint.textContent=GOALHINT[cur]||'';if(was&&was!==hint.textContent)anim(hint,[{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'none'}],{duration:280,easing:EASE_OUT});}
+  el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const g=b.dataset.g;if(g===cur)return;onPick(g);renderGoalChips(elId,g,onPick);}));
 }
 function finishWizard(){
   const err=$('wzErr');err.textContent='';
@@ -2099,7 +2179,7 @@ function finishWizard(){
 async function doSignIn(){$('loginMsg').textContent='';try{await puter.auth.signIn();await boot();}catch(e){$('loginMsg').textContent='Sign-in was cancelled or failed — try again.';}}
 async function doSignOut(){
   if(!confirm('Sign out on this device? Your data stays safe in your account.'))return;
-  try{localStorage.removeItem(cacheKey());localStorage.removeItem(socKey());localStorage.removeItem('rt_lastuser');}catch(e){}
+  try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');localStorage.removeItem(socKey());localStorage.removeItem('rt_lastuser');await lidbDel(k);}catch(e){}
   try{await puter.auth.signOut();}catch(e){}location.reload();
 }
 
@@ -2166,6 +2246,7 @@ function show(v){
   sc.scrollTop=0;
   countUp(el,true);fillRings(el,true);requestAnimationFrame(movePill);
   if(v==='progress')fetchPhotos();
+  if(v==='workout')dayPillSoon();
   heroDeco=el.querySelector('.hero-card .deco');
   onScroll();requestAnimationFrame(()=>setupReveal(el));
 }
@@ -2175,9 +2256,9 @@ function plannedDay(date){
   const sp=activeSplit();if(!sp||!sp.days.length)return null;
   const sch=sp.sched||[];
   if(sch.some(x=>x)){const id=sch[parseD(date).getDay()];return id?sp.days.find(d=>d.id===id)||null:null;}
-  const ws=Object.values(S.workouts).filter(w=>w.split===sp.id&&woHasData(w)&&w.date<date).sort((a,b)=>a.date<b.date?1:-1);
-  if(!ws.length)return sp.days[0];
-  const i=sp.days.findIndex(d=>d.id===ws[0].day);return sp.days[(i+1)%sp.days.length];
+  let last=null;for(const id in S.workouts){const w=S.workouts[id];if(w&&w.split===sp.id&&w.date<date&&(!last||w.date>last.date)&&woHasData(w))last=w;}
+  if(!last)return sp.days[0];
+  const i=sp.days.findIndex(d=>d.id===last.day);return sp.days[(i+1)%sp.days.length];
 }
 let DFMT=null,hdrKey='';
 function renderHeader(){
@@ -2331,7 +2412,7 @@ function renderWorkout(){
   $('gymSel').innerHTML=S.gyms.map(g=>'<option value="'+g.id+'"'+(g.id===S.activeGym?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'<option value="__add">+ Add gym…</option>';
   const wo=ensureWO();
   if(!wo.ended&&wo.gym!==S.activeGym&&!woHasData(wo))wo.gym=S.activeGym;
-  $('dayChips').innerHTML=sp.days.map(d=>'<button class="chip'+(d.id===wo.day&&wo.split===sp.id?' on':'')+'" onclick="setWorkoutDay(\''+d.id+'\')">'+esc(d.name)+'</button>').join('');
+  $('dayChips').innerHTML=sp.days.map(d=>'<button class="chip'+(d.id===wo.day&&wo.split===sp.id?' on':'')+'" onclick="setWorkoutDay(\''+d.id+'\')">'+esc(d.name)+'</button>').join('')+dayPillHTML();dayPillSoon();
   $('woDate').value=wo.date;
   const gymName=(S.gyms.find(g=>g.id===wo.gym)||{}).name||'';
   $('woList').innerHTML=(wo.items.length?'<div class="woprog" id="woProg"><div class="wpt"><span id="woProgTxt"></span><span id="woProgPct"></span></div><div class="wpb"><i id="woProgBar"></i></div></div>':'')+
@@ -2431,7 +2512,9 @@ function updateWoProg(first){
   const w=curWO(),el=$('woProg');if(!w||!el)return;
   let tot=0,done=0;w.items.forEach((it,i)=>{const c=$('exc_'+i);if(!c)return;c.querySelectorAll('.done-in').forEach(b=>{tot++;if(b.checked)done++;});});
   const p=tot?done/tot*100:0;
-  $('woProgTxt').innerHTML='<b>'+done+'</b> / '+tot+' sets';$('woProgPct').textContent=tot?Math.round(p)+'%':'';
+  const pd=el.dataset.d===undefined?NaN:+el.dataset.d;el.dataset.d=done;const moved=!first&&!isNaN(pd)&&pd!==done;
+  $('woProgTxt').innerHTML='<b'+(moved?' class="'+(done>pd?'rollup':'rolldn')+'"':'')+'>'+done+'</b> / '+tot+' sets';
+  if(moved&&done>pd&&!RM){el.classList.remove('sweep');void el.offsetWidth;el.classList.add('sweep');clearTimeout(el._sw);el._sw=setTimeout(()=>el.classList.remove('sweep'),900);}$('woProgPct').textContent=tot?Math.round(p)+'%':'';
   const bar=$('woProgBar');
   if(first){bar.style.transition='none';bar.style.transform='translate3d('+((enteringView==='workout'?0:(barMem.get('wo')||0))-100)+'%,0,0)';requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition='';bar.style.transform='translate3d('+(p-100)+'%,0,0)';}));}
   else bar.style.transform='translate3d('+(p-100)+'%,0,0)';
@@ -2466,11 +2549,11 @@ const TYPED=new Map();
 function typedTick(cb,i){clearTimeout(TYPED.get(cb.id));TYPED.set(cb.id,setTimeout(()=>{TYPED.delete(cb.id);if(!cb.isConnected||!cb.checked)return;tickFx(cb,i);},900));}
 function tickFx(cb,i){
   const card=$('exc_'+i);if(!card)return;
-  haptic('medium');const row=cb.closest('.setrow');if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}
+  haptic('medium');tickPop(cb);const row=cb.closest('.setrow');if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}
   const r=cb.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);
   if(card.classList.contains('exdone')){card.classList.remove('justdone');void card.offsetWidth;card.classList.add('justdone');setTimeout(()=>card.classList.remove('justdone'),1000);}
   fxSetPR(cb,i);
-  if(S.settings.autoRest!==false){const w=curWO();const it=w&&w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
+  if(S.settings.autoRest!==false){const w=curWO();const it=w&&!w.ended&&w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
 }
 function syncWorkout(){
   const w=curWO();if(!w)return;let tick=false;
@@ -2557,13 +2640,13 @@ async function aiFeedback(id,manual){
   w.ai=text;save();showAi(text);renderHistory();
 }
 /* rest timer */
-let timerInt=null,timerEnd=0;
+let timerInt=null,timerEnd=0,timerHideT=0;
 function nat(msg){try{window.webkit.messageHandlers.lockin.postMessage(msg);return true;}catch(e){return false;}}
 function hasNative(){return !!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.lockin);}
 let timerLbl='';
 function restNotify(){if(S.settings.restNotify===false)return;const left=Math.round((timerEnd-Date.now())/1000);if(left>0)nat({action:'notify',secs:left,title:'Rest is over',body:(timerLbl||'Next set')+' — time for your next set'});}
 function startTimer(sec,i){
-  clearInterval(timerInt);lastLeft=-1;timerEnd=Date.now()+sec*1000;timerTotal=sec;
+  clearInterval(timerInt);clearTimeout(timerHideT);lastLeft=-1;timerEnd=Date.now()+sec*1000;timerTotal=sec;
   const w=curWO();timerLbl=w&&w.items[i]?exInfo(w.items[i].k).name:'';$('timerLabel').textContent='Rest · '+timerLbl;restNotify();
   $('timerLeft').classList.remove('doneflash');$('timerSheet').classList.add('show');tick();timerInt=setInterval(tick,250);
 }
@@ -2578,10 +2661,21 @@ function tick(){
   lastLeft=left;
   $('timerLeft').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
   const fg=$('tringFg');if(fg)fg.style.strokeDashoffset=(138.2*(1-Math.max(0,(timerEnd-Date.now())/1000)/Math.max(1,timerTotal))).toFixed(1);
-  if(left<=0){haptic('success');clearInterval(timerInt);$('timerLeft').textContent='GO';$('timerLeft').classList.add('doneflash');beep();if(navigator.vibrate)navigator.vibrate([200,100,200]);setTimeout(()=>$('timerSheet').classList.remove('show'),2500);}
+  if(left<=0){haptic('success');clearInterval(timerInt);$('timerLeft').textContent='GO';$('timerLeft').classList.add('doneflash');beep();if(navigator.vibrate)navigator.vibrate([200,100,200]);clearTimeout(timerHideT);timerHideT=setTimeout(()=>$('timerSheet').classList.remove('show'),2500);}
 }
 function stopTimer(){clearInterval(timerInt);$('timerSheet').classList.remove('show');nat({action:'cancel'});}
-function beep(){try{const ctx=new (window.AudioContext||window.webkitAudioContext)();[0,.25,.5].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.28,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.2);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.22);});}catch(e){}}
+// one audio context for the whole app, unlocked by your first tap (iOS keeps contexts made outside a tap silent and caps how many
+// exist); it sleeps between beeps so it doesn't keep the audio hardware awake
+let ACTX=null,ACTX_OK=false,ACTX_T=0;
+function audioCtx(){try{const C=window.AudioContext||window.webkitAudioContext;if(C&&!ACTX)ACTX=new C();}catch(e){}return ACTX;}
+function audioNap(c,ms){clearTimeout(ACTX_T);ACTX_T=setTimeout(()=>{try{if(c.state==='running')c.suspend();}catch(e){}},ms);}
+function audioUnlock(){const c=audioCtx();if(!c||ACTX_OK)return;try{const b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0);
+  Promise.resolve(c.resume&&c.resume()).then(()=>{if(c.state==='running'){ACTX_OK=true;audioNap(c,700);}},()=>{});}catch(e){}}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,function un(){if(ACTX_OK){['touchend','click','keydown'].forEach(x=>document.removeEventListener(x,un,true));return;}
+  if(curView==='workout'||$('timerSheet').classList.contains('show'))audioUnlock();},true));   // only where a beep can follow
+function beep(){const c=audioCtx();if(!c)return;
+  const go=()=>{try{const t0=c.currentTime;[0,.25,.5].forEach(t=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.28,t0+t);g.gain.exponentialRampToValueAtTime(.001,t0+t+.2);o.start(t0+t);o.stop(t0+t+.22);});}catch(e){}audioNap(c,1500);};
+  if(c.state==='running')go();else{try{c.resume().then(go,()=>{});}catch(e){}}}
 let wl=null;
 async function wakeLock(on){
   try{
@@ -3339,7 +3433,7 @@ function saveMeal(md,date){
   const mn=partsTotal(parts),mm=md.mult||1,late=(+mn.caffeine||0)>0&&new Date(e?e.e.ts:Date.now()).getHours()>=CAF_CUT;
   const over=antiOver(dDate).filter(o=>(+mn[o.k]||0)*mm>(o.k==='seedoil'?0.1:goalFor(o.k)*0.05));
   toast(late?(md.id?'Saved':'Logged')+' — ⚠ caffeine after 1 pm':over.length?(md.id?'Saved':'Logged')+' — ⚠ '+NMAP[over[0].k].n+' over your limit':(md.id?'Saved ':'Logged ')+(md.name||'meal'));
-  anFocus=mid;analyzeMeal(mid);
+  anFocus=mid;analyzeMeal(mid);if(!md.id)kcalFly(mid);
 }
 /* ---------- meal editor: foods, grams, cooking fat, add ingredients ---------- */
 function editMeal(id){const f=findMeal(id);if(!f)return;openMealEditor({id,name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:f.e.src,where:f.e.where},'Edit meal');}
@@ -3720,7 +3814,7 @@ function renderWeight(){
     '<p class="tiny" style="margin-top:4px">Dark: daily · light: 7-day average (trust this one)</p>';
   const now=l.ts,w1=data.filter(p=>now-p.ts<7*864e5),w2=data.filter(p=>now-p.ts>=7*864e5&&now-p.ts<14*864e5),ins=$('bodyInsight');
   if(!w1.length||!w2.length){ins.style.display='none';return;}
-  const d=w1.reduce((a,p)=>a+p.w,0)/w1.length-w2.reduce((a,p)=>a+p.w,0)/w2.length,g='recomp',dir=(d>=0?'+':'')+d.toFixed(2)+' kg vs last week';
+  const d=w1.reduce((a,p)=>a+p.w,0)/w1.length-w2.reduce((a,p)=>a+p.w,0)/w2.length,g=S.settings.goal||'recomp',dir=(d>=0?'+':'')+d.toFixed(2)+' kg vs last week';
   let msg;
   if(g==='cut')msg=d<=-0.25&&d>=-0.8?'Down '+Math.abs(d).toFixed(2)+' kg — sweet-spot pace for a cut. Keep protein at goal.':d<-0.8?'Down '+Math.abs(d).toFixed(2)+' kg — faster than needed, which risks muscle. Eat a bit more carbs.':d<0.15?'Scale barely moving ('+dir+'). Trim carbs or fat slightly and re-check in a week.':'Up '+d.toFixed(2)+' kg on a cut — probably water. If it repeats, eat a little less.';
   else if(g==='bulk')msg=d>=0.1&&d<=0.4?'Up '+d.toFixed(2)+' kg — clean lean-bulk pace.':d>0.4?'Up '+d.toFixed(2)+' kg — quicker than a lean bulk needs. Hold intake here.':d>-0.15?'Flat ('+dir+') on a bulk — add some carbs.':'Trending down on a bulk — eat more.';
@@ -3816,7 +3910,7 @@ function renderSettings(){
   $('acctLine').textContent=user?'Signed in as @'+user.username:'—';renderSync();
   const s=S.settings;
   $('set-name').value=s.name;if($('set-sport'))$('set-sport').value=s.sport||'';$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-dob').value=DOB||'';$('set-dob').max=addDays(todayStr(),-3650);$('ageLbl').textContent=s.age?'· age '+s.age:'';$('set-sex').value=s.sex||'m';
-  setGoal='recomp';
+  setGoal=s.goal||'recomp';renderGoalChips('set-goals',setGoal,g=>{setGoal=g;});
   $('set-ai').checked=s.aiAuto!==false;$('set-autorest').checked=s.autoRest!==false;$('set-wake').checked=!!s.wake;
   $('set-notify').checked=s.restNotify!==false;$('notifyLine').style.display=hasNative()?'':'none';
   $('t-protein').value=S.targets.protein||'';$('t-carbs').value=S.targets.carbs||'';$('t-fat').value=S.targets.fat||'';kcalSetup();
@@ -3866,7 +3960,9 @@ function kcalHero(tot,label,compact){
 function saveSettings(){
   const s=S.settings;const name=$('set-name').value.trim();if(name)s.name=name;
   const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),dob=$('set-dob').value,a=ageFrom(dob);
-  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;{const sp=$('set-sport');if(sp){const v=sp.value.trim().slice(0,60);if(v)s.sport=v;else delete s.sport;}}s.goal=setGoal;
+  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;{const sp=$('set-sport');if(sp){const v=sp.value.trim().slice(0,60);s.sport=v;}}{const og=s.goal||'recomp';if(setGoal!==og){const was=suggestMacros(s.weight,og),T=S.targets;s.goal=setGoal;
+    if(was&&T.protein===was.protein&&T.carbs===was.carbs&&T.fat===was.fat){Object.assign(T,suggestMacros(s.weight,setGoal));toast('Goal: '+GOALS[setGoal]+' — macro goals updated to match','ok');}
+    else toast('Goal: '+GOALS[setGoal]+' — tap Suggest under Nutrition goals to update your macros','ok');}}
   save();renderHeader();renderSettings();socNameSync();
 }
 function saveTargets(){
@@ -3883,7 +3979,7 @@ async function eraseAll(){
   try{await puter.kv.del(KV_KEY);for(const k in pushed)await puter.kv.del(k);}catch(e){}
   try{await puter.fs.delete(PDIR,{recursive:true});}catch(e){}
   try{if(SOC.me)await sapi('/me','DELETE');}catch(e){}socWipe();
-  try{localStorage.removeItem(cacheKey());}catch(e){}
+  try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');lidbDel(k);LIDB.data=null;}catch(e){}
   S=fresh();pushed={};photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
 }
 
@@ -5430,7 +5526,7 @@ function bdayCheck(){
 }
 function dobAsk(){
   const st=S&&S.settings;if(!st||!st.setupDone||st.dob||st.dobE||DOB)return;
-  if($('view-wizard').classList.contains('active')||$('sheet').classList.contains('show')){setTimeout(dobAsk,4000);return;}
+  if($('tourOv')||$('view-wizard').classList.contains('active')||$('sheet').classList.contains('show')){setTimeout(dobAsk,4000);return;}
   openSheet('When’s your birthday?','<p class="tiny" style="margin:0 0 14px">Lock In now uses your birthday instead of your age — it keeps your targets and limits (like caffeine) right as you get older. It’s encrypted with your own key; nobody else can read it.</p>'+
     '<div class="field"><label class="f">Birthday</label><input id="ask-dob" type="date" max="'+addDays(todayStr(),-3650)+'" min="1920-01-01"></div>'+
     '<button class="btn btn-primary" id="askDobBtn" style="width:100%;margin-top:6px">Save birthday</button>');
@@ -5509,7 +5605,7 @@ async function aiAdminCheck(){
   if(typeof sapi!=='function'||typeof socTok!=='function'||!socTok()||!navigator.onLine)return;
   let j;try{j=await sapi('/admin/aiout');}catch(e){return;}
   AIADM.items=j.items||[];AIADM.t=Date.now();const items=AIADM.items.filter(x=>!x.seen&&!x.back&&x.month===aiMonth());if(!items.length)return;
-  if($('sheet').classList.contains('show')){setTimeout(aiAdminCheck,5000);return;}
+  if($('tourOv')||$('sheet').classList.contains('show')){setTimeout(aiAdminCheck,5000);return;}
   const when=t=>new Date(t).toLocaleString(undefined,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   openSheet('AI credit ran out','<p class="tiny" style="margin:0 0 12px">These people hit their Puter AI limit. The app shows them a note and uses the built-in grading until it resets next month.</p><div class="aolist">'+
     items.map(x=>'<div class="req"><div class="grow"><b>'+esc(x.name||x.handle)+'</b><div class="tiny">@'+esc(x.handle)+(x.pname?' · Puter: '+esc(x.pname):'')+'</div><div class="tiny">Ran out '+when(x.first)+(x.n>1?' · '+x.n+' times, last '+when(x.last):'')+'</div></div></div>').join('')+
@@ -5791,7 +5887,7 @@ function csMark(k){const s=csSeen();s.add(k);try{localStorage.setItem(csSeenKey(
 function csNotify(){
   if(!S||document.hidden)return;
   // never pop up over something you're doing: an open sheet, the setup screen, typing a set, or a running rest timer
-  const busy=$('sheet').classList.contains('show')||$('view-wizard').classList.contains('active')||$('timerSheet').classList.contains('show')||
+  const busy=!!$('tourOv')||$('sheet').classList.contains('show')||$('view-wizard').classList.contains('active')||$('timerSheet').classList.contains('show')||
     (typeof lastInput==='number'&&performance.now()-lastInput<6000)||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
   if(busy){clearTimeout(CS.nT);CS.nT=setTimeout(csNotify,5000);return;}
   const seen=csSeen();
@@ -5971,8 +6067,15 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.19.5';
+const WEB_VER='2026.10.19.6';
 const WHATSNEW=[
+ {v:'2026.10.19.6',d:'19 Oct',items:[
+  ['🎯','Pick your goal','Cut, Recomp, Lean bulk or Maintain — in Setup → Profile. Calories, macros and the weight trend follow it.'],
+  ['🧭','Tours fixed','The quick tours point at the right thing on iPhone and never hide behind other pop-ups.'],
+  ['⚡','First things first','What’s new and the update screen are there the moment the app opens.'],
+  ['⏱️','Rest timer','The end-of-rest beep works on iPhone, a new rest right after GO stays on screen, and fixing an old workout doesn’t start timers.'],
+  ['✨','New motion','Tab icons come alive, the day you pick slides into place, sets roll in and a meal’s calories fly into the ring.'],
+  ['🚀','Faster and safer','Quicker start with lots of history, opens from the saved copy on slow gym Wi-Fi, and big histories are stored safely on your phone.']]},
  {v:'2026.10.19.5',d:'19 Oct',items:[
   ['🏗️','Split builder','New here? Pick your days, experience and a style — Full Body, Upper / Lower, PPL, Bro split, Arnold — and the AI picks exercises for your body.'],
   ['🧭','Quick tours','The first time you open Lift, Diet, Friends or the split editor, a few spotlights show what everything does.'],
@@ -6010,26 +6113,53 @@ function showWhatsNew(all){
     '<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="closeSheet()">Let’s go</button>',{tall:list.length>1||list[0].items.length>4});
   if(!all)haptic('light');
 }
-function whatsNewCheck(){
+// is there anything new this user hasn't seen? (a brand-new account starts from now; a newer 'seen' means nothing to show)
+function wnPending(){
+  if(!S||!S.settings.setupDone)return false;
+  const k='lockin_wn_'+(user?user.username:'');let seen=null;try{seen=localStorage.getItem(k);}catch(e){}
+  if(seen===WEB_VER)return false;
+  if(seen===null&&!Object.keys(S.workouts).some(id=>woHasData(S.workouts[id]))&&!Object.keys(S.food).length)return false;
+  return WHATSNEW.some(x=>!seen||verCmp(x.v,seen)>0);
+}
+function whatsNewCheck(first){
   if(!S||!S.settings.setupDone||$('updGate'))return;
   const k='lockin_wn_'+(user?user.username:'');let seen=null;try{seen=localStorage.getItem(k);}catch(e){}
   if(seen===WEB_VER)return;
   // a brand-new account has nothing to compare against: start from now
   if(seen===null&&!Object.keys(S.workouts).some(id=>woHasData(S.workouts[id]))&&!Object.keys(S.food).length){try{localStorage.setItem(k,WEB_VER);}catch(e){}return;}
-  const busy=$('sheet').classList.contains('show')||$('view-wizard').classList.contains('active')||$('timerSheet').classList.contains('show')||(typeof lastInput==='number'&&performance.now()-lastInput<2000);
+  const busy=!!$('tourOv')||$('sheet').classList.contains('show')||$('view-wizard').classList.contains('active')||$('timerSheet').classList.contains('show')||(!first&&typeof lastInput==='number'&&performance.now()-lastInput<2000);
   if(busy){setTimeout(whatsNewCheck,2500);return;}
   showWhatsNew(false);
 }
 // the iPhone app: if a newer version is out, stop at an update screen
-async function appVerCheck(){
-  const nv=nativeVer();if(!nv||!navigator.onLine)return;APPVT=Date.now();
-  try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);const r=await fetch('/api/appver',{cache:'no-store',signal:ac.signal});clearTimeout(t);if(!r.ok)return;APPV=await r.json();}catch(e){return;}
+function appVerFetch(){
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+  return fetch('/api/appver',{cache:'no-store',signal:ac.signal}).then(r=>r.ok?r.json():null).catch(()=>null).finally(()=>clearTimeout(t));
+}
+function appVerApply(j){
+  const nv=nativeVer();if(!nv||!j||!j.version)return;   // couldn't check: keep what we had
+  APPV=j;APPVT=Date.now();try{localStorage.setItem('lockin_appv',JSON.stringify({v:j.version,t:Date.now()}));}catch(e){}
   verLine();
-  if(APPV&&APPV.version&&verCmp(nv,APPV.version)<0)updGate(nv,APPV.version);else{const g=$('updGate');if(g)g.remove();}
+  if(verCmp(nv,j.version)<0)updGate(nv,j.version);else{const g=$('updGate');if(g)g.remove();}
+}
+async function appVerCheck(){const nv=nativeVer();if(!nv||!navigator.onLine)return;APPVT=Date.now();appVerApply(await appVerFetch());}
+/* First things first: the update screen and What's new come before the app.
+   A known-outdated app stops at the gate on the very first frame; otherwise the splash waits (≤0.9 s)
+   for the version check that started while the page was loading. */
+let SPLASH_HOLD=0,SPLASH_WANT=0;const SPLASH_Q=[];
+function splashRelease(){if(!SPLASH_HOLD)return;SPLASH_HOLD=0;while(SPLASH_Q.length){try{SPLASH_Q.shift()();}catch(e){}}if(SPLASH_WANT)hideSplash();}
+function afterSplash(fn){if(SPLASH_HOLD)SPLASH_Q.push(fn);else fn();}
+function appGateBoot(){
+  const nv=nativeVer();if(!nv)return;
+  let c=null;try{c=JSON.parse(localStorage.getItem('lockin_appv')||'null');}catch(e){}
+  if(c&&c.v&&navigator.onLine&&verCmp(nv,c.v)<0){APPV={version:c.v};updGate(nv,c.v);}
+  const p=window.__appvP;window.__appvP=null;if(!p)return;APPVT=Date.now();
+  p.then(appVerApply);
+  if(!$('updGate')){SPLASH_HOLD=1;setTimeout(splashRelease,900);p.then(splashRelease);}
 }
 function updGate(have,latest){
   if($('updGate')){$('updHave').textContent=have;$('updNew').textContent=latest;return;}
-  try{closeSheet();stopTimer();}catch(e){}
+  try{closeSheet();stopTimer();tourEnd();}catch(e){}
   const el=document.createElement('div');el.id='updGate';el.setAttribute('role','dialog');
   el.innerHTML='<div class="ugcard"><div class="ugicon"><svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg></div>'+
     '<h2>Update Lock In</h2><p class="ugsub">A new version of the app is out. Update to keep using it — your data is safe and waiting.</p>'+
@@ -6225,36 +6355,91 @@ function tourFind(sel){
   if(sel.startsWith('card:')){const t=sel.slice(5).toLowerCase();return [...document.querySelectorAll('.view.active .card')].find(c=>{const h=c.querySelector('h2');return h&&h.textContent.toLowerCase().includes(t);})||null;}
   const el=[...document.querySelectorAll(sel)].find(e=>e.offsetParent!==null||e.getClientRects().length);return el||null;
 }
+// something else is about to pop up (What's new, the update screen) — tours wait for it
+function tourBusy(){
+  if($('sheet').classList.contains('show')||$('fxDone')||document.querySelector('.fxlevel')||$('updGate'))return true;
+  return typeof wnPending==='function'&&wnPending();
+}
 function tourStart(k,force){
-  if(!S||!TOURS[k]||(!force&&tourSeen(k))||TOUR.k||$('updGate'))return;
-  if($('sheet').classList.contains('show')||$('fxDone')||document.querySelector('.fxlevel')){setTimeout(()=>tourStart(k,force),2500);return;}
+  if(!S||!TOURS[k]||(!force&&tourSeen(k))||TOUR.k)return;
+  if(tourBusy()){clearTimeout(TOUR.wait);TOUR.wait=setTimeout(()=>{const v={lift:'workout',diet:'diet',friends:'friends',editor:'editor'}[k];if(document.querySelector('#view-'+v+'.active'))tourStart(k,force);},2500);return;}
   const steps=TOURS[k].map(s=>({sel:s[0],t:s[1],d:s[2]})).filter(s=>tourFind(s.sel));if(!steps.length)return;
-  (S.settings.tours=S.settings.tours||{})[k]=1;save();
   TOUR.k=k;TOUR.i=0;TOUR.steps=steps;
   const o=document.createElement('div');o.id='tourOv';o.innerHTML='<div class="tspot"></div><div class="tbub"><div class="ttop"><b></b><span></span></div><p></p><div class="tbtns"><button class="linkbtn" onclick="tourEnd()">Skip</button><button class="btn btn-primary btn-sm" onclick="tourNext()">Next</button></div></div>';
   o.addEventListener('click',e=>{if(e.target===o||e.target.classList.contains('tspot'))tourNext();});
+  o.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});   // the page stays put under the tour
   document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('show'));tourShow();
+  const loop=()=>{if(!TOUR.k)return;tourPlace();TOUR.raf=requestAnimationFrame(loop);};TOUR.raf=requestAnimationFrame(loop);
 }
 function tourShow(){
   const s=TOUR.steps[TOUR.i],o=$('tourOv');if(!s||!o){tourEnd();return;}
   const el=tourFind(s.sel);if(!el){TOUR.i++;tourShow();return;}
-  el.scrollIntoView({block:'center',behavior:RM?'auto':'smooth'});
-  setTimeout(()=>{if(!$('tourOv'))return;const r=el.getBoundingClientRect(),pad=8,sp=o.querySelector('.tspot'),bub=o.querySelector('.tbub');
-    Object.assign(sp.style,{left:(r.left-pad)+'px',top:(r.top-pad)+'px',width:(r.width+pad*2)+'px',height:Math.min(r.height+pad*2,innerHeight*.55)+'px'});
-    bub.querySelector('b').textContent=s.t;bub.querySelector('span').textContent=(TOUR.i+1)+' / '+TOUR.steps.length;bub.querySelector('p').textContent=s.d;
-    bub.querySelector('.btn').textContent=TOUR.i===TOUR.steps.length-1?'Got it':'Next';
-    const below=r.top+Math.min(r.height,innerHeight*.55)+pad+14,bh=bub.offsetHeight||150;
-    bub.style.top=(below+bh<innerHeight-90?below:Math.max(70,r.top-pad-14-bh))+'px';
-    bub.classList.remove('pop');void bub.offsetWidth;bub.classList.add('pop');haptic('selection');},RM?60:380);
+  TOUR.el=el;
+  // jump (no smooth scroll — iOS keeps scrolling after we measure) so the target sits in the upper part of the screen
+  const sc=$('scroller');if(sc&&sc.contains(el)){const r=el.getBoundingClientRect();sc.scrollTop=Math.max(0,sc.scrollTop+r.top-Math.max(96,innerHeight*.16));}
+  const bub=o.querySelector('.tbub');
+  bub.querySelector('b').textContent=s.t;bub.querySelector('span').textContent=(TOUR.i+1)+' / '+TOUR.steps.length;bub.querySelector('p').textContent=s.d;
+  bub.querySelector('.btn').textContent=TOUR.i===TOUR.steps.length-1?'Got it':'Next';
+  bub.classList.remove('pop');void bub.offsetWidth;bub.classList.add('pop');haptic('selection');tourPlace();
+}
+// the spotlight follows the target every frame, so it can never drift off it
+function tourPlace(){
+  const o=$('tourOv'),el=TOUR.el;if(!o||!el)return;
+  const r=el.getBoundingClientRect(),pad=8,H=Math.min(r.height,innerHeight*.4),sp=o.querySelector('.tspot'),bub=o.querySelector('.tbub');
+  const top=Math.max(-pad,r.top),k=Math.round(r.left)+','+Math.round(top)+','+Math.round(r.width)+','+Math.round(H);if(k===TOUR.last)return;TOUR.last=k;
+  sp.style.cssText='left:'+(r.left-pad)+'px;top:'+(top-pad)+'px;width:'+(r.width+pad*2)+'px;height:'+(H+pad*2)+'px';
+  const bh=bub.offsetHeight||160,below=top+H+pad+14,above=top-pad-14-bh,minTop=64;
+  bub.style.top=(below+bh<=innerHeight-96?below:above>=minTop?above:Math.max(minTop,innerHeight-96-bh))+'px';
 }
 function tourNext(){TOUR.i++;if(TOUR.i>=TOUR.steps.length)tourEnd();else tourShow();}
-function tourEnd(){const o=$('tourOv');TOUR.k=null;if(o){o.classList.remove('show');setTimeout(()=>o.remove(),300);}}
+function tourEnd(){
+  const o=$('tourOv'),k=TOUR.k;TOUR.k=null;TOUR.el=null;TOUR.last='';cancelAnimationFrame(TOUR.raf);
+  if(k&&S){(S.settings.tours=S.settings.tours||{})[k]=1;save();}
+  if(o){o.classList.remove('show');setTimeout(()=>o.remove(),300);}
+}
 function tourAuto(v){
-  if(!S||!S.settings.setupDone)return;
-  if(v==='workout'&&!S.settings.needSplit)setTimeout(()=>{if(curView==='workout')tourStart('lift');},800);
+  if(!S||!S.settings.setupDone)return;TOUR.view={workout:'lift',diet:'diet',friends:'friends',editor:'editor'}[v]||'';
+  if(v==='workout'&&!S.settings.needSplit)setTimeout(()=>{if(curView==='workout')tourStart('lift');},900);
   if(v==='diet')setTimeout(()=>{if(curView==='diet')tourStart('diet');},800);
   if(v==='friends')setTimeout(()=>{if(curView==='friends'&&document.querySelector('#view-friends .frme'))tourStart('friends');},1400);
   if(v==='editor')setTimeout(()=>{if(document.querySelector('#view-editor.active'))tourStart('editor');},700);
+}
+
+/* ================= MORE MOTION: day-chip pill, set counter roll, progress sweep, tick pop, calories fly into the ring ================= */
+// the selected day on Lift sits on a pill that slides to the day you pick (like the tab bar)
+const DPILL={x:null,y:0,w:0,h:0,sp:''};
+// the pill is part of the chips' HTML at its last spot (no flash on re-render); it's measured and slid a frame later,
+// and only while Lift is on screen (measuring a hidden page forces a costly layout)
+function dayPillHTML(){const sp=(S&&S.activeSplit)||'';return DPILL.x!=null&&DPILL.sp===sp?'<i class="dpill" aria-hidden="true" style="transform:translate3d('+DPILL.x+'px,'+DPILL.y+'px,0);width:'+DPILL.w+'px;height:'+DPILL.h+'px"></i>':'';}
+function dayPillSoon(){const bar=$('dayChips');if(bar&&!bar.querySelector('.dpill'))bar.classList.remove('haspill');cancelAnimationFrame(DPILL.raf);DPILL.raf=requestAnimationFrame(()=>{if($('view-workout').classList.contains('active'))dayPill();});}
+function dayPill(){
+  const bar=$('dayChips');if(!bar)return;const on=bar.querySelector('.chip.on'),sp=(S&&S.activeSplit)||'';
+  let p=bar.querySelector('.dpill');
+  if(!on){if(p)p.remove();bar.classList.remove('haspill');DPILL.x=null;return;}
+  const x=on.offsetLeft,y=on.offsetTop,w=on.offsetWidth,h=on.offsetHeight;if(!w)return;   // hidden right now: placed when shown
+  if(!p){p=document.createElement('i');p.className='dpill';p.setAttribute('aria-hidden','true');bar.prepend(p);}
+  p.style.height=h+'px';
+  if(DPILL.x!=null&&DPILL.sp===sp&&(DPILL.x!==x||DPILL.w!==w)&&!RM){p.style.transition='none';p.style.transform='translate3d('+DPILL.x+'px,'+DPILL.y+'px,0)';p.style.width=DPILL.w+'px';void p.offsetWidth;p.style.transition='';}
+  p.style.transform='translate3d('+x+'px,'+y+'px,0)';p.style.width=w+'px';
+  Object.assign(DPILL,{x,y,w,h,sp});bar.classList.add('haspill');
+}
+// a logged set: the tick pops with a ring
+function tickPop(cb){if(RM||!cb)return;cb.classList.remove('ck');void cb.offsetWidth;cb.classList.add('ck');clearTimeout(cb._ck);cb._ck=setTimeout(()=>cb.classList.remove('ck'),650);}
+// a logged meal: its calories fly from where you tapped Save into the calorie ring
+function kcalFly(mid){
+  if(RM||typeof kcalOn!=='function'||!kcalOn())return;
+  setTimeout(()=>{
+    const ring=document.querySelector('#view-diet.active #kcalCard .khring'),f=findMeal(mid);if(!ring||!f)return;
+    const kc=Math.round(kcalOf(f.e.n)*(f.e.mult||1));if(!(kc>0))return;
+    const b=ring.getBoundingClientRect();if(b.bottom<70||b.top>innerHeight-110)return;   // ring scrolled away: skip
+    const x1=b.left+b.width/2,y1=b.top+b.height/2,x0=innerWidth/2,y0=innerHeight-150,dx=x1-x0,dy=y1-y0;
+    const c=document.createElement('div');c.className='kfly';c.textContent='+'+kc.toLocaleString()+' kcal';c.style.left=x0+'px';c.style.top=y0+'px';document.body.appendChild(c);
+    const a=anim(c,[{transform:'translate(-50%,-50%) scale(.55)',opacity:0},
+      {transform:'translate(-50%,-50%) translate('+(dx*.12).toFixed(1)+'px,'+(dy*.32-26).toFixed(1)+'px) scale(1.08)',opacity:1,offset:.32},
+      {transform:'translate(-50%,-50%) translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale(.42)',opacity:.15}],{duration:820,easing:'cubic-bezier(.55,0,.25,1)'});
+    if(!a){c.remove();return;}
+    a.onfinish=()=>{c.remove();const kh=ring.closest('.kh');if(kh){kh.classList.remove('kfhit');void kh.offsetWidth;kh.classList.add('kfhit');setTimeout(()=>kh.classList.remove('kfhit'),700);}burst(x1,y1,'#ffb36e');haptic('light');};
+  },360);
 }
 
 /* ================= INIT ================= */
@@ -6331,7 +6516,7 @@ function initUI(){
   /* light haptic on every button press in the app shell */
   document.addEventListener('click',e=>{const b=e.target.closest('.btn-primary,.chip,.addbtn');if(b&&!b.closest('nav'))haptic(b.matches('.chip')?'selection':'light');},true);
 }
-function hideSplash(){const s=$('splash');if(s&&!s.classList.contains('gone')){s.classList.add('gone');setTimeout(()=>s.remove(),600);}}
+function hideSplash(){if(SPLASH_HOLD){SPLASH_WANT=1;return;}const s=$('splash');if(s&&!s.classList.contains('gone')){s.classList.add('gone');setTimeout(()=>s.remove(),600);}}
 
 /* ================= v2 UI: compact bar, nav scrub, page swipe, reveal, ripple ================= */
 let revealObs=null;
@@ -6513,7 +6698,7 @@ function init(){
   readSprings();
   if(!('switch' in HTMLInputElement.prototype))document.documentElement.classList.add('noswitch');
   if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}catch(e){}}
-  boot();
+  appGateBoot();boot();
 }
 init();
 </script>
