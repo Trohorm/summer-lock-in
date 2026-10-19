@@ -1247,6 +1247,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 
 .ainote{margin:0 0 12px;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.35;color:#f5c26b;background:rgba(245,194,107,.09);border:1px solid rgba(245,194,107,.22)}
 .aolist .req b{display:block}
+.aoback{text-align:right;white-space:nowrap;padding-left:10px}.aoback b{display:block;color:#f5c26b}.aoback.ok .tiny{color:#3ecf8e}
 </style>
 </head>
 <body>
@@ -1453,6 +1454,11 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 
   <!-- SETUP -->
   <section class="view" id="view-settings">
+    <div class="card" id="aiAdmCard" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0">AI credit</h2><button class="btn btn-ghost btn-sm" onclick="aiAdminList(true)">Refresh</button></div>
+      <p class="tiny" style="margin:6px 0 12px">Only you see this — who ran out of Puter AI credit and when it comes back (<span id="aiAdmCount">…</span>).</p>
+      <div id="aiAdmBox"></div>
+    </div>
     <div class="card">
       <h2>Profile</h2>
       <div class="field"><label class="f">Display name</label><input id="set-name" maxlength="24"></div>
@@ -1810,7 +1816,7 @@ async function ai(prompt,img){
     const txt=normChat(r);
     // Puter can answer with a short "you've hit your usage limit" message instead of an error
     if(txt&&txt.length<400&&!/[{\[]/.test(txt)&&AI_CREDIT.test(txt))throw aiOutHit();
-    if(out){aiOutSet(null);const el=$('aiOutNote');if(el)el.hidden=true;}
+    if(out){aiOutSet(null);const el=$('aiOutNote');if(el)el.hidden=true;if(out.r&&typeof sapi==='function')sapi('/aiout/back','POST',{}).catch(()=>{});}
     window.__aiOk[key]=m;return txt;}
   throw err;
 }
@@ -2001,7 +2007,7 @@ function renderView(v){
   if(v==='diet')renderDiet();
   if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
   if(v==='friends')renderFriends();
-  if(v==='settings')renderSettings();
+  if(v==='settings'){renderSettings();aiAdminList();}
   viewVer[v]=verKey(v);
 }
 let enteringView='',swipeFrom=null,heroDeco=null,leaveAnims=[];
@@ -5194,14 +5200,33 @@ function quickCaf(i,btn){
   toast(new Date().getHours()>=CAF_CUT?'Logged '+q[0]+' — ⚠ caffeine after 1 pm':tot>lim?'Logged '+q[0]+' — ⚠ '+fmtNum(tot)+' mg is over your '+fmtNum(lim)+' mg':'Logged '+q[0]+' · '+fmtNum(tot)+' mg today');
 }
 
+const AIADM={admin:null,items:null,t:0};
+const aiBackDate=mo=>{const [y,m]=mo.split('-').map(Number);return new Date(y,m,1);};
+async function aiAdminList(force){
+  const card=$('aiAdmCard');if(!card||typeof sapi!=='function'||typeof socTok!=='function'||!socTok())return;
+  if(AIADM.admin===null){try{AIADM.admin=!!(await sapi('/admin')).admin;}catch(e){return;}}
+  card.hidden=!AIADM.admin;if(!AIADM.admin)return;
+  const box=$('aiAdmBox');
+  if(force||!AIADM.items||Date.now()-AIADM.t>60e3){if(!AIADM.items)box.innerHTML='<p class="tiny">Loading…</p>';
+    try{AIADM.items=(await sapi('/admin/aiout')).items||[];AIADM.t=Date.now();}catch(e){box.innerHTML='<p class="tiny">Couldn’t load — '+esc(e.message)+'</p>';return;}}
+  const now=Date.now(),cur=aiMonth(),day=864e5;
+  const out=AIADM.items.filter(x=>!x.back&&x.month===cur),back=AIADM.items.filter(x=>x.back||x.month!==cur).slice(0,6);
+  const d=t=>new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  const row=(x,live)=>{const bd=aiBackDate(x.month),left=Math.max(0,Math.ceil((bd-now)/day));
+    return '<div class="req"><div class="grow"><b>'+esc(x.name||x.handle)+'</b><div class="tiny">@'+esc(x.handle)+(x.pname&&x.pname.toLowerCase()!==x.handle?' · Puter: '+esc(x.pname):'')+' · ran out '+d(x.first)+(x.n>1?' · hit it '+x.n+'×':'')+'</div></div>'+
+      (live?'<div class="aoback"><b>'+d(bd)+'</b><span class="tiny">'+(left<=1?'tomorrow':'in '+left+' days')+'</span></div>':'<div class="aoback ok"><span class="tiny">back '+d(x.back||bd)+'</span></div>')+'</div>';};
+  box.innerHTML=(out.length?'<div class="aolist">'+out.map(x=>row(x,1)).join('')+'</div>':'<p class="tiny" style="margin:0">Nobody is out of AI credit right now.</p>')+
+    (back.length?'<label class="f" style="margin-top:14px">Recently back</label><div class="aolist">'+back.map(x=>row(x,0)).join('')+'</div>':'');
+  $('aiAdmCount').textContent=out.length?out.length+' out right now':'nobody out';
+}
 async function aiAdminCheck(){
   if(typeof sapi!=='function'||typeof socTok!=='function'||!socTok()||!navigator.onLine)return;
   let j;try{j=await sapi('/admin/aiout');}catch(e){return;}
-  const items=(j.items||[]).filter(x=>!x.seen);if(!items.length)return;
+  AIADM.items=j.items||[];AIADM.t=Date.now();const items=AIADM.items.filter(x=>!x.seen&&!x.back&&x.month===aiMonth());if(!items.length)return;
   const when=t=>new Date(t).toLocaleString(undefined,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   openSheet('AI credit ran out','<p class="tiny" style="margin:0 0 12px">These people hit their Puter AI limit. The app shows them a note and uses the built-in grading until it resets next month.</p><div class="aolist">'+
     items.map(x=>'<div class="req"><div class="grow"><b>'+esc(x.name||x.handle)+'</b><div class="tiny">@'+esc(x.handle)+(x.pname?' · Puter: '+esc(x.pname):'')+'</div><div class="tiny">Ran out '+when(x.first)+(x.n>1?' · '+x.n+' times, last '+when(x.last):'')+'</div></div></div>').join('')+
-    '</div><button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="sapi(\'/admin/aiout/seen\',\'POST\',{}).catch(()=>{});closeSheet()">Got it</button>');
+    '</div><p class="tiny" style="margin:12px 0 0">The full list is in Setup → AI credit.</p><button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="sapi(\'/admin/aiout/seen\',\'POST\',{}).catch(()=>{});closeSheet()">Got it</button>');
   haptic('heavy');
 }
 /* ================= INIT ================= */
