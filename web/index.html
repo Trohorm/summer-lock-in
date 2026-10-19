@@ -5152,11 +5152,22 @@ async function dobSet(d){
   save();
 }
 async function dobLoad(){
-  const st=S&&S.settings;if(!st)return;
+  const st=S&&S.settings;if(!st)return;setTimeout(dobAsk,600);
   if(st.dob&&!st.dobE){await dobSet(st.dob);return;}            // saved while offline: encrypt it now
   if(!st.dobE||typeof e2eLoad!=='function'||!(await e2eLoad()))return;
   try{DOB=TD.decode(await decS(E2E.self,st.dobE,'dob'));const a=ageFrom(DOB);if(a&&a!==st.age){st.age=a;save();}}catch(e){}
   if($('set-dob')&&!$('set-dob').value)$('set-dob').value=DOB;
+}
+function dobAsk(){
+  const st=S&&S.settings;if(!st||!st.setupDone||st.dob||st.dobE||DOB)return;
+  if($('view-wizard').classList.contains('active')||$('sheet').classList.contains('show')){setTimeout(dobAsk,4000);return;}
+  openSheet('When’s your birthday?','<p class="tiny" style="margin:0 0 14px">Lock In now uses your birthday instead of your age — it keeps your targets and limits (like caffeine) right as you get older. It’s encrypted with your own key; nobody else can read it.</p>'+
+    '<div class="field"><label class="f">Birthday</label><input id="ask-dob" type="date" max="'+addDays(todayStr(),-3650)+'" min="1920-01-01"></div>'+
+    '<button class="btn btn-primary" id="askDobBtn" style="width:100%;margin-top:6px">Save birthday</button>');
+  $('askDobBtn').onclick=async()=>{const v=$('ask-dob').value;
+    if(!/^\d{4}-\d\d-\d\d$/.test(v)||ageFrom(v)<10||ageFrom(v)>100){toast('Enter your birthday first');$('ask-dob').focus();return;}
+    $('askDobBtn').disabled=true;await dobSet(v);if($('set-dob'))$('set-dob').value=v;if($('ageLbl'))$('ageLbl').textContent='· age '+S.settings.age;
+    closeSheet();toast('Birthday saved — age '+S.settings.age);haptic('success');};
 }
 
 /* ---------- good stuff: same idea as micros (done first, then closest), never red ---------- */
@@ -5223,6 +5234,7 @@ async function aiAdminCheck(){
   if(typeof sapi!=='function'||typeof socTok!=='function'||!socTok()||!navigator.onLine)return;
   let j;try{j=await sapi('/admin/aiout');}catch(e){return;}
   AIADM.items=j.items||[];AIADM.t=Date.now();const items=AIADM.items.filter(x=>!x.seen&&!x.back&&x.month===aiMonth());if(!items.length)return;
+  if($('sheet').classList.contains('show')){setTimeout(aiAdminCheck,5000);return;}
   const when=t=>new Date(t).toLocaleString(undefined,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   openSheet('AI credit ran out','<p class="tiny" style="margin:0 0 12px">These people hit their Puter AI limit. The app shows them a note and uses the built-in grading until it resets next month.</p><div class="aolist">'+
     items.map(x=>'<div class="req"><div class="grow"><b>'+esc(x.name||x.handle)+'</b><div class="tiny">@'+esc(x.handle)+(x.pname?' · Puter: '+esc(x.pname):'')+'</div><div class="tiny">Ran out '+when(x.first)+(x.n>1?' · '+x.n+' times, last '+when(x.last):'')+'</div></div></div>').join('')+
