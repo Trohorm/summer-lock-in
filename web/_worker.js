@@ -34,8 +34,8 @@ async function ipaSource(url) {
 
 /* ============================== FRIENDS API ============================== */
 // What a friend can be allowed to see. Defaults for new accounts: training yes, body data no.
-const CATS = ['gym', 'lifts', 'split', 'diet', 'nutr', 'body'];
-const DEFAULTS = { gym: true, lifts: true, split: true, diet: true, nutr: false, body: false };
+const CATS = ['gym', 'lifts', 'split', 'diet', 'nutr', 'body', 'photos'];
+const DEFAULTS = { gym: true, lifts: true, split: true, diet: true, nutr: false, body: false, photos: true };
 const EMOJI = ['💪', '🔥', '👏', '🫡', '🤯', '👋'];
 const ABC = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const HOUR = 3600e3, DAY = 864e5, LINK_TTL = DAY, QR_TTL = 40e3; // QR shown for 30 s, accepted for 40 s (scan delay)
@@ -52,6 +52,10 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS tokens(h TEXT PRIMARY KEY, id TEXT NOT NULL, exp INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS invites(code TEXT PRIMARY KEY, uid TEXT NOT NULL, kind TEXT NOT NULL, exp INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS invites_uid ON invites(uid)`,
+  `CREATE TABLE IF NOT EXISTS sends(id INTEGER PRIMARY KEY AUTOINCREMENT, from_uid TEXT NOT NULL, to_uid TEXT NOT NULL, code TEXT NOT NULL, ts INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE INDEX IF NOT EXISTS sends_to ON sends(to_uid, done)`,
+  `CREATE TABLE IF NOT EXISTS posts(id TEXT PRIMARY KEY, uid TEXT NOT NULL, ts INTEGER NOT NULL, cap TEXT NOT NULL DEFAULT '', type TEXT NOT NULL, data TEXT NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS posts_uid ON posts(uid, ts)`,
   `CREATE TABLE IF NOT EXISTS shares(code TEXT PRIMARY KEY, uid TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, created INTEGER NOT NULL)`
 ];
 let schemaReady = null;
@@ -99,7 +103,7 @@ async function sha256(s) {
 }
 async function readBody(req) {
   const t = await req.text();
-  if (t.length > 400000) throw new HttpError(413, 'too_big', 'That is too much data at once.');
+  if (t.length > 1200000) throw new HttpError(413, 'too_big', 'That is too much data at once.');
   if (!t) return {};
   const b = parse(t);
   if (!b || typeof b !== 'object') throw new HttpError(400, 'bad_json', 'Bad request.');
@@ -213,6 +217,8 @@ async function api(req, env, ctx, url) {
       case 'POST /api/react': return await react(db, id, b);
       case 'POST /api/seen': await db.prepare('UPDATE users SET seen=? WHERE id=?').bind(Date.now(), id).run(); return J({ ok: true });
       case 'POST /api/share': return await share(db, id, b);
+      case 'POST /api/posts': return await addPost(db, id, b);
+      case 'GET /api/posts': return await listPosts(db, id, String(url.searchParams.get('u') || id));
       case 'GET /api/lookup': {
         const h = String(url.searchParams.get('h') || '').toLowerCase().replace(/^@/, '').trim();
         const u = /^[a-z0-9_.]{3,20}$/.test(h) && await db.prepare('SELECT id,handle,name,av FROM users WHERE handle=?').bind(h).first();
@@ -220,6 +226,14 @@ async function api(req, env, ctx, url) {
         const l = await db.prepare('SELECT state FROM links WHERE a=? AND b=?').bind(id, u.id).first();
         return J({ user: pub(u), state: u.id === id ? 'self' : l ? l.state : 'none' });
       }
+    }
+    if ((m = /^\/api\/posts\/([a-f0-9]{16,32})(\/img)?$/.exec(p))) {
+      if (m[2] && M === 'GET') return await postImg(db, id, m[1]);
+      if (!m[2] && M === 'DELETE') { await db.prepare('DELETE FROM posts WHERE id=? AND uid=?').bind(m[1], id).run(); return J({ ok: true }); }
+    }
+    if ((m = /^\/api\/sends\/(\d{1,12})\/done$/.exec(p)) && M === 'POST') {
+      await db.prepare('UPDATE sends SET done=1 WHERE id=? AND to_uid=?').bind(+m[1], id).run();
+      return J({ ok: true });
     }
     if ((m = /^\/api\/friends\/([a-z0-9]{8,32})(\/perms)?$/.exec(p))) {
       if (!m[2] && M === 'GET') return await profile(db, id, m[1]);
@@ -315,7 +329,15 @@ async function friendsOut(db, me) {
       WHERE r.owner=? AND r.uid<>? ORDER BY r.ts DESC LIMIT 40`).bind(me, me).all()).results || [];
   const S = {};
   for (const s of snaps) (S[s.uid] = S[s.uid] || {})[s.cat] = { d: parse(s.data), t: s.updated };
-  const out = { now, me: meRow, friends: [], incoming: [], outgoing: [], feed: [], inbox: [] };
+  const canSee = {};
+  for (const r of friends) canSee[r.id] = eff(r.defaults, r.theirs);
+  const postOwners = [me, ...fids.filter(f => canSee[f].photos)];
+  const postRows = await selectIn(db, 'SELECT id, uid, ts, cap FROM posts WHERE ts>? AND uid IN ', postOwners, ' ORDER BY ts DESC LIMIT 60', [now - 21 * DAY]);
+  const gifts = (await db.prepare(`SELECT s.id, s.code, s.ts, sh.data, u.id AS uid, u.handle, u.name, u.av FROM sends s JOIN shares sh ON sh.code=s.code JOIN users u ON u.id=s.from_uid
+      WHERE s.to_uid=? AND s.done=0 AND s.ts>? ORDER BY s.ts DESC LIMIT 10`).bind(me, now - 30 * DAY).all()).results || [];
+  const out = { now, me: meRow, friends: [], incoming: [], outgoing: [], feed: [], inbox: [],
+    gifts: gifts.map(g => { const d = parse(g.data) || {}; return { id: g.id, code: g.code, ts: g.ts, name: String(d.name || 'Split').slice(0, 40), days: Array.isArray(d.days) ? d.days.length : 0, from: pub({ id: g.uid, handle: g.handle, name: g.name, av: g.av }) }; }) };
+  for (const x of postRows) out.feed.push({ id: 'p' + x.id, c: 'photos', t: 'p', ts: x.ts, cap: x.cap, by: x.uid });
   for (const r of rows) {
     const u = pub(r);
     if (r.state === 'in') out.incoming.push(Object.assign(u, { ts: r.created }));
@@ -391,6 +413,8 @@ async function deleteMe(db, id) {
     db.prepare('DELETE FROM avatars WHERE uid=?').bind(id),
     db.prepare('DELETE FROM shares WHERE uid=?').bind(id),
     db.prepare('DELETE FROM invites WHERE uid=?').bind(id),
+    db.prepare('DELETE FROM posts WHERE uid=?').bind(id),
+    db.prepare('DELETE FROM sends WHERE from_uid=? OR to_uid=?').bind(id, id),
     db.prepare('DELETE FROM tokens WHERE id=?').bind(id),
     db.prepare('DELETE FROM users WHERE id=?').bind(id)]);
   for (const [k, v] of MEM) if (v.id === id) MEM.delete(k);
@@ -436,9 +460,14 @@ async function react(db, me, b) {
     return J({ ok: true, item: key, already: !(res.meta && res.meta.changes) });
   }
   const can = eff(r.defaults, r.theirs);
-  const f = await db.prepare("SELECT data FROM snaps WHERE uid=? AND cat='feed'").bind(owner).first();
-  const it = f && (parse(f.data) || []).find(x => x && x.id === item);
-  if (!it || !can[it.c]) throw new HttpError(404, 'gone', 'That post isn’t available any more.');
+  if (/^p[a-f0-9]{16,32}$/.test(item)) {
+    const ps = await db.prepare('SELECT 1 AS ok FROM posts WHERE id=? AND uid=?').bind(item.slice(1), owner).first();
+    if (!ps || !can.photos) throw new HttpError(404, 'gone', 'That post isn’t available any more.');
+  } else {
+    const f = await db.prepare("SELECT data FROM snaps WHERE uid=? AND cat='feed'").bind(owner).first();
+    const it = f && (parse(f.data) || []).find(x => x && x.id === item);
+    if (!it || !can[it.c]) throw new HttpError(404, 'gone', 'That post isn’t available any more.');
+  }
   const st = [emoji ? db.prepare('INSERT OR REPLACE INTO reacts(owner,item,uid,emoji,ts) VALUES(?,?,?,?,?)').bind(owner, item, me, emoji, Date.now())
                     : db.prepare('DELETE FROM reacts WHERE owner=? AND item=? AND uid=?').bind(owner, item, me)];
   if (Math.random() < 0.03) st.push(db.prepare('DELETE FROM reacts WHERE ts<?').bind(Date.now() - 90 * DAY));
@@ -451,9 +480,43 @@ async function share(db, me, b) {
   if (s.length > 60000) throw new HttpError(413, 'too_big', 'That split is too large to share.');
   const n = await db.prepare('SELECT COUNT(*) AS n FROM shares WHERE uid=? AND created>?').bind(me, Date.now() - DAY).first();
   if (n && n.n >= 40) throw new HttpError(429, 'slow_down', 'That’s a lot of sharing for one day — try again tomorrow.');
-  const c = code(8);
-  await db.prepare('INSERT INTO shares(code,uid,kind,data,created) VALUES(?,?,?,?,?)').bind(c, me, b.kind, s, Date.now()).run();
-  return J({ code: c });
+  const c = code(8), now = Date.now(), st = [db.prepare('INSERT INTO shares(code,uid,kind,data,created) VALUES(?,?,?,?,?)').bind(c, me, b.kind, s, now)];
+  const to = Array.isArray(b.to) ? [...new Set(b.to.map(String))].slice(0, 50) : [];
+  let sent = 0;
+  if (to.length) {
+    const ok = await selectIn(db, "SELECT b FROM links WHERE a=? AND state='friend' AND b IN ", to, '', [me]);
+    for (const x of ok) { st.push(db.prepare('INSERT INTO sends(from_uid,to_uid,code,ts) VALUES(?,?,?,?)').bind(me, x.b, c, now)); sent++; }
+  }
+  await db.batch(st);
+  return J({ code: c, sent });
+}
+
+/* ---------- progress-photo posts (visible to friends allowed "photos") ---------- */
+async function canSeePhotos(db, me, owner) {
+  if (owner === me) return true;
+  const r = await db.prepare(LINKQ + ' WHERE l.a=? AND l.b=?').bind(me, owner).first();
+  return !!(r && r.state === 'friend' && eff(r.defaults, r.theirs).photos);
+}
+async function addPost(db, me, b) {
+  const m = /^data:(image\/(?:jpeg|webp|png));base64,([A-Za-z0-9+/=]+)$/.exec(String((b && b.img) || ''));
+  if (!m) throw new HttpError(400, 'bad_image', 'That photo couldn’t be used.');
+  if (m[2].length > 1100000) throw new HttpError(413, 'too_big', 'That photo is too large.');
+  const id = crypto.randomUUID().replace(/-/g, ''), ts = Date.now();
+  const n = await db.prepare('SELECT COUNT(*) AS n FROM posts WHERE uid=?').bind(me).first();
+  const st = [db.prepare('INSERT INTO posts(id,uid,ts,cap,type,data) VALUES(?,?,?,?,?,?)').bind(id, me, ts, clean(b.cap, 200), m[1], m[2])];
+  if (n && n.n >= 60) st.unshift(db.prepare('DELETE FROM posts WHERE id IN (SELECT id FROM posts WHERE uid=? ORDER BY ts ASC LIMIT ?)').bind(me, n.n - 59));
+  await db.batch(st);
+  return J({ id, ts });
+}
+async function listPosts(db, me, owner) {
+  if (!/^[a-z0-9]{8,32}$/.test(owner) || !(await canSeePhotos(db, me, owner))) throw new HttpError(403, 'private', 'Progress photos are private.');
+  const r = (await db.prepare('SELECT id, ts, cap FROM posts WHERE uid=? ORDER BY ts DESC LIMIT 60').bind(owner).all()).results || [];
+  return J({ posts: r, mine: owner === me });
+}
+async function postImg(db, me, id) {
+  const r = await db.prepare('SELECT uid, type, data FROM posts WHERE id=?').bind(id).first();
+  if (!r || !(await canSeePhotos(db, me, r.uid))) return new Response('', { status: 404 });
+  return new Response(Uint8Array.from(atob(r.data), c => c.charCodeAt(0)), { headers: { 'content-type': r.type, 'cache-control': 'private, max-age=604800' } });
 }
 
 /* ============================== INVITE / SHARE LINKS ============================== */
