@@ -24,3 +24,14 @@ It builds an unsigned IPA on macOS, attaches it to a GitHub release and updates 
 which ipa.lockin-app.online serves to SideStore.
 
 Web changes need no app release — the app loads the live site.
+
+## Versions
+- **iPhone app:** the web app compares the app's version (`window.__lockinNative.version`) with the latest
+  one in `source.json` (served at `/api/appver`). An older app shows a full-screen update screen and can't be used
+  until it's updated — so a new release in the Build IPA workflow reaches everyone right away.
+- **What's new:** each web release bumps `WEB_VER` and adds an entry to `WHATSNEW` (built from `tools/p30_ver.py`
+  in the build scripts). Existing users see it once after the update; new accounts don't.
+
+## Public split links
+`/p/<code>#<key>` — anyone can follow; only the owner's app writes (`/api/pub`). The key after `#` never reaches
+the server, so the stored copy is encrypted. Followers poll for the latest version; to change it they duplicate it.

@@ -344,8 +344,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:rgba(110,166,2
 .excard.exdone{opacity:1;border-color:rgba(62,207,142,.3);background:rgba(62,207,142,.04)}
 .excard.exdone .nm{text-decoration:none;color:#9fe3bc}
 .exhead .thumb{border-radius:12px;transition:transform .25s var(--spring)}.exhead .thumb:active{transform:scale(.92)}
-.setrow input[type=number]{border-radius:10px}
-.setrow:has(.done-in:checked) input[type=number]{border-color:rgba(62,207,142,.4);background:rgba(62,207,142,.07);color:#bff0d6}
+.setrow input:not(.done-in){border-radius:10px}
+.setrow:has(.done-in:checked) input:not(.done-in){border-color:rgba(62,207,142,.4);background:rgba(62,207,142,.07);color:#bff0d6}
 .setrow input.done-in{-webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:10px;border:1.5px solid rgba(255,255,255,.16);background:rgba(8,10,13,.6) center/17px no-repeat;cursor:pointer;transition:background-color .2s,border-color .2s,transform .25s var(--spring);padding:0;margin:0}
 .setrow input.done-in:checked{background-color:#2fbf7f;border-color:#2fbf7f;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");animation:pop .35s var(--spring)}
 @keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
@@ -1308,6 +1308,29 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 .prnew{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:9.5px;font-weight:900;letter-spacing:.06em;color:#1a1300;background:linear-gradient(90deg,#f0b941,#ffe08a,#f0b941);background-size:200% 100%;animation:prshine 2.4s linear infinite;vertical-align:2px}
 @keyframes prshine{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.prnew,.csline.live,.cafshake,.kh.hitnow .khring{animation:none}}
+.histact{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.histact .btn{min-height:44px!important;height:auto!important;font-size:13.5px!important;padding:10px 6px!important}
+.cs3{grid-template-columns:1fr 1fr 1fr!important}
+.cs3 .segpill2{width:calc((100% - 6px)/3)}
+.cs3[data-m="together"] .segpill2{transform:translate3d(100%,0,0)}
+.cs3[data-m="public"] .segpill2{transform:translate3d(200%,0,0)}
+.cs3 button{padding:9px 3px}.cs3 button b{font-size:12.5px}.cs3 button small{font-size:10.5px}
+.publink{display:flex;gap:8px;margin-top:4px}.publink input{flex:1;min-width:0;font-size:12.5px;color:var(--sky)}
+.pubstat{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(110,166,255,.08);border:1px solid rgba(110,166,255,.16);font-size:13px;color:var(--slate)}.pubstat b{color:#fff}
+.wnitem{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);animation:li-in .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--j)*45ms)}
+.wnitem i{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-style:normal;font-size:19px;background:rgba(110,166,255,.12);border:1px solid rgba(110,166,255,.2)}
+.wnitem b{font-size:14.5px;color:#fff}.wnitem p{font-size:13px;color:var(--slate);margin-top:2px;line-height:1.4}
+#updGate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:calc(env(safe-area-inset-top) + 20px) 22px calc(env(safe-area-inset-bottom) + 20px);
+  background:radial-gradient(80% 60% at 50% 0%,rgba(91,147,255,.25),transparent 70%),rgba(10,12,15,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transition:opacity .35s}
+#updGate.show{opacity:1}
+.ugcard{width:100%;max-width:360px;text-align:center}
+.ugicon{width:76px;height:76px;margin:0 auto 18px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(135deg,#6ea6ff,#7b6cff);box-shadow:0 18px 50px rgba(91,147,255,.45);animation:float 3s ease-in-out infinite}
+.ugicon svg{width:36px;height:36px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#updGate h2{font-size:26px;letter-spacing:-.02em;color:#fff;margin-bottom:6px}.ugsub{color:var(--slate);font-size:14.5px;line-height:1.45}
+.ugver{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0;padding:14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
+.ugver small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}.ugver b{font-size:22px;color:#fff}.ugver span{color:#6ea6ff;font-size:20px}
+.ugver div:last-child b{color:#7ee2b1}
+.ugsteps{text-align:left;margin:0 0 18px 0;padding-left:20px;color:#d9e4f8;font-size:14px;line-height:1.9}
 </style>
 </head>
 <body>
@@ -1351,7 +1374,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
       <div class="wizsub">Your numbers drive your nutrition goals. Change anything later in Setup.</div>
       <div class="field"><label class="f">Display name</label><input id="wz-name" maxlength="24" placeholder="How should the app call you?"></div>
       <div class="grid2">
-        <div class="field"><label class="f">Weight kg</label><input id="wz-weight" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label class="f">Weight kg</label><input id="wz-weight" type="text" inputmode="decimal" autocomplete="off"></div>
         <div class="field"><label class="f">Height cm</label><input id="wz-height" type="number" inputmode="numeric"></div>
         <div class="field"><label class="f">Birthday</label><input id="wz-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="wz-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
@@ -1485,7 +1508,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
     <div class="card">
       <h2>Bodyweight</h2>
       <div class="row" style="margin-bottom:10px">
-        <input type="number" step="0.1" inputmode="decimal" id="bwIn" placeholder="kg" style="max-width:110px">
+        <input type="text" inputmode="decimal" autocomplete="off" id="bwIn" placeholder="kg" style="max-width:110px">
         <input type="date" id="bwDate" class="grow">
         <button class="btn btn-ghost btn-sm" id="bwSave">Save</button>
       </div>
@@ -1525,7 +1548,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
       <h2>Profile</h2>
       <div class="field"><label class="f">Display name</label><input id="set-name" maxlength="24"></div>
       <div class="grid2">
-        <div class="field"><label class="f">Weight kg</label><input id="set-weight" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label class="f">Weight kg</label><input id="set-weight" type="text" inputmode="decimal" autocomplete="off"></div>
         <div class="field"><label class="f">Height cm</label><input id="set-height" type="number" inputmode="numeric"></div>
         <div class="field"><label class="f">Birthday <span class="tiny" id="ageLbl"></span></label><input id="set-dob" type="date" min="1930-01-01"></div>
         <div class="field"><label class="f">Sex</label><select id="set-sex"><option value="m">Male</option><option value="f">Female</option></select></div>
@@ -1568,6 +1591,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
       <h2>Install</h2>
       <p class="tiny"><b>iPhone home screen:</b> Safari → Share → Add to Home Screen.<br><b>App (SideStore):</b> add this source in SideStore → Sources → +</p>
       <div class="row" style="margin-top:8px"><input id="srcUrl" readonly value="https://ipa.lockin-app.online"><button class="btn btn-ghost btn-sm" id="srcCopy">Copy</button></div>
+      <div class="row" style="margin-top:12px;align-items:center"><span class="tiny grow" id="verLine"></span><button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">What’s new</button></div>
     </div>
     <div class="card">
       <h2>Account &amp; data</h2>
@@ -1743,7 +1767,7 @@ function migrate(){
 function cacheKey(){return 'rtcache_'+(user?user.username:'anon');}
 let dataVer=0;const viewVer={};
 function verKey(v){return dataVer+'|'+todayStr()+(v==='diet'?'|'+dDate:'')+(v==='friends'||v==='today'?'|s'+SOC.v:'');}
-function save(){if(typeof csPushSoon==='function')csPushSoon();dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
+function save(){if(typeof csPushSoon==='function')csPushSoon();if(typeof pubPushSoon==='function')pubPushSoon();dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
 function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;try{localStorage.setItem(cacheKey(),JSON.stringify(S));}catch(e){}}
 function idle(fn){if(window.requestIdleCallback)requestIdleCallback(fn,{timeout:600});else setTimeout(fn,0);}
 function flushAll(){if(localT)writeLocal();if(dirty&&cloudReady)pushNow();}
@@ -2022,7 +2046,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){setTimeout(dobLoad,3000);migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){setTimeout(whatsNewCheck,2600);setTimeout(appVerCheck,900);setTimeout(dobLoad,3000);migrate();idle(writeLocal);document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -2071,7 +2095,7 @@ function renderView(v){
   if(v==='diet')renderDiet();
   if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
   if(v==='friends')renderFriends();
-  if(v==='settings'){renderSettings();aiAdminList();}
+  if(v==='settings'){renderSettings();aiAdminList();verLine();}
   viewVer[v]=verKey(v);
 }
 let enteringView='',swipeFrom=null,heroDeco=null,leaveAnims=[];
@@ -2304,7 +2328,7 @@ function exCard(wo,it,i){
   for(let s=0;s<n;s++){
     const sv=saved[s]||{},ps=pv[s]||{};
     rows+='<div class="setrow"><div class="sn">'+(s+1)+'</div>'+
-      '<input type="number" step="0.5" inputmode="decimal" placeholder="'+(ps.w||c[0].toLowerCase())+'" value="'+(sv.w||'')+'" id="w_'+i+'_'+s+'" oninput="syncWorkout()">'+
+      '<input type="text" inputmode="decimal" autocomplete="off" placeholder="'+(ps.w||c[0].toLowerCase())+'" value="'+(sv.w||'')+'" id="w_'+i+'_'+s+'" oninput="syncWorkout()">'+
       '<input type="number" inputmode="numeric" placeholder="'+(ps.r||(it.lo+'–'+it.hi))+'" value="'+(sv.r||'')+'" id="r_'+i+'_'+s+'" oninput="syncWorkout()">'+
       '<input type="checkbox" class="done-in" id="d_'+i+'_'+s+'" '+(sv.r?'checked':'')+' onchange="markDone(this,'+i+')"></div>';
   }
@@ -2475,9 +2499,9 @@ function histDet(w){
   const det=Object.keys(w.ex).map(k=>{const x=exInfo(k);const f=fmtSets(w.ex[k],x.t);return f?esc(x.full)+': '+esc(f):null;}).filter(Boolean).join('<br>');
   return det+(w.notes?'<br><i>'+esc(w.notes)+'</i>':'')+(w.ai?'<div class="ai">'+esc(w.ai)+'</div>':'')+
     '<br><span class="tiny">Volume ≈ '+Math.round(vol).toLocaleString()+' kg · </span>'+
-    '<span class="tiny" style="color:var(--sky);cursor:pointer" onclick="event.stopPropagation();openOld(\''+w.id+'\')">open</span><span class="tiny"> · </span>'+
-    '<span class="tiny" style="color:var(--sky);cursor:pointer" onclick="event.stopPropagation();aiFeedback(\''+w.id+'\',true)">'+(w.ai?'redo AI':'get AI feedback')+'</span><span class="tiny"> · </span>'+
-    '<span class="tiny" style="color:var(--bad);cursor:pointer" onclick="event.stopPropagation();delWorkout(\''+w.id+'\')">delete</span>';
+    '<div class="histact"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openOld(\''+w.id+'\')">Open</button>'+
+    '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();aiFeedback(\''+w.id+'\',true)">'+(w.ai?'Redo AI':'AI feedback')+'</button>'+
+    '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delWorkout(\''+w.id+'\')">Delete</button></div>';
 }
 function histOpen(el,id){const d=el.querySelector('.det');if(d&&!d.dataset.f){d.innerHTML=histDet(S.workouts[id]);d.dataset.f=1;}flip($('histList'),()=>el.classList.toggle('open'));}
 function openOld(id){const w=S.workouts[id];if(!w)return;const c=curWO();if(c&&c.id!==id&&!c.ended&&!woHasData(c))delete S.workouts[c.id];S.cur=id;editingOld=id;if(S.splits[w.split])S.activeSplit=w.split;save();renderWorkout();$('scroller').scrollTo({top:0,behavior:'smooth'});toast('Editing '+w.dayName+' from '+fmtD(w.date));}
@@ -2688,7 +2712,7 @@ function makeSortable(box,itemSel,gripSel,onDrop){
 /* ================= SPLIT EDITOR ================= */
 let draft=null,aiProposal=null,edOpen={};
 function edToggle(id){edOpen[id]=!edOpen[id];flip($('edDays'),renderEditor);}
-function openEditor(){edSort=false;draft=clone(activeSplit());edOpen={};aiProposal=null;$('aiSplitOut').innerHTML='';$('aiSplitIn').value='';show('editor');renderEditor();}
+function openEditor(){if(folBlock())return;edSort=false;draft=clone(activeSplit());edOpen={};aiProposal=null;$('aiSplitOut').innerHTML='';$('aiSplitIn').value='';show('editor');renderEditor();}
 function closeEditor(){edSort=false;if(draft&&JSON.stringify(draft)!==JSON.stringify(activeSplit())&&!confirm('Discard your changes to this split?'))return;draft=null;show('workout');}
 function saveEditor(){
   if(!draft.name.trim()){toast('Name the split');return;}
@@ -2757,11 +2781,12 @@ function createSplit(t){
   const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
   openEditor();
 }
-function dupSplit(){const sp=clone(draft);delete sp.cs;sp.id=uid('s');sp.name=(sp.name||'Split')+' (copy)';S.splits[sp.id]=sp;S.activeSplit=sp.id;save();draft=clone(sp);renderEditor();toast('Duplicated — now editing the copy');}
+function dupSplit(){const sp=clone(draft);delete sp.cs;delete sp.pub;delete sp.fol;sp.id=uid('s');sp.name=(sp.name||'Split')+' (copy)';S.splits[sp.id]=sp;S.activeSplit=sp.id;save();draft=clone(sp);renderEditor();toast('Duplicated — now editing the copy');}
 function delSplit(){
   if(Object.keys(S.splits).length<2){toast('You need at least one split');return;}
   if(draft.cs){csDeleteSplit();return;}
-  if(!confirm('Delete the split "'+draft.name+'"? Logged workouts stay in your history.'))return;
+  if(!confirm('Delete the split "'+draft.name+'"?'+(draft.pub?' Its public link is turned off too.':'')+' Logged workouts stay in your history.'))return;
+  if(draft.pub)sapi('/pub/'+draft.pub.code,'DELETE').catch(()=>{});
   delete S.splits[draft.id];S.activeSplit=Object.keys(S.splits)[0];
   const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
   draft=null;save();show('workout');toast('Split deleted');
@@ -3301,7 +3326,7 @@ function drawMD(){
     '<div class="field"><label class="f">Meal name</label><input value="'+esc(MD.name||'')+'" onchange="MD.name=this.value"></div>'+
     (MD.note?'<p class="tiny" style="margin:-4px 0 8px">'+esc(MD.note)+'</p>':'')+
     '<label class="f">Foods in this meal</label>'+
-    MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><input type="number" inputmode="decimal" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value)"><span>g</span></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
+    MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><input type="text" inputmode="decimal" autocomplete="off" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value)"><span>g</span></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
       '<div class="pm">'+(kcalOn()?'<b class="mkcal">'+Math.round(kcalOf(p.n))+' kcal</b> · ':'')+'P '+fmtNum(p.n.protein||0)+' · C '+fmtNum(p.n.carbs||0)+' · F '+fmtNum(p.n.fat||0)+' g'+(p.flags&&p.flags.length?' '+flagChips(p.flags,1):'')+'</div>'+ingBlock(p)+'</div>').join('')+
     '<div class="row" style="margin:10px 0 4px"><input id="mdAdd" class="grow" placeholder="Add a food or ingredient, e.g. 2 tbsp peanut butter"><button class="btn btn-ghost btn-sm" id="mdAddBtn" onclick="addPart()">Add</button></div>'+
     '<details class="fold" id="cookFold"'+(MD.cookOpen?' open':'')+' ontoggle="MD.cookOpen=this.open"><summary>How was it cooked? (adds the fat it took up)</summary><div class="fb" id="cookBox"></div></details>'+
@@ -3722,8 +3747,8 @@ function renderSettings(){
   $('set-notify').checked=s.restNotify!==false;$('notifyLine').style.display=hasNative()?'':'none';
   $('t-protein').value=S.targets.protein||'';$('t-carbs').value=S.targets.carbs||'';$('t-fat').value=S.targets.fat||'';kcalSetup();
   const AD=antiDefaults();
-  $('microTgt').innerHTML=NUT.filter(n=>['vit','min','oth','good'].includes(n[3])).map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-mi="'+n[0]+'" placeholder="'+microDefault(n[0])+'" value="'+((S.targets.micro||{})[n[0]]||'')+'">').join('');
-  $('antiTgt').innerHTML=NUT.filter(n=>n[3]==='bad'||n[3]==='anti').map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="number" step="any" data-an="'+n[0]+'" placeholder="'+AD[n[0]]+'" value="'+((S.targets.anti||{})[n[0]]||'')+'">').join('');
+  $('microTgt').innerHTML=NUT.filter(n=>['vit','min','oth','good'].includes(n[3])).map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="text" inputmode="decimal" autocomplete="off" data-mi="'+n[0]+'" placeholder="'+microDefault(n[0])+'" value="'+((S.targets.micro||{})[n[0]]||'')+'">').join('');
+  $('antiTgt').innerHTML=NUT.filter(n=>n[3]==='bad'||n[3]==='anti').map(n=>'<span>'+esc(n[1])+' <span class="tiny">('+n[2]+')</span></span><input type="text" inputmode="decimal" autocomplete="off" data-an="'+n[0]+'" placeholder="'+AD[n[0]]+'" value="'+((S.targets.anti||{})[n[0]]||'')+'">').join('');
   renderGyms();renderSocialSettings();if(!SOC.me&&socTok())socEnsureMe().then(()=>renderSocialSettings());
 }
 function renderGyms(){
@@ -5029,7 +5054,7 @@ function deepLink(){
   const h=location.hash||'';let m;
   if((m=/^#add=([A-Za-z0-9-]{4,20})$/.exec(h))){clearHash();const c=m[1].replace(/-/g,'').toUpperCase();setTimeout(()=>{show('friends');setTimeout(()=>previewInvite(c),250);},350);return true;}
   if((m=/^#qr=([A-Za-z0-9]{8,16})$/.exec(h))){clearHash();const c=m[1].toUpperCase();setTimeout(()=>{show('friends');setTimeout(()=>addByQR(c),250);},350);return true;}
-  if((m=/^#split=([A-Za-z0-9]{4,16})(?:-([A-Za-z0-9]{11}))?$/.exec(h))){clearHash();const c=m[1].toUpperCase(),k=m[2]||'';setTimeout(()=>previewShare(c,0,k),350);return true;}
+  if((m=/^#split=([A-Za-z0-9]{4,16})(?:-([A-Za-z0-9]{10,11}))?$/.exec(h))){clearHash();const c=m[1].toUpperCase(),k=m[2]||'';setTimeout(()=>k.length===10?previewFollow(c,k):previewShare(c,0,k),350);return true;}
   return false;
 }
 function clearHash(){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
@@ -5587,6 +5612,12 @@ async function csJoin(id,btn){
     SOC.v++;if(curView==='friends')renderView('friends');
   }catch(e){if(btn){btn.disabled=false;btn.textContent='Join';}toast(e.message,'err');}
 }
+async function csCopyDecline(id,btn){
+  const R=CS.invR&&CS.invR[id],r=CS.rows.find(x=>x.id===id);if(!R||!r)return;
+  if(btn)btn.disabled=true;
+  try{await sapi('/cs/'+id+'/leave','POST',{});}catch(e){if(e.code!=='cs_gone'){if(btn)btn.disabled=false;toast(e.message,'err');return;}}
+  CS.rows=CS.rows.filter(x=>x.id!==id);closeSheet();importSplit(R,R.defs,csWho(r,r.owner).name||'',null);SOC.v++;if(curView==='friends')renderView('friends');
+}
 async function csDecline(id,btn){
   if(btn)btn.disabled=true;
   try{await sapi('/cs/'+id+'/leave','POST',{});CS.rows=CS.rows.filter(x=>x.id!==id);closeSheet();toast('Invite declined');SOC.v++;if(curView==='friends')renderView('friends');}
@@ -5615,12 +5646,14 @@ async function csRemove(uidR,btn){
 }
 
 /* ---- the share window ---- */
-function openShareSplit(){
+function openShareSplit(mode){
   if(!Object.keys(S.splits).length)return;
-  SOC.shareSp=S.activeSplit;CS.mode=(activeSplit()||{}).cs?'together':'copy';
+  const a=activeSplit()||{};SOC.shareSp=S.activeSplit;CS.mode=mode||(a.cs?'together':a.pub||a.fol?'public':'copy');
   openSheet('Share a split','<div id="shSplit"></div>',{tall:true});drawShareSplit();
-  if(socTok())socRefresh(!SOC.data).then(drawShareSplit);
+  if(socTok()){socRefresh(!SOC.data).then(()=>drawShareSplit());if(a.pub)pubCounts().then(()=>drawShareSplit(true));}
 }
+function pubLinkBox(p){return '<div class="publink"><input readonly value="'+esc(pubURL(p))+'" onclick="this.select()"><button class="btn btn-ghost btn-sm" onclick="pubCopy(this)">Copy</button></div>'+
+  '<button class="btn btn-primary socbtn" style="margin-top:10px" onclick="pubShare(this)">'+IC.share+' Share link</button>';}
 // switching between copy / together: the pill slides across and only the part below cross-fades
 function csMode(m){
   if(CS.mode===m)return;CS.mode=m;haptic('selection');
@@ -5633,15 +5666,23 @@ function drawShareSplit(bodyOnly){
   const nEx=sp.days.reduce((a,d)=>a+d.ex.length,0);
   const head=(Object.keys(S.splits).length>1?'<div class="chipbar scroll">'+Object.values(S.splits).map(x=>'<button class="chip sm'+(x.id===sp.id?' on':'')+'" onclick="SOC.shareSp=\''+x.id+'\';CS.sent={};drawShareSplit()">'+(x.cs?'👥 ':'')+esc(x.name||'Split')+'</button>').join('')+'</div>':'')+
     '<div class="shsum"><b>'+esc(sp.name||'Split')+'</b><span class="tiny">'+sp.days.length+' days · '+nEx+' exercises'+(cs?' · 👥 shared':'')+'</span><div class="dcards mini">'+deckCards(sp.days[0],{})+'</div></div>'+
-    '<div class="seg csseg" data-m="'+CS.mode+'"><i class="segpill2"></i><button data-m="copy" class="'+(CS.mode==='copy'?'on':'')+'" onclick="csMode(\'copy\')"><b>Send a copy</b><small>They get their own version</small></button><button data-m="together" class="'+(CS.mode==='together'?'on':'')+'" onclick="csMode(\'together\')"><b>Edit together</b><small>One split, synced for everyone</small></button></div>';
+    '<div class="seg csseg cs3" data-m="'+CS.mode+'"><i class="segpill2"></i>'+[['copy','Send a copy','Their own version'],['together','Edit together','Synced for all'],['public','Public link','Anyone can follow']].map(o=>'<button data-m="'+o[0]+'" class="'+(CS.mode===o[0]?'on':'')+'" onclick="csMode(\''+o[0]+'\')"><b>'+o[1]+'</b><small>'+o[2]+'</small></button>').join('')+'</div>';
   let h='';
   if(CS.mode==='copy'){
     h+='<p class="tiny csexp">Your friend gets a copy that’s theirs to change — your split stays exactly as it is. It pops up on their phone straight away.</p>';
     h+=fr.length?fr.map(f=>{const s=CS.sent[f.id];return '<div class="req">'+avHTML(f,40)+'<div class="grow"><b>'+esc(f.name)+'</b><div class="tiny">@'+esc(f.handle)+'</div></div><button class="btn '+(s?'btn-ok':'btn-ghost')+' btn-sm" onclick="sendSplit(\''+f.id+'\',this)"'+(s?' disabled':'')+'>'+(s?'Sent ✓':'Send')+'</button></div>';}).join('')
       :(signed?'<p class="tiny" style="margin-top:6px">Add friends to send splits straight to them.</p>':'');
     h+='<button class="btn btn-primary socbtn" style="margin-top:16px" onclick="shareSplit(this)">'+IC.share+' Share a link (AirDrop, Messages…)</button><p class="tiny" style="margin-top:6px;text-align:center">Anyone with the link can add a copy. The link holds the key, so the server can’t read it.</p>';
+  }else if(CS.mode==='public'){
+    if(sp.fol)h+='<p class="tiny csexp">This is '+esc(sp.fol.from.name||'someone')+'’s live split — you can pass their link on. To make your own version, duplicate it from Edit split.</p>'+pubLinkBox(sp.fol);
+    else if(!signed)h+='<p class="tiny csexp">Sign in to make a public link.</p>';
+    else if(sp.pub)h+='<p class="tiny csexp">Anyone with this link can follow your split. They always see your latest version but can’t change it — to edit it, they make their own copy.</p>'+pubLinkBox(sp.pub)+
+      '<div class="pubstat">📡 <b>'+(sp.pub.fol||0)+'</b> '+(sp.pub.fol===1?'person follows':'people follow')+' this split</div><button class="btn btn-danger btn-sm" style="width:100%;margin-top:14px" onclick="pubStop()">Turn off public link</button>';
+    else h+='<p class="tiny csexp">Make one link anyone can open — post it on Instagram, TikTok or Discord. Followers always get your latest version, but only you can change it. Encrypted: only people with the link can read it.</p>'+
+      '<button class="btn btn-primary socbtn" onclick="pubCreate(this)">🔗 Create public link</button>';
   }else{
-    if(!signed){h+='<p class="tiny csexp">Sign in to edit splits together with friends.</p>';}
+    if(sp.fol){h+='<p class="tiny csexp">You’re following this split, so it can’t be edited together. Duplicate it from Edit split first.</p>';}
+    else if(!signed){h+='<p class="tiny csexp">Sign in to edit splits together with friends.</p>';}
     else{
       h+='<p class="tiny csexp">Everyone you invite trains from this same split. When anyone changes it — exercises, sets, days — it updates for all of you within seconds. Encrypted end to end.</p>';
       const mem=(cs&&cs.members)||[],mids=new Set(mem.map(m=>m.id));
@@ -5657,7 +5698,8 @@ function drawShareSplit(bodyOnly){
     }
   }
   const sb=$('shBody');
-  if(bodyOnly&&sb){sb.innerHTML=h;if(!RM)anim(sb,[{opacity:0,transform:'translate3d('+(CS.mode==='together'?16:-16)+'px,0,0)'},{opacity:1,transform:'none'}],{duration:340,easing:EASE_OUT});return;}
+  if(bodyOnly&&sb){const dir=CS.lastMode&&['copy','together','public'].indexOf(CS.mode)<['copy','together','public'].indexOf(CS.lastMode)?-16:16;CS.lastMode=CS.mode;sb.innerHTML=h;if(!RM)anim(sb,[{opacity:0,transform:'translate3d('+dir+'px,0,0)'},{opacity:1,transform:'none'}],{duration:340,easing:EASE_OUT});return;}
+  CS.lastMode=CS.mode;
   box.innerHTML=head+'<div id="shBody">'+h+'</div>';
 }
 async function sendSplit(fid,btn){
@@ -5688,10 +5730,12 @@ async function csInvitePopup(id){
   const r=CS.rows.find(x=>x.id===id);if(!r)return;const from=csWho(r,r.owner);
   openSheet('Edit a split together','<div id="csInv">'+foundSkel()+'</div>',{tall:true});haptic('medium');
   let R=null;try{const k=await csKey(r);if(k)R=await csOpenData(r,k);}catch(e){}
+  (CS.invR=CS.invR||{})[id]=R;
   const box=$('csInv');if(!box)return;
   box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(userOf(r.owner)||from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name)+' invited you to edit a split together</div><div class="fname">'+esc(R?R.name||'Split':'Shared split')+'</div><div class="e2etag">'+IC.lock+' End-to-end encrypted</div></div>'+
     '<p class="tiny" style="margin-top:12px">You both train from the same split — any change either of you makes shows up for the other. Your logged workouts stay yours.</p>'+
     '<div class="row" style="margin-top:12px"><button class="btn btn-ghost grow" onclick="csDecline(\''+r.id+'\',this)">Decline</button><button class="btn btn-primary grow" onclick="csJoin(\''+r.id+'\',this)">Join</button></div>'+
+    (R?'<button class="btn btn-ghost socbtn" style="margin-top:8px;width:100%" onclick="csCopyDecline(\''+r.id+'\',this)">'+IC.copy+' Decline, but keep a copy for me</button><p class="tiny" style="margin-top:6px;text-align:center">A copy is only yours — their changes won’t reach it.</p>':'')+
     (R?'<div style="margin-top:14px">'+splitDaysHTML(R,R.defs)+'</div>':'<p class="tiny" style="text-align:center">Join to see it.</p>');
 }
 // Friends tab: invites sit with the splits people sent you
@@ -5707,14 +5751,16 @@ function frGifts(d){
 // Lift tab: who you share the current split with
 function csLine(){
   const el=$('csLine');if(!el||!S)return;const sp=activeSplit(),cs=sp&&sp.cs;
-  if(!cs){el.hidden=true;return;}
+  if(sp&&sp.fol){el.hidden=false;el.innerHTML='📡 Following '+esc(first(sp.fol.from.name||'someone'))+'’s split · updates by itself · <button class="linkbtn" onclick="folBlock()">Duplicate to edit</button>';return;}
+  if(!cs){if(sp&&sp.pub){el.hidden=false;el.innerHTML='🔗 Public link on · '+(sp.pub.fol||0)+' following · <button class="linkbtn" onclick="openShareSplit(\'public\')">Manage</button>';return;}el.hidden=true;return;}
   const others=(cs.members||[]).filter(m=>m.id!==csMe()&&m.state==='in'),inv=(cs.members||[]).filter(m=>m.state==='invited'&&m.id!==csMe()).length;
   el.hidden=false;el.innerHTML='👥 '+(others.length?'Shared with '+others.map(m=>esc(first(m.name))).join(', '):'Shared split')+(inv?' · '+inv+' invited':'')+' · <button class="linkbtn" onclick="openShareSplit()">Manage</button>';
 }
 // a friend's change just arrived: the shared line on the Lift tab lights up
 function csLive(){const el=$('csLine');if(!el||el.hidden||RM)return;el.classList.remove('live');void el.offsetWidth;el.classList.add('live');setTimeout(()=>el.classList.remove('live'),1700);}
 // keep friends (and shared splits) fresh while the app is open
-function csPoll(){clearInterval(CS.pollT);CS.pollT=setInterval(()=>{if(document.hidden||!S||!socTok()||!navigator.onLine)return;if(Date.now()-SOC.t>25000)socRefresh();},30000);}
+function csPoll(){clearInterval(CS.pollT);CS.pollT=setInterval(()=>{if(document.hidden||!S||!navigator.onLine)return;pubPull();if(socTok()&&Date.now()-SOC.t>25000)socRefresh();},30000);
+  setTimeout(()=>pubPull(true),5000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)pubPull();});}
 // the split editor saves over the split: fold in anything a friend changed while it was open
 function csEditorMerge(dr){
   const cur=S.splits[dr.id];if(!cur||!cur.cs||!dr.cs)return;
@@ -5725,13 +5771,194 @@ async function csDeleteSplit(){
   const L=S.splits[draft.id];if(!L||!L.cs)return;const owner=L.cs.owner===csMe();
   if(!confirm(owner?'Delete “'+L.name+'”? It stops being shared — your friends keep their own copy.':'Delete “'+L.name+'”? You’ll leave the shared split; the others keep it.'))return;
   try{await sapi('/cs/'+L.cs.id+(owner?'':'/leave'),owner?'DELETE':'POST',owner?undefined:{});}catch(e){if(e.code!=='cs_gone'){toast(e.message,'err');return;}}
-  CS.rows=CS.rows.filter(x=>x.id!==L.cs.id);
+  CS.rows=CS.rows.filter(x=>x.id!==L.cs.id);if(L.pub)sapi('/pub/'+L.pub.code,'DELETE').catch(()=>{});
   if(Object.keys(S.splits).length<2){delete L.cs;draft=null;save();show('workout');toast('Left the shared split — kept it as your own (you need at least one)');return;}
   delete S.splits[L.id];S.activeSplit=Object.keys(S.splits)[0];
   const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
   draft=null;save();show('workout');toast('Split deleted');
 }
 
+/* ================= PUBLIC SPLIT LINKS: anyone can follow, only the owner edits ================= */
+// The owner's app keeps one encrypted, always-latest copy on the server. The key sits after the # of the link,
+// so the server can't read it. Followers get a read-only split that updates itself; to change it they duplicate it.
+const PUB={t:0,busy:null,keys:new Map()};
+async function pubKeyOf(code,key){
+  const ck=code+'|'+key;if(PUB.keys.has(ck))return PUB.keys.get(ck);
+  const hk=await SUB().importKey('raw',TE.encode(key),'HKDF',false,['deriveKey']);
+  const k=await SUB().deriveKey({name:'HKDF',hash:'SHA-256',salt:TE.encode('lockin-pub-v1|'+code),info:TE.encode('split')},hk,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  PUB.keys.set(ck,k);return k;
+}
+const pubURL=p=>location.origin+'/p/'+p.code+'#'+p.key;
+async function pubSeal(p,content){return 'e1.00000000.'+await encS(await pubKeyOf(p.code,p.key),jenc(content),'pub|'+p.code);}
+async function pubOpen(code,key,data){const m=ENCRX.exec(String(data||''));if(!m)throw new Error('That split can’t be read.');
+  try{return jdec(await decS(await pubKeyOf(code,key),m[2],'pub|'+code));}catch(e){throw new Error('This link’s key doesn’t match — ask for the full link again.');}}
+async function pubGet(code){
+  const r=await fetch('/api/pub/'+encodeURIComponent(code),{cache:'no-store'});const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(j.message||'That link doesn’t work.'),{status:r.status,code:j.error});return j;
+}
+
+/* ---- owner ---- */
+async function pubCreate(btn){
+  const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp||sp.pub)return;
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Making your link…';}
+  try{
+    const content=csContent(sp);
+    for(let i=0;i<4;i++){const p={code:rndStr(8,C31),key:rndStr(10,B62)};
+      try{await sapi('/pub','POST',{code:p.code,data:await pubSeal(p,content)});sp.pub=Object.assign(p,{ver:1,base:JSON.stringify(content),fol:0});save();break;}
+      catch(e){if(e.status!==409)throw e;}}
+    if(!sp.pub)throw new Error('Couldn’t make the link — try again');
+    haptic('success');if(btn)burstAt(btn,'#6ea6ff');toast('Public link ready — share it anywhere','ok');
+  }catch(e){toast(e.message,'err');}
+  drawShareSplit(true);
+}
+async function pubStop(){
+  const sp=S.splits[SOC.shareSp]||activeSplit();if(!sp||!sp.pub)return;
+  if(!confirm('Turn off the public link for “'+sp.name+'”? People who follow it keep the version they have, but won’t get your changes any more.'))return;
+  try{await sapi('/pub/'+sp.pub.code,'DELETE');}catch(e){if(e.code!=='pub_gone'){toast(e.message,'err');return;}}
+  delete sp.pub;save();toast('Public link turned off');drawShareSplit(true);csLine();
+}
+async function pubCopy(btn){const sp=S.splits[SOC.shareSp]||activeSplit(),p=sp&&(sp.pub||sp.fol);if(!p)return;
+  const u=pubURL(p);try{await navigator.clipboard.writeText(u);if(btn)btnOk(btn,'Copied');haptic('light');}catch(e){prompt('Copy the link:',u);}}
+async function pubShare(btn){const sp=S.splits[SOC.shareSp]||activeSplit(),p=sp&&(sp.pub||sp.fol);if(!p)return;
+  await nativeShare(pubURL(p),'Follow my split “'+(sp.name||'Split')+'” on Lock In');}
+function pubPushSoon(){
+  if(!S||!Object.values(S.splits).some(L=>L&&L.pub))return;clearTimeout(PUB.pushT);
+  PUB.pushT=setTimeout(async()=>{for(const L of Object.values(S.splits)){if(!L||!L.pub)continue;const content=csContent(L),json=JSON.stringify(content);if(json===L.pub.base)continue;
+    try{const r=await sapi('/pub/'+L.pub.code,'PUT',{data:await pubSeal(L.pub,content)});L.pub.ver=r.ver;L.pub.base=json;save();}
+    catch(e){if(e.code==='pub_gone'){delete L.pub;save();}}}},1500);
+}
+async function pubCounts(){   // follower counts for your links (shown in the share window)
+  if(!socTok()||!Object.values(S.splits).some(L=>L&&L.pub))return;
+  try{const r=await sapi('/pub');const m={};(r.pubs||[]).forEach(x=>m[x.code]=x);
+    for(const L of Object.values(S.splits))if(L&&L.pub){if(m[L.pub.code])L.pub.fol=m[L.pub.code].fol;else delete L.pub;}}catch(e){}
+}
+
+/* ---- followers ---- */
+function pubFind(code){return Object.values(S.splits).find(L=>L&&L.fol&&L.fol.code===code)||null;}
+async function previewFollow(code,key){
+  openSheet('Live split','<div id="pfBox2">'+foundSkel()+'</div>',{tall:true});
+  try{
+    const j=await pubGet(code),R=await pubOpen(code,key,j.data),from=j.from||{};PUB.prev={code,key,R,j};
+    const box=$('pfBox2');if(!box)return;const mine=pubFind(code),own=SOC.me&&from.id===SOC.me.id;
+    box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+'’s split · '+(j.fol?j.fol+' following':'live')+'</div><div class="fname">'+esc(R.name||'Split')+'</div><div class="e2etag">'+IC.lock+' End-to-end encrypted</div></div>'+
+      '<p class="tiny" style="margin-top:12px;text-align:center">'+(own?'This is your own public link.':'Follow it and it updates whenever '+esc(first(from.name||'they'))+' changes it. You can’t edit a followed split — duplicate it to make your own version.')+'</p>'+
+      (own?'':mine?'<button class="btn btn-ghost socbtn" style="margin-top:12px" onclick="closeSheet();S.activeSplit=\''+mine.id+'\';save();show(\'workout\')">You’re following it — open</button>'
+        :'<div class="row" style="margin-top:12px"><button class="btn btn-ghost grow" onclick="pubCopyOnly(this)">Just copy it</button><button class="btn btn-primary grow" onclick="pubFollow(this)">📡 Follow</button></div>')+
+      '<div style="margin-top:14px">'+splitDaysHTML(R,R.defs)+'</div>';
+  }catch(e){const box=$('pfBox2');if(box)box.innerHTML=frNote('🔗','Couldn’t open that split',esc(e.message));}
+}
+async function pubFollow(btn){
+  const P=PUB.prev;if(!P)return;if(btn)btn.disabled=true;
+  const id='pf_'+P.code,L={id,name:'',days:[],sched:[]};csApply(L,P.R);
+  const from=P.j.from||{};L.fol={code:P.code,key:P.key,ver:P.j.ver,from:{id:from.id,name:from.name||'',handle:from.handle||''},t:Date.now()};
+  S.splits[id]=L;S.activeSplit=id;const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}save();
+  fetch('/api/pub/'+P.code+'/follow',{method:'POST'}).catch(()=>{});
+  closeSheet();haptic('success');celebrate();toast('Following “'+L.name+'” — you’re training with it now','ok');
+  renderHeader();show('workout');
+}
+function pubCopyOnly(btn){const P=PUB.prev;if(!P)return;importSplit(P.R,P.R.defs,(P.j.from||{}).name||'',btn);setTimeout(closeSheet,600);}
+// followed splits: fetch the latest version now and then (public, no sign-in needed)
+async function pubPull(force){
+  if(!S||PUB.busy||!navigator.onLine)return;const fl=Object.values(S.splits).filter(L=>L&&L.fol);if(!fl.length)return;
+  if(!force&&Date.now()-PUB.t<110e3)return;PUB.t=Date.now();
+  PUB.busy=(async()=>{let touched=false;
+    for(const L of fl){
+      try{const j=await pubGet(L.fol.code);if(j.ver===L.fol.ver)continue;
+        const R=await pubOpen(L.fol.code,L.fol.key,j.data);csApply(L,R);L.fol.ver=j.ver;touched=true;
+        if(j.from&&j.from.name)L.fol.from.name=j.from.name;
+        toast(first(L.fol.from.name||'They')+' updated “'+L.name+'”','ok');setTimeout(csLive,60);}
+      catch(e){if(e.status===404){const nm=L.name;delete L.fol;touched=true;toast('The link for “'+nm+'” was turned off — you kept the last version as your own');}}
+    }
+    if(touched){save();if(curView==='workout')renderWorkout();csLine();}
+  })().finally(()=>{PUB.busy=null;});
+  return PUB.busy;
+}
+// a followed split can't be edited: offer to duplicate it (or stop following)
+function folBlock(){
+  const sp=activeSplit();if(!sp||!sp.fol)return false;
+  openSheet('Followed split','<p class="muted" style="margin-bottom:12px">You’re following <b>'+esc(sp.fol.from.name||'someone')+'</b>’s “'+esc(sp.name)+'”. It updates whenever they change it, so it can’t be edited here.</p>'+
+    '<button class="btn btn-primary socbtn" onclick="folDuplicate()">'+IC.copy+' Duplicate it to edit</button>'+
+    '<button class="btn btn-ghost socbtn" style="margin-top:8px" onclick="folUnfollow()">Stop following</button>'+
+    '<p class="tiny" style="margin-top:10px">Your logged workouts are always yours, whatever you do here.</p>');
+  return true;
+}
+function folDuplicate(){
+  const sp=activeSplit();if(!sp)return;const c=clone(sp);delete c.fol;delete c.pub;delete c.cs;c.id=uid('s');c.name=String(sp.name||'Split').slice(0,30)+' (mine)';
+  S.splits[c.id]=c;S.activeSplit=c.id;const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}save();
+  closeSheet();toast('Duplicated — this copy is yours to change','ok');setTimeout(()=>openEditor(),350);
+}
+function folUnfollow(){
+  const sp=activeSplit();if(!sp||!sp.fol)return;
+  if(Object.keys(S.splits).length<2){delete sp.fol;save();closeSheet();toast('Stopped following — kept it as your own');csLine();return;}
+  if(!confirm('Stop following “'+sp.name+'”? It’s removed from your splits. Your logged workouts stay.'))return;
+  delete S.splits[sp.id];S.activeSplit=Object.keys(S.splits)[0];const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}
+  save();closeSheet();renderWorkout();renderHeader();csLine();toast('Stopped following');
+}
+function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
+
+/* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
+const WEB_VER='2026.10.19.3';
+const WHATSNEW=[
+ {v:'2026.10.19.3',d:'19 Oct',items:[
+  ['📡','Public split links','One link anyone can open. Followers always get your latest version — only you can change it. Share → Public link.'],
+  ['🤝','Decline, but keep a copy','Got invited to a shared split? Keep it just for you, without their edits.'],
+  ['⌨️','60,5 kg works','Commas and dots both work in every weight field.'],
+  ['👆','Bigger buttons','Open, Redo AI and Delete on saved workouts are easy to hit now.'],
+  ['📳','Calmer tab bar','One tap of feedback per tab change — no more buzzing while you swipe across.'],
+  ['📱','App updates','If the iPhone app is out of date, it tells you and shows you how to update.']]},
+ {v:'2026.10.19.2',d:'19 Oct',items:[
+  ['🔥','Calories up top','A big calorie ring on Diet and Today, on every meal and in Log again. Turn it off in Setup if you don’t want it.'],
+  ['👥','Edit splits together','Share → Edit together. Everyone trains from one split and changes sync in seconds.'],
+  ['💪','Smarter muscle sets','Helper muscles count too (dips → triceps). Progress shows done vs. planned for every muscle.'],
+  ['⏱️','Rest timer on typing','Typing your reps starts the rest timer, like tapping the tick.'],
+  ['➖','− set','Drop a set from today’s workout without touching your split.'],
+  ['🏋️','Horizontal bench press','New variant of the machine chest press.'],
+  ['✨','More effects','Calorie ring fills, NEW PR badges, sparkles when you hit goals, and a birthday surprise.']]}
+];
+function verCmp(a,b){const x=String(a||'0').split('.').map(n=>parseInt(n)||0),y=String(b||'0').split('.').map(n=>parseInt(n)||0);for(let i=0;i<Math.max(x.length,y.length);i++){const d=(x[i]||0)-(y[i]||0);if(d)return d<0?-1:1;}return 0;}
+const nativeVer=()=>(window.__lockinNative&&window.__lockinNative.version)||'';
+let APPV=null,APPVT=0;document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-APPVT>6e5)appVerCheck();});
+function verLine(){const el=$('verLine');if(!el)return;const nv=nativeVer();
+  el.innerHTML='Version '+WEB_VER+(nv?' · iPhone app '+esc(nv)+(APPV&&APPV.version?(verCmp(nv,APPV.version)<0?' <b style="color:var(--warn)">— '+esc(APPV.version)+' is out</b>':' (latest)'):''):'');}
+function showWhatsNew(all){
+  const k='lockin_wn_'+(user?user.username:'');let seen='';try{seen=localStorage.getItem(k)||'';}catch(e){}
+  const list=all?WHATSNEW:WHATSNEW.filter(x=>!seen||verCmp(x.v,seen)>0);if(!list.length)return;
+  try{localStorage.setItem(k,WEB_VER);}catch(e){}
+  let j=0;
+  openSheet('What’s new','<div class="wnlist">'+list.map((r,ri)=>(ri?'<div class="nsec" style="margin-top:14px">Earlier · '+esc(r.d)+'</div>':'')+r.items.map(it=>'<div class="wnitem" style="--j:'+(j++)+'"><i>'+it[0]+'</i><div><b>'+esc(it[1])+'</b><p>'+esc(it[2])+'</p></div></div>').join('')).join('')+'</div>'+
+    '<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="closeSheet()">Let’s go</button>',{tall:list.length>1||list[0].items.length>4});
+  if(!all)haptic('light');
+}
+function whatsNewCheck(){
+  if(!S||!S.settings.setupDone||$('updGate'))return;
+  const k='lockin_wn_'+(user?user.username:'');let seen=null;try{seen=localStorage.getItem(k);}catch(e){}
+  if(seen===WEB_VER)return;
+  // a brand-new account has nothing to compare against: start from now
+  if(seen===null&&!Object.keys(S.workouts).some(id=>woHasData(S.workouts[id]))&&!Object.keys(S.food).length){try{localStorage.setItem(k,WEB_VER);}catch(e){}return;}
+  const busy=$('sheet').classList.contains('show')||$('view-wizard').classList.contains('active')||$('timerSheet').classList.contains('show')||(typeof lastInput==='number'&&performance.now()-lastInput<2000);
+  if(busy){setTimeout(whatsNewCheck,2500);return;}
+  showWhatsNew(false);
+}
+// the iPhone app: if a newer version is out, stop at an update screen
+async function appVerCheck(){
+  const nv=nativeVer();if(!nv||!navigator.onLine)return;APPVT=Date.now();
+  try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);const r=await fetch('/api/appver',{cache:'no-store',signal:ac.signal});clearTimeout(t);if(!r.ok)return;APPV=await r.json();}catch(e){return;}
+  verLine();
+  if(APPV&&APPV.version&&verCmp(nv,APPV.version)<0)updGate(nv,APPV.version);else{const g=$('updGate');if(g)g.remove();}
+}
+function updGate(have,latest){
+  if($('updGate')){$('updHave').textContent=have;$('updNew').textContent=latest;return;}
+  try{closeSheet();stopTimer();}catch(e){}
+  const el=document.createElement('div');el.id='updGate';el.setAttribute('role','dialog');
+  el.innerHTML='<div class="ugcard"><div class="ugicon"><svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg></div>'+
+    '<h2>Update Lock In</h2><p class="ugsub">A new version of the app is out. Update to keep using it — your data is safe and waiting.</p>'+
+    '<div class="ugver"><div><small>You have</small><b id="updHave">'+esc(have)+'</b></div><span>→</span><div><small>Latest</small><b id="updNew">'+esc(latest)+'</b></div></div>'+
+    '<ol class="ugsteps"><li>Open <b>SideStore</b></li><li>Go to <b>My Apps</b> and pull down to refresh</li><li>Tap <b>Update</b> next to Lock In</li></ol>'+
+    '<button class="btn btn-primary" style="width:100%" onclick="this.innerHTML=\'<span class=spin></span>Checking…\';appVerCheck().then(()=>{if($(\'updGate\'))this.textContent=\'Still out of date — check again\';})">I’ve updated — check again</button>'+
+    (verCmp(have,'3.5.0')>=0?'<a class="btn btn-ghost" style="width:100%;margin-top:8px" href="sidestore://">Open SideStore</a>':'')+
+    '<p class="tiny" style="margin-top:12px">Not in SideStore yet? Add the source <b>ipa.lockin-app.online</b> under Sources.</p></div>';
+  document.body.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));haptic('heavy');
+}
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','friends','settings'];
@@ -5804,7 +6031,7 @@ function initUI(){
     if(d.dy>d.h*.3||(d.v>.5&&d.dy>20))closeSheet();};
   head.addEventListener('touchend',dend);head.addEventListener('touchcancel',dend);
   /* light haptic on every button press in the app shell */
-  document.addEventListener('click',e=>{const b=e.target.closest('nav button,.btn-primary,.chip,.addbtn');if(b)haptic(b.matches('nav button,.chip')?'selection':'light');},true);
+  document.addEventListener('click',e=>{const b=e.target.closest('.btn-primary,.chip,.addbtn');if(b&&!b.closest('nav'))haptic(b.matches('.chip')?'selection':'light');},true);
 }
 function hideSplash(){const s=$('splash');if(s&&!s.classList.contains('gone')){s.classList.add('gone');setTimeout(()=>s.remove(),600);}}
 
@@ -5840,13 +6067,13 @@ function initGlass(){
     if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>8)moved=true;if(!moved)return;
     const r=nav.getBoundingClientRect(),x=e.clientX-r.left,b=nearest(x);
     const bs=btns(),f=bs[0],l=bs[bs.length-1],mn=f.offsetLeft,mx=l.offsetLeft+l.offsetWidth-b.offsetWidth;pill.classList.add('drag');pill.style.translate=Math.max(mn,Math.min(mx,x-b.offsetWidth/2))+'px 0px';pill.style.width=b.offsetWidth+'px';
-    if(nav._hover!==b){nav._hover=b;haptic('selection');btns().forEach(x=>{x.style.color=x===b?'#fff':'';x.classList.toggle('hov',x===b);});}
+    if(nav._hover!==b){nav._hover=b;btns().forEach(x=>{x.style.color=x===b?'#fff':'';x.classList.toggle('hov',x===b);});}
   });
   const end=e=>{
     if(!down)return;pill.classList.remove('drag');btns().forEach(x=>{x.style.color='';x.classList.remove('hov');});
-    if(moved&&nav._hover){const v=nav._hover.dataset.v;nav._hover=null;down=null;show(v);return;}
+    if(moved&&nav._hover){const v=nav._hover.dataset.v;nav._hover=null;down=null;if(v!==curView)haptic('selection');show(v);return;}
     down=null;nav._hover=null;
-    if(e.type==='pointerup'){const r=nav.getBoundingClientRect();if(e.clientY>=r.top&&e.clientY<=r.bottom){const b=nearest(e.clientX-r.left);if(b){nav._tapped=true;b.click();nav._tapped=false;handled=true;return;}}}
+    if(e.type==='pointerup'){const r=nav.getBoundingClientRect();if(e.clientY>=r.top&&e.clientY<=r.bottom){const b=nearest(e.clientX-r.left);if(b){if(b.dataset.v!==curView)haptic('selection');nav._tapped=true;b.click();nav._tapped=false;handled=true;return;}}}
     movePill();
   };let handled=false;
   nav.addEventListener('pointerup',end);nav.addEventListener('pointercancel',end);
@@ -5936,6 +6163,10 @@ function btnOk(b,txt){
 }
 
 function init(){
+  // a comma becomes a dot as you type, so 60,5 and 60.5 both work everywhere
+  document.addEventListener('input',e=>{const t=e.target;if(!t||t.tagName!=='INPUT'||t.inputMode!=='decimal')return;
+    const v=t.value,n=v.replace(/,/g,'.').replace(/[^0-9.]/g,'').replace(/^(\d*\.\d*)\./,'$1').replace(/(\..*)\./g,'$1');
+    if(n!==v){const p=Math.max(0,(t.selectionStart||n.length)-(v.length-n.length));t.value=n;try{t.setSelectionRange(p,p);}catch(_){}}},true);
   initUI();initGlass();initFx();csPoll();setTimeout(()=>{if(aiOutGet()){const el=$('aiOutNote');if(el)el.hidden=false;aiOutReport();}},1500);setTimeout(aiAdminCheck,4500);
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
   $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);

@@ -29,8 +29,9 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.hostname.startsWith('ipa.')) return ipaSource(url);
+    if (url.pathname === '/api/appver') return secure(await appVer());
     if (url.pathname.startsWith('/api/')) return secure(await api(request, env, ctx, url));
-    const lm = /^\/(i|s|q)\/([A-Za-z0-9-]{4,20})\/?$/.exec(url.pathname);
+    const lm = /^\/(i|s|q|p)\/([A-Za-z0-9-]{4,20})\/?$/.exec(url.pathname);
     if (lm && request.method === 'GET') return secure(await landing(env, url, lm[1], lm[2], request));
     const res = await env.ASSETS.fetch(request);
     const html = (res.headers.get('content-type') || '').includes('text/html');
@@ -46,6 +47,16 @@ async function ipaSource(url) {
   }
   return new Response(text, { status: r.ok ? 200 : 502, headers: {
     'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=60' } });
+}
+
+// latest iPhone app version (from the SideStore source) — the app refuses to run if it's older
+async function appVer() {
+  try {
+    const r = await fetch(SOURCE, { cf: { cacheTtl: 60, cacheEverything: true } });
+    const v = (await r.json()).apps[0].versions[0];
+    return new Response(JSON.stringify({ version: v.version, date: v.date || '', notes: v.localizedDescription || '', size: v.size || 0 }), { headers: {
+      'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=60' } });
+  } catch (e) { return new Response('{"error":"unavailable"}', { status: 502, headers: { 'content-type': 'application/json' } }); }
 }
 
 /* ============================== FRIENDS API ============================== */
@@ -72,7 +83,7 @@ const RX = {
   uid: /^[a-z0-9]{8,32}$/
 };
 
-const SCHEMA_V = '5';
+const SCHEMA_V = '6';
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, puid TEXT NOT NULL UNIQUE, handle TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '',
      av INTEGER NOT NULL DEFAULT 0, invite TEXT NOT NULL UNIQUE, defaults TEXT NOT NULL DEFAULT '{}', created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, pub TEXT, fp TEXT)`,
@@ -103,7 +114,10 @@ const SCHEMA = [
   // collaborative splits: one encrypted copy everyone edits; its key is wrapped per member (w, wrapped by wb)
   `CREATE TABLE IF NOT EXISTS cs(id TEXT PRIMARY KEY, owner TEXT NOT NULL, ver INTEGER NOT NULL, kv TEXT NOT NULL, data TEXT NOT NULL, upd INTEGER NOT NULL, by TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS csm(sid TEXT NOT NULL, uid TEXT NOT NULL, state TEXT NOT NULL, w TEXT NOT NULL, wb TEXT NOT NULL, rf TEXT NOT NULL, "of" TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY(sid,uid))`,
-  `CREATE INDEX IF NOT EXISTS csm_uid ON csm(uid)`
+  `CREATE INDEX IF NOT EXISTS csm_uid ON csm(uid)`,
+  // public follow links: one encrypted, always-latest copy of a split; the key is only in the link (#)
+  `CREATE TABLE IF NOT EXISTS pubs(code TEXT PRIMARY KEY, uid TEXT NOT NULL, data TEXT NOT NULL, ver INTEGER NOT NULL, upd INTEGER NOT NULL, created INTEGER NOT NULL, fol INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE INDEX IF NOT EXISTS pubs_uid ON pubs(uid)`
 ];
 // columns added after the first release (fresh databases get them from SCHEMA, the ALTERs then just fail)
 const MIGRATE = [
@@ -273,6 +287,14 @@ async function api(req, env, ctx, url) {
       const enc = RX.enc.test(s.data);
       return J({ kind: s.kind, data: enc ? s.data : parse(s.data), enc, created: s.created, from: pub(s) });
     }
+    if ((m = /^\/api\/pub\/([A-Za-z0-9]{8})(\/follow)?$/.exec(p)) && (M === 'GET' || (M === 'POST' && m[2]))) {
+      const c = normCode(m[1]);
+      await limit(db, 'ip:' + ipOf(req) + ':pubr', 120, 60e3);
+      if (m[2]) { await limit(db, 'ip:' + ipOf(req) + ':pubf:' + c, 3, DAY); await db.prepare('UPDATE pubs SET fol=fol+1 WHERE code=?').bind(c).run(); return J({ ok: true }); }
+      const r = await db.prepare('SELECT p.data, p.ver, p.upd, p.fol, u.id, u.handle, u.name, u.av FROM pubs p JOIN users u ON u.id=p.uid WHERE p.code=?').bind(c).first();
+      if (!r) return err(404, 'pub_gone', 'This split link was turned off by its owner.');
+      return J({ data: r.data, ver: r.ver, upd: r.upd, fol: r.fol, from: pub(r) });
+    }
     /* everything else: the current app, signed in with Puter */
     if ((req.headers.get('x-lockin') || '') !== API_VERSION) return err(426, 'update', 'Lock In was updated — close and reopen the app to keep using friends.');
     const me = await who(req, env, ctx);
@@ -345,6 +367,29 @@ async function api(req, env, ctx, url) {
       if (!m[2] && M === 'DELETE') { await db.prepare('DELETE FROM posts WHERE id=? AND uid=?').bind(m[1], id).run(); return J({ ok: true }); }
     }
     if (p.startsWith('/api/cs')) { const r = await csApi(db, id, M, p, b); if (r) return r; }
+    if (p === '/api/pub' && M === 'POST') {
+      await limit(db, 'u:' + id + ':pubnew', 20, DAY);
+      const c = normCode(b && b.code);
+      if (c.length !== 8 || [...c].some(ch => !ABC.includes(ch)) || !csData(b.data)) throw new HttpError(400, 'bad', 'Couldn’t make that link.');
+      const n = await db.prepare('SELECT COUNT(*) AS n FROM pubs WHERE uid=?').bind(id).first();
+      if (n && n.n >= 30) throw new HttpError(429, 'too_many', 'You already have 30 public links — turn one off first.');
+      try { await db.prepare('INSERT INTO pubs(code,uid,data,ver,upd,created) VALUES(?,?,?,1,?,?)').bind(c, id, b.data, Date.now(), Date.now()).run(); }
+      catch (e) { if (/unique|constraint/i.test(String(e && e.message))) throw new HttpError(409, 'code_taken', 'Try again.'); throw e; }
+      return J({ code: c, ver: 1 });
+    }
+    if ((m = /^\/api\/pub\/([A-Za-z0-9]{8})$/.exec(p)) && (M === 'PUT' || M === 'DELETE')) {
+      const c = normCode(m[1]), own = await db.prepare('SELECT uid, ver FROM pubs WHERE code=?').bind(c).first();
+      if (!own || own.uid !== id) throw new HttpError(404, 'pub_gone', 'That link doesn’t exist any more.');
+      if (M === 'DELETE') { await db.prepare('DELETE FROM pubs WHERE code=?').bind(c).run(); return J({ ok: true }); }
+      await limit(db, 'u:' + id + ':pubput', 240, HOUR);
+      if (!b || !csData(b.data)) throw new HttpError(400, 'bad', 'Couldn’t update the link.');
+      await db.prepare('UPDATE pubs SET data=?, ver=ver+1, upd=? WHERE code=?').bind(b.data, Date.now(), c).run();
+      return J({ ok: true, ver: own.ver + 1 });
+    }
+    if (p === '/api/pub' && M === 'GET') {
+      const r = (await db.prepare('SELECT code, ver, upd, fol FROM pubs WHERE uid=?').bind(id).all()).results || [];
+      return J({ pubs: r });
+    }
     if ((m = /^\/api\/sends\/(\d{1,12})\/done$/.exec(p)) && M === 'POST') {
       await db.prepare('UPDATE sends SET done=1 WHERE id=? AND to_uid=?').bind(+m[1], id).run();
       return J({ ok: true });
@@ -605,6 +650,7 @@ async function deleteMe(db, id) {
     db.prepare('DELETE FROM keyring WHERE owner=? OR reader=?').bind(id, id),
     db.prepare('DELETE FROM csm WHERE uid=? OR sid IN (SELECT id FROM cs WHERE owner=?)').bind(id, id),
     db.prepare('DELETE FROM cs WHERE owner=?').bind(id),
+    db.prepare('DELETE FROM pubs WHERE uid=?').bind(id),
     db.prepare('DELETE FROM tokens WHERE id=?').bind(id),
     db.prepare('DELETE FROM users WHERE id=?').bind(id)]);
   for (const [k, v] of MEM) if (v.id === id) MEM.delete(k);
@@ -836,7 +882,7 @@ async function postImg(db, me, id) {
 // so this page decrypts the preview on the phone.
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 async function landing(env, url, kind, raw, req) {
-  const c = normCode(raw), isInvite = kind === 'i', isQR = kind === 'q', isSplit = kind === 's';
+  const c = normCode(raw), isInvite = kind === 'i', isQR = kind === 'q', isPub = kind === 'p', isSplit = kind === 's' || isPub;
   let name = '', avatar = '', encShare = false, title = isInvite ? 'This invite has expired' : isQR ? 'Scan this code in Lock In' : 'A training split for you',
     desc = 'Train together on Lock In — workouts, streaks, PRs and splits.', sub = isInvite ? 'Invite links work for 24 hours — ask for a new one.' : isQR ? 'Friends → Add friends → Scan. Codes change every 30 seconds.' : '';
   if (env.DB) {
@@ -846,6 +892,14 @@ async function landing(env, url, kind, raw, req) {
       if (isInvite) {
         const u = await env.DB.prepare("SELECT u.id,u.handle,u.name,u.av FROM invites i JOIN users u ON u.id=i.uid WHERE i.code=? AND i.kind='link' AND i.exp>?").bind(c, Date.now()).first();
         if (u) { name = u.name || u.handle; title = 'Add ' + name + ' on Lock In'; sub = '@' + u.handle + ' · they accept your request in the app'; if (u.av) avatar = '/api/avatar/' + u.id + '?v=' + u.av; }
+      } else if (isPub) {
+        const s = await env.DB.prepare('SELECT p.fol, u.id, u.handle, u.name, u.av FROM pubs p JOIN users u ON u.id=p.uid WHERE p.code=?').bind(c).first();
+        if (s) {
+          name = s.name || s.handle; encShare = true; title = name + '’s training split';
+          desc = 'Follow it in Lock In — it updates whenever ' + name + ' changes it. End-to-end encrypted: only people with the link can read it.';
+          sub = '📡 Live split · ' + (s.fol ? s.fol + ' following' : 'updates automatically');
+          if (s.av) avatar = '/api/avatar/' + s.id + '?v=' + s.av;
+        } else { title = 'This split link was turned off'; sub = 'Ask its owner for a new one.'; }
       } else if (isSplit) {
         const s = await env.DB.prepare('SELECT s.data, u.id, u.handle, u.name, u.av FROM shares s JOIN users u ON u.id=s.uid WHERE s.code=?').bind(c).first();
         if (s) {
@@ -875,7 +929,7 @@ async function landing(env, url, kind, raw, req) {
 <meta property="og:image" content="${esc(img)}"><meta property="og:url" content="${esc(url.origin + url.pathname)}">
 <meta name="twitter:card" content="summary"><meta name="theme-color" content="#0e1013"><meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<script>(function(){var k=${isSplit ? '/^#([A-Za-z0-9]{11})$/.exec(location.hash)' : 'null'},suf=k?'-'+k[1]:'';
+<script>(function(){var k=${isPub ? '/^#([A-Za-z0-9]{10})$/.exec(location.hash)' : isSplit ? '/^#([A-Za-z0-9]{11})$/.exec(location.hash)' : 'null'},suf=k?'-'+k[1]:'';
 window.__t=${JSON.stringify(target)}+suf;window.__s=${JSON.stringify(scheme)}+suf;
 var inApp=!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.lockin);
 if(inApp||!/iPhone|iPad|iPod/.test(navigator.userAgent))location.replace(window.__t);})();</script>
@@ -898,18 +952,18 @@ small{display:block;margin-top:18px;color:#7d8592;font-size:12.5px}
 <div style="height:22px"></div>
 ${isQR ? '' : `<a class="p" id="oa" href="${esc(scheme)}">Open in the Lock In app</a>`}
 <a class="${isQR ? 'p' : 'g'}" id="ob" href="${esc(isQR ? '/' : target)}">${isQR ? 'Open Lock In' : 'Continue in the browser'}</a>
-<small>${isInvite ? 'Invite links work for 24 hours. Your request needs their OK.' : isQR ? 'QR codes only work from the scanner inside Lock In.' : 'Opens the split in Lock In so you can add it to your splits.'}</small>
+<small>${isInvite ? 'Invite links work for 24 hours. Your request needs their OK.' : isQR ? 'QR codes only work from the scanner inside Lock In.' : isPub ? 'Follow it in Lock In — you always get the latest version. Duplicate it if you want to change it.' : 'Opens the split in Lock In so you can add it to your splits.'}</small>
 </main>
 <script>(function(){var a=document.getElementById('oa'),b=document.getElementById('ob');${isQR ? '' : 'if(a)a.href=window.__s;if(b)b.href=window.__t;'}
-${encShare ? `var m=/^#([A-Za-z0-9]{11})$/.exec(location.hash),C=${JSON.stringify(c)},E=new TextEncoder();
+${encShare ? `var m=/^#([A-Za-z0-9]{${isPub ? 10 : 11}})$/.exec(location.hash),C=${JSON.stringify(c)},E=new TextEncoder(),PUB=${isPub ? 'true' : 'false'};
 if(!m||!window.crypto||!crypto.subtle){if(!m)document.getElementById('sub').textContent='This link is missing its key — ask for the full link again.';return;}
 function u(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var r=atob(s),x=new Uint8Array(r.length);for(var i=0;i<r.length;i++)x[i]=r.charCodeAt(i);return x;}
-fetch('/api/share/'+C).then(function(r){return r.json();}).then(function(j){var p=String(j.data||'').split('.');
- return crypto.subtle.importKey('raw',E.encode(m[1]),'HKDF',false,['deriveKey']).then(function(hk){return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:E.encode('lockin-share-v1|'+C),info:E.encode('split')},hk,{name:'AES-GCM',length:256},false,['decrypt']);})
- .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:u(p[2]),additionalData:E.encode('share|'+C)},k,u(p[3]));})
+fetch((PUB?'/api/pub/':'/api/share/')+C).then(function(r){return r.json();}).then(function(j){var p=String(j.data||'').split('.');
+ return crypto.subtle.importKey('raw',E.encode(m[1]),'HKDF',false,['deriveKey']).then(function(hk){return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:E.encode((PUB?'lockin-pub-v1|':'lockin-share-v1|')+C),info:E.encode('split')},hk,{name:'AES-GCM',length:256},false,['decrypt']);})
+ .then(function(k){return crypto.subtle.decrypt({name:'AES-GCM',iv:u(p[2]),additionalData:E.encode((PUB?'pub|':'share|')+C)},k,u(p[3]));})
  .then(function(buf){var d=JSON.parse(new TextDecoder().decode(buf)),days=Array.isArray(d.days)?d.days:[];
    document.getElementById('h1').textContent=String(d.name||'Training split').slice(0,60);
-   document.getElementById('sub').textContent=days.length+' training days · 🔒 end-to-end encrypted';
+   document.getElementById('sub').textContent=days.length+' training days · '+(PUB?'📡 live — updates automatically':'🔒 end-to-end encrypted');
    var box=document.getElementById('days');days.slice(0,8).forEach(function(x){var s=document.createElement('span');s.textContent=String((x&&x.name)||'Day').slice(0,30);box.appendChild(s);});});
 }).catch(function(){document.getElementById('sub').textContent='Couldn’t open this split — the link may be incomplete.';});` : ''}
 })();</script></body></html>`;

@@ -253,6 +253,13 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         // Sign-in popups (Google / Apple / Microsoft via Puter) must finish inside the popup, so never bounce them to Safari.
         if webView != self.webView { decisionHandler(.allow); return }
+        // Other apps' links (sidestore://, mailto:, tel: …) open in that app instead of failing inside the web view.
+        if let url = navigationAction.request.url, let scheme = url.scheme?.lowercased(),
+           !["http", "https", "about", "blob", "data", "file", "lockin"].contains(scheme) {
+            UIApplication.shared.open(url)
+            decisionHandler(.cancel)
+            return
+        }
         if navigationAction.targetFrame?.isMainFrame ?? true,
            let url = navigationAction.request.url,
            let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
