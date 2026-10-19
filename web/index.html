@@ -1255,6 +1255,27 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
 .csexp{margin:10px 0 8px;line-height:1.45}
 .csline{margin:-2px 0 12px;padding:8px 12px;border-radius:12px;background:rgba(110,166,255,.08);border:1px solid rgba(110,166,255,.18);color:var(--slate)}
 .csline .linkbtn{font-size:inherit}
+.kcalcard{padding-top:16px;padding-bottom:16px}
+.kh{display:flex;align-items:center;gap:18px}
+.kh-c{gap:14px;margin:10px 0 14px;padding:12px;border-radius:16px;background:rgba(255,140,90,.06);border:1px solid rgba(255,150,100,.14)}
+.khring{position:relative;flex:none}
+.khring svg{width:100%;height:100%;display:block}
+.khfg{transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)}
+.khc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.khc b{font-size:28px;font-weight:900;letter-spacing:-.02em;color:#fff}
+.kh-c .khc b{font-size:21px}
+.khc small{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-top:4px}
+.khr{flex:1;min-width:0}
+.khk{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#ffb36b;margin-bottom:4px}
+.khleft{font-size:15px;color:var(--slate);font-weight:700}
+.khleft b{font-size:26px;font-weight:900;color:#fff;letter-spacing:-.02em}
+.kh-c .khleft b{font-size:21px}
+.kh-over .khleft b{color:#ff8a6e}
+.khmix{display:flex;gap:3px;height:8px;border-radius:6px;overflow:hidden;margin:10px 0 6px;background:rgba(255,255,255,.06)}
+.khmix i{display:block;border-radius:3px}
+.khleg{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--slate);font-weight:700}
+.khleg i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.mkcal{color:#ffb36b;font-weight:900}
 </style>
 </head>
 <body>
@@ -1407,6 +1428,7 @@ input[type=date]{min-height:44px;-webkit-appearance:none;appearance:none}
       <input type="file" id="libIn" accept="image/*" style="display:none">
       <p class="tiny" style="margin-top:8px;text-align:center">Scan reads barcodes on its own — or snap your plate and the AI estimates every macro, micro and anti-nutrient. <span class="linkbtn" style="font-size:11.5px" onclick="$('libIn').click()">Pick from photos</span></p>
     </div>
+    <div class="card kcalcard" id="kcalCard" hidden></div>
     <div class="card ancard" id="anCard" style="display:none"></div>
     <div id="aiOutNote" class="ainote" hidden>AI is paused — your Puter AI credit ran out this month. Meals still get the built-in grade.</div>
 <div id="dietAlert"></div>
@@ -2125,7 +2147,7 @@ function renderToday(){
   const mac='<div class="rings">'+ring(tt.protein,goalFor('protein'),'Protein','#6ea6ff')+ring(tt.carbs,goalFor('carbs'),'Carbs','#ffd166')+ring(tt.fat,goalFor('fat'),'Fat','#3ecf8e')+'</div>';
   const lastPR=latestPR(),bw=latestBody(),nextW=nextWorkoutTxt();
   $('todayHub').innerHTML=
-    '<div class="hub" style="grid-column:1/-1" onclick="show(\'diet\')"><div class="k">Nutrition today</div>'+mac+'<div class="statchips">'+(n?(kcalOn()?'<span>'+Math.round(kcalOf(tt)).toLocaleString()+' / '+kcalGoal().toLocaleString()+' kcal</span>':'')+'<span>'+n+' meal'+(n>1?'s':'')+'</span>'+lastGradeChip(t)+'<span class="'+(mh.hit>=mh.of*0.75?'good':'')+'">Micros '+mh.hit+'/'+mh.of+'</span>'+
+    '<div class="hub" style="grid-column:1/-1" onclick="show(\'diet\')"><div class="k">Nutrition today</div>'+(kcalOn()?kcalHero(tt,'',1):'')+mac+'<div class="statchips">'+(n?'<span>'+n+' meal'+(n>1?'s':'')+'</span>'+lastGradeChip(t)+'<span class="'+(mh.hit>=mh.of*0.75?'good':'')+'">Micros '+mh.hit+'/'+mh.of+'</span>'+
       ((tt.seedoil||0)>0.4?'<span class="badc">Seed oils '+fmtNum(tt.seedoil)+' g</span>':'<span class="good">No seed oils</span>')+
       (over.filter(o=>o.k!=='seedoil').length?'<span class="badc">'+over.filter(o=>o.k!=='seedoil').length+' over limit</span>':''):'<span>Nothing logged yet — snap your first meal</span>')+streakChip()+'</div>'+nextTip(t)+
     '<div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm grow" onclick="event.stopPropagation();openCam()">📷 Snap a meal</button><button class="btn btn-ghost btn-sm grow" onclick="event.stopPropagation();show(\'diet\');openDescribe()">✍️ Describe</button></div></div>'+
@@ -2834,7 +2856,8 @@ function renderDiet(){
   $('dDate').value=dDate;$('dDate').max=t;$('dNext').disabled=dDate>=t;
   const tot=dayTotals(dDate),meals=S.food[dDate]||[];
   $('dietCount').textContent=meals.length?meals.length+' meal'+(meals.length>1?'s':''):'';
-  $('macroBox').innerHTML=(kcalOn()?kcalRow(tot):'')+['protein','carbs','fat'].map(k=>nutRow(k,tot)).join('');
+  {const kc=$('kcalCard');kc.hidden=!kcalOn();if(kcalOn())kc.innerHTML=kcalHero(tot,dDate===todayStr()?'Today':fmtD(dDate));}
+  $('macroBox').innerHTML=['protein','carbs','fat'].map(k=>nutRow(k,tot)).join('');
   $('badBox').innerHTML=NUT.filter(n=>n[3]==='bad'&&n[0]!=='caffeine').map(n=>nutRow(n[0],tot,true)).join('');renderCaffeine(tot);
   $('antiBox').innerHTML=NUT.filter(n=>n[3]==='anti').map(n=>nutRow(n[0],tot,true)).join('')+'<p class="tiny" style="margin-top:10px">Tap any name to see what it does and where today’s amount came from.</p>';
   const mh=microHits(dDate);$('microScore').textContent=mh.hit+'/'+mh.of+' goals hit';
@@ -3189,7 +3212,7 @@ function mealHTML(e){
   const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0),fl=mealFlags(e);
   const desc=e.parts&&e.parts.length?e.parts.map(p=>p.name+(p.g?' '+Math.round(p.g)+' g':'')).join(', '):(e.items||'');
   return '<div class="meal'+(fl.includes('seed_oil')?' hasbad':'')+'" id="m_'+e.id+'" data-fk="'+e.id+'"><div class="top" onclick="this.parentNode.classList.toggle(\'open\')"><div class="grow"><div class="nm">'+gradePill(e)+esc(e.name)+(m!==1?' <span class="tiny">×'+m+'</span>':'')+(e.src==='barcode'?' <span class="tiny">· barcode</span>':e.src==='queued'?' <span class="tiny">· analyzed later</span>':'')+'</div>'+
-    '<div class="mm">'+(kcalOn()?Math.round(kcalOf({protein:v('protein'),carbs:v('carbs'),fat:v('fat')}))+' kcal · ':'')+'P '+Math.round(v('protein'))+' g · C '+Math.round(v('carbs'))+' g · F '+Math.round(v('fat'))+' g'+(anti.length?' · '+anti.length+' anti-nutrient'+(anti.length>1?'s':''):'')+'</div>'+flagChips(fl)+'</div>'+
+    '<div class="mm">'+(kcalOn()?'<b class="mkcal">'+Math.round(kcalOf({protein:v('protein'),carbs:v('carbs'),fat:v('fat')}))+' kcal</b> · ':'')+'P '+Math.round(v('protein'))+' g · C '+Math.round(v('carbs'))+' g · F '+Math.round(v('fat'))+' g'+(anti.length?' · '+anti.length+' anti-nutrient'+(anti.length>1?'s':''):'')+'</div>'+flagChips(fl)+'</div>'+
     '<div class="t">'+new Date(e.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div>'+
     '<div class="det">'+anMini(e)+(desc?'<p class="tiny" style="margin-bottom:6px">'+esc(desc)+'</p>':'')+(e.parts||[]).map(ingBlock).join('')+
     '<div class="ngrid">'+NUT.map(x=>'<div class="'+((x[3]==='anti'&&v(x[0])>0)||(x[0]==='seedoil'&&v(x[0])>0.4)||(x[0]==='addsugar'&&v(x[0])>8)||(x[0]==='la'&&v(x[0])>4)?'bad':'')+'"><span>'+esc(x[1])+'</span><b>'+fmtNum(v(x[0]))+' '+x[2]+'</b></div>').join('')+'</div>'+
@@ -3633,6 +3656,21 @@ function kcalGoal(){return S.targets.kcal>0?S.targets.kcal:kcalMacroGoal();}
 function kcalSetup(){const on=kcalOn();$('set-kcal').checked=on;$('kcalField').hidden=!on;$('t-kcal').value=S.targets.kcal||'';$('kcalHint').textContent='· blank = '+kcalMacroGoal()+' from your macros';}
 function kcalRow(tot){const v=Math.round(kcalOf(tot)),g=kcalGoal(),p=g?v/g*100:0;
   return '<div class="nrow kcalrow"><div class="tgtline"><span class="nlab">Calories</span><span><b>'+v.toLocaleString()+'</b> / '+g.toLocaleString()+' kcal<span class="pct"> '+Math.round(p)+'%</span></span></div><div class="bar"><i class="'+(p>=100?'full':'')+'" style="width:'+Math.min(100,p).toFixed(1)+'%;background:linear-gradient(90deg,#ff9f6e,#ffcf6e)"></i></div></div>';}
+function kcalHero(tot,label,compact){
+  const P=(+tot.protein||0)*4,C=(+tot.carbs||0)*4,F=(+tot.fat||0)*9,v=Math.round(P+C+F),g=kcalGoal(),p=g?Math.min(1,v/g):0,left=g-v,over=left<0;
+  const r=compact?40:54,sz=compact?100:132,c=2*Math.PI*r,sw=compact?10:12;
+  const seg=(x,col)=>v?'<i style="flex:'+x.toFixed(1)+';background:'+col+'"></i>':'';
+  return '<div class="kh'+(compact?' kh-c':'')+(over?' kh-over':'')+'">'+
+    '<div class="khring" style="width:'+sz+'px;height:'+sz+'px"><svg viewBox="0 0 '+sz+' '+sz+'"><defs><linearGradient id="kg'+(compact?'c':'d')+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb36b"/><stop offset="1" stop-color="#ff6f61"/></linearGradient></defs>'+
+      '<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="'+sw+'"/>'+
+      '<circle class="khfg" cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="url(#kg'+(compact?'c':'d')+')" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+(c*(1-p)).toFixed(1)+'" transform="rotate(-90 '+sz/2+' '+sz/2+')"/></svg>'+
+      '<div class="khc"><b>'+v.toLocaleString()+'</b><small>kcal</small></div></div>'+
+    '<div class="khr">'+(label?'<div class="khk">Calories · '+esc(label)+'</div>':'')+
+      '<div class="khleft"><b>'+Math.abs(left).toLocaleString()+'</b> '+(over?'over':'left')+'</div><div class="tiny">of '+g.toLocaleString()+' kcal goal · '+Math.round(v/(g||1)*100)+'%</div>'+
+      '<div class="khmix">'+seg(P,'#6ea6ff')+seg(C,'#ffd166')+seg(F,'#3ecf8e')+'</div>'+
+      '<div class="khleg"><span><i style="background:#6ea6ff"></i>P '+Math.round(P)+'</span><span><i style="background:#ffd166"></i>C '+Math.round(C)+'</span><span><i style="background:#3ecf8e"></i>F '+Math.round(F)+'</span></div>'+
+    '</div></div>';
+}
 function saveSettings(){
   const s=S.settings;const name=$('set-name').value.trim();if(name)s.name=name;
   const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),dob=$('set-dob').value,a=ageFrom(dob);
