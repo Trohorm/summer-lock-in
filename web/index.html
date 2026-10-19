@@ -1626,7 +1626,7 @@ function suggestMacros(w,goal){
   if(!w)return null;
   return {protein:Math.round(w*2.2),carbs:Math.round(w*({cut:3,recomp:4,bulk:5,maintain:4}[goal]||4)),fat:Math.round(w*({cut:0.8,bulk:1.1}[goal]||1))};
 }
-const KV_KEY='state_v1',PDIR='photos',AI_MODEL='claude-sonnet-4-6';
+const KV_KEY='state_v1',PDIR='photos',AI_MODEL='claude-sonnet-4-6',AI_TEXT=['anthropic/claude-haiku-5-5','claude-haiku-4-5'],AI_IMG=['anthropic/claude-sonnet-5-5','claude-sonnet-4-6'];
 
 /* ================= STATE ================= */
 let S=null,user=null,dirty=false,pushT=null,lastSync=null,offlineMode=false,pushed={},cloudReady=false,pushing=false,needsSignIn=false,localT=null,syncing=false,lastPull=0;
@@ -1780,8 +1780,12 @@ function parseJSON(t){
 }
 async function ai(prompt,img){
   if(typeof puter==='undefined')throw new Error('offline');
-  try{return normChat(img?await puter.ai.chat(prompt,img,false,{model:AI_MODEL}):await puter.ai.chat(prompt,{model:AI_MODEL}));}
-  catch(e){return normChat(img?await puter.ai.chat(prompt,img):await puter.ai.chat(prompt));}
+  // cheap Haiku for text, Sonnet only when it has to read a photo; remember which id works
+  const list=img?AI_IMG:AI_TEXT,key=img?'img':'txt',ok=(window.__aiOk=window.__aiOk||{})[key];
+  const order=ok?[ok,...list.filter(m=>m!==ok)]:list;let err;
+  for(const m of order){try{const r=img?await puter.ai.chat(prompt,img,false,{model:m}):await puter.ai.chat(prompt,{model:m});window.__aiOk[key]=m;return normChat(r);}
+    catch(e){err=e;const t=String((e&&(e.message||e.error&&e.error.message||e.code))||e);if(/insufficient|funds|credit|quota|limit|402|auth|sign/i.test(t))throw e;}}
+  throw err;
 }
 function fmtNum(v){if(v==null||isNaN(v))return '0';const a=Math.abs(v);return a>=100?String(Math.round(v)):a>=10?String(Math.round(v*10)/10):String(Math.round(v*100)/100);}
 
