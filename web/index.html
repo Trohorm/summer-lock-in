@@ -1375,10 +1375,11 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 @keyframes nv-hop{0%{transform:none}40%{transform:translateY(-3.5px)}100%{transform:none}}
 @keyframes nv-gear{0%{transform:rotate(-120deg) scale(.8)}100%{transform:translateY(-1px) scale(1.1) rotate(0)}}
 /* ---- Lift: the selected day rides a sliding pill ---- */
-#dayChips{position:relative}
-#dayChips .dpill{position:absolute;left:0;top:0;border-radius:999px;background:var(--grad);box-shadow:0 4px 14px rgba(79,124,247,.3);pointer-events:none;z-index:0;
+#dayChips{position:relative;isolation:isolate}
+#dayChips .dpill{position:absolute;left:0;top:0;border-radius:999px;background:var(--grad);box-shadow:0 4px 14px rgba(79,124,247,.3);pointer-events:none;z-index:-1;
   transition:transform .5s var(--sp-bounce),width .5s var(--sp-bounce)}
-#dayChips.haspill .chip{position:relative;z-index:1}
+#dayChips.haspill .chip{position:relative;z-index:1;-webkit-transform:translateZ(0);transform:translateZ(0)}   /* own layer: iOS keeps the text above the pill */
+#dayChips.haspill .chip:active{transform:translateZ(0) scale(.94)}
 #dayChips.haspill .chip.on{background:transparent;border-color:transparent;box-shadow:none}
 /* ---- set counter rolls, the progress bar shines on each logged set ---- */
 .woprog .wpt b{display:inline-block}
@@ -2450,7 +2451,7 @@ function renderWorkout(){
   $('gymSel').innerHTML=S.gyms.map(g=>'<option value="'+g.id+'"'+(g.id===S.activeGym?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'<option value="__add">+ Add gym…</option>';
   const wo=ensureWO();
   if(!wo.ended&&wo.gym!==S.activeGym&&!woHasData(wo))wo.gym=S.activeGym;
-  $('dayChips').innerHTML=sp.days.map(d=>'<button class="chip'+(d.id===wo.day&&wo.split===sp.id?' on':'')+'" onclick="setWorkoutDay(\''+d.id+'\')">'+esc(d.name)+'</button>').join('')+dayPillHTML();dayPillSoon();
+  $('dayChips').innerHTML=sp.days.map(d=>'<button class="chip'+(d.id===wo.day&&wo.split===sp.id?' on':'')+'" onclick="setWorkoutDay(\''+d.id+'\')">'+esc(d.name)+'</button>').join('');{const ph=dayPillHTML();if(ph)$('dayChips').insertAdjacentHTML('afterbegin',ph);}dayPillSoon();if(typeof csLine==='function')csLine();
   $('woDate').value=wo.date;
   const gymName=(S.gyms.find(g=>g.id===wo.gym)||{}).name||'';
   $('woList').innerHTML=(wo.items.length?'<div class="woprog" id="woProg"><div class="wpt"><span id="woProgTxt"></span><span id="woProgPct"></span></div><div class="wpb"><i id="woProgBar"></i></div></div>':'')+
