@@ -1464,6 +1464,11 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .view.enter .ydcard::after{animation:cbshine 1.4s ease .5s}
 }
 @keyframes ydgrow{from{transform:scaleX(0)}to{transform:none}}
+.gqbox{border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:4px 14px}
+.gqrow{display:grid;grid-template-columns:1fr auto 18px auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
+.gqrow:last-child{border-bottom:0}.gqrow span{color:var(--slate);font-weight:700}.gqrow s{color:var(--mist)}.gqrow i{color:#6ea6ff;font-style:normal;text-align:center}
+.gqrow b{color:#fff;min-width:84px;text-align:right}.gqrow b.up{color:#7ee2b1}.gqrow b.dn{color:#ffb39c}
+@media (prefers-reduced-motion:no-preference){.gqrow{animation:li-in .4s var(--out) both}.gqrow:nth-child(2){animation-delay:60ms}.gqrow:nth-child(3){animation-delay:120ms}.gqrow:nth-child(4){animation-delay:180ms}}
 </style>
 </head>
 <body>
@@ -2518,7 +2523,7 @@ function exCard(wo,it,i){
     const sv=saved[s]||{},ps=pv[s]||{};
     rows+='<div class="setrow"><div class="sn">'+(s+1)+'</div>'+
       '<input type="text" inputmode="decimal" autocomplete="off" placeholder="'+(ps.w||c[0].toLowerCase())+'" value="'+(sv.w||'')+'" id="w_'+i+'_'+s+'" oninput="syncWorkout()">'+
-      '<input type="number" inputmode="numeric" placeholder="'+(ps.r||(it.lo+'–'+it.hi))+'" value="'+(sv.r||'')+'" id="r_'+i+'_'+s+'" oninput="syncWorkout()">'+
+      '<input type="number" inputmode="numeric" placeholder="'+(ps.r||(it.lo+'–'+it.hi))+'" value="'+(sv.r||sv.rk||'')+'"'+(!sv.r&&sv.rk?' data-u="1"':'')+' id="r_'+i+'_'+s+'" oninput="repInput(this)" onblur="tickFlush(this)">'+
       '<input type="checkbox" class="done-in" id="d_'+i+'_'+s+'" '+(sv.r?'checked':'')+' onchange="markDone(this,'+i+')"></div>';
   }
   const allDone=n>0&&saved.length>=n&&saved.slice(0,n).every(s=>s&&s.r);
@@ -4043,9 +4048,7 @@ function kcalHero(tot,label,compact){
 function saveSettings(){
   const s=S.settings;const name=$('set-name').value.trim();if(name)s.name=name;
   const w=parseFloat($('set-weight').value),h=parseFloat($('set-height').value),dob=$('set-dob').value,a=ageFrom(dob);
-  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;{const sp=$('set-sport');if(sp){const v=sp.value.trim().slice(0,60);s.sport=v;}}{const og=s.goal||'recomp';if(setGoal!==og){const was=suggestMacros(s.weight,og),T=S.targets;s.goal=setGoal;
-    if(was&&T.protein===was.protein&&T.carbs===was.carbs&&T.fat===was.fat){Object.assign(T,suggestMacros(s.weight,setGoal));toast('Goal: '+GOALS[setGoal]+' — macro goals updated to match','ok');}
-    else toast('Goal: '+GOALS[setGoal]+' — tap Suggest under Nutrition goals to update your macros','ok');}}
+  if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;{const sp=$('set-sport');if(sp){const v=sp.value.trim().slice(0,60);s.sport=v;}}{const og=s.goal||'recomp';if(setGoal!==og){s.goal=setGoal;setTimeout(()=>goalAsk(setGoal),350);}}
   if($('socHandle')&&SOC.me&&$('socHandle').value.trim().toLowerCase().replace(/^@/,'')!==SOC.me.handle)saveHandle(null,true);
   save();renderHeader();renderSettings();socNameSync();
 }
@@ -6178,8 +6181,12 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.20.3';
+const WEB_VER='2026.10.20.4';
 const WHATSNEW=[
+ {v:'2026.10.20.4',d:'20 Oct',items:[
+  ['✅','Smoother set ticks','Type your reps and the set ticks once you stop (or tap Done) — pop, buzz and rest timer all at the same moment.'],
+  ['↩️','Untick keeps your numbers','Unticking a set no longer wipes it — the numbers stay, they just don’t count until you tick it again.'],
+  ['🎯','Goal → targets','Change your goal and the app offers to recalculate your calories and macros for it.']]},
  {v:'2026.10.20.3',d:'20 Oct',items:[
   ['👁','View-only members','Own a shared split? Make anyone view-only (or let them edit again) in Share → Edit together. They still get every change.'],
   ['📡','Send public links to friends','Share → Public link now lists your friends — it pops up on their phone with Follow.'],
@@ -6691,6 +6698,86 @@ function openYday(){
     '<p class="tiny" style="margin-top:14px">Food counts meal grades, calories, protein, seed oils and other limits, and micronutrients. Training counts the planned day and how many sets you did, plus new bests; a planned rest day is full marks.</p></div>');
   const sb=$('sheetBody');countUp(sb,true);fillRings(sb,true);if(r.total>=85&&!RM)setTimeout(()=>{const g=sb.querySelector('.ydring');if(g){const q=g.getBoundingClientRect();burst(q.left+q.width/2,q.top+q.height/2,'#3ecf8e',true);}},700);
 }
+
+/* ================= SET TICKS v2: unticking keeps your numbers; a typed set ticks once, with all its effects at the same moment ================= */
+// a set is logged when it has reps and isn't unticked. Unticked sets keep their reps as rk (not counted anywhere).
+function repInput(ri){delete ri.dataset.u;delete ri.dataset.auto;syncWorkout();}
+function syncWorkout(){
+  const w=curWO();if(!w)return;
+  w.items.forEach((it,i)=>{
+    const card=$('exc_'+i);if(!card)return;
+    const n=card.querySelectorAll('.done-in').length;const arr=[];
+    for(let s=0;s<n;s++){
+      const wi=$('w_'+i+'_'+s),ri=$('r_'+i+'_'+s),di=$('d_'+i+'_'+s);
+      const wv=wi?parseFloat(wi.value):NaN,rv=ri?parseFloat(ri.value):NaN,off=!!(ri&&ri.dataset.u==='1');
+      const has=!isNaN(rv)&&rv>0&&!off;
+      if(di&&di.checked!==has){
+        if(has&&ri&&document.activeElement===ri)tickSoon(di,i);            // still typing: tick when they stop
+        else{di.checked=has;if(!has)tickCancel(di);}
+      }else if(di&&!has)tickCancel(di);
+      const o={w:!isNaN(wv)?wv:0,r:has?rv:0};if(!has&&rv>0)o.rk=rv;arr.push(o);
+    }
+    w.ex[it.k]=arr;
+  });
+  const nt=$('woNotes');if(nt)w.notes=nt.value.trim();
+  const has=woHasData(w);
+  if(!w.t0&&!w.ended&&has){w.t0=Date.now();snapSoon(4000);}
+  else if(w.t0&&!w.ended&&!has){delete w.t0;snapSoon(4000);}
+  w.ts=Date.now();save();
+  w.items.forEach((it,i)=>{const c=$('exc_'+i);if(c)c.classList.toggle('exdone',[...c.querySelectorAll('.done-in')].every(b=>b.checked));});updateWoProg();
+  if(typeof woButtons==='function')woButtons();
+}
+const TICKQ=new Map();
+function tickSoon(cb,i){clearTimeout(TICKQ.get(cb.id));TICKQ.set(cb.id,setTimeout(()=>tickCommit(cb,i),700));}
+function tickCancel(cb){clearTimeout(TICKQ.get(cb.id));TICKQ.delete(cb.id);}
+function tickCommit(cb,i){tickCancel(cb);if(!cb.isConnected||cb.checked)return;const sn=cb.id.split('_')[2],ri=$('r_'+i+'_'+sn);
+  if(!ri||!(parseFloat(ri.value)>0)||ri.dataset.u==='1')return;cb.checked=true;tickEffects(cb,i);updateWoProg();}
+// leaving the reps field (or Done) ticks it right away
+function tickFlush(ri){const p=ri.id.split('_'),cb=$('d_'+p[1]+'_'+p[2]);if(cb&&TICKQ.has(cb.id))tickCommit(cb,+p[1]);}
+function markDone(cb,i){
+  tickCancel(cb);
+  const sn=cb.id.split('_')[2],wi=$('w_'+i+'_'+sn),ri=$('r_'+i+'_'+sn);
+  if(cb.checked){
+    if(ri)delete ri.dataset.u;
+    // ticking an empty set fills it from last time; with nothing to fill, there is nothing to log yet
+    if(ri&&!ri.value&&!isNaN(parseFloat(ri.placeholder))){ri.value=parseFloat(ri.placeholder);ri.dataset.auto=1;}
+    if(wi&&!wi.value&&!isNaN(parseFloat(wi.placeholder))){wi.value=parseFloat(wi.placeholder);wi.dataset.auto=1;}
+    if(ri&&!(parseFloat(ri.value)>0)){cb.checked=false;ri.focus();toast('Type your reps first');return;}
+  }else if(ri){
+    // unticking: the set stops counting but your numbers stay (only what the tick filled in itself goes)
+    if(ri.dataset.auto){ri.value='';delete ri.dataset.auto;if(wi&&wi.dataset.auto){wi.value='';delete wi.dataset.auto;}}
+    else ri.dataset.u='1';
+  }
+  syncWorkout();
+  if(cb.checked)tickEffects(cb,i);else{const card=$('exc_'+i);if(card)card.classList.remove('exdone');haptic('light');}
+}
+// everything a logged set does, at one moment: tick pop, row flash, burst, haptic, exercise done, PR, rest timer
+function tickEffects(cb,i){
+  const card=$('exc_'+i);if(!card)return;
+  haptic('medium');tickPop(cb);const row=cb.closest('.setrow');if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}
+  const r=cb.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);
+  const was=card.classList.contains('exdone'),now=[...card.querySelectorAll('.done-in')].every(b=>b.checked);card.classList.toggle('exdone',now);
+  if(now&&!was){card.classList.remove('justdone');void card.offsetWidth;card.classList.add('justdone');setTimeout(()=>card.classList.remove('justdone'),1000);setTimeout(()=>haptic('success'),120);}
+  fxSetPR(cb,i);
+  if(S.settings.autoRest!==false){const w=curWO();const it=w&&!w.ended&&w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
+}
+function tickFx(cb,i){tickEffects(cb,i);}
+function typedTick(cb,i){tickSoon(cb,i);}
+
+/* ================= GOAL CHANGE: offer to recalculate calories and macros ================= */
+function goalTargets(g){const m=suggestMacros(S.settings.weight,g);if(!m)return null;return Object.assign(m,{kcal:Math.round(m.protein*4+m.carbs*4+m.fat*9)});}
+function goalAsk(g){
+  const nw=goalTargets(g);if(!nw)return;const T=S.targets,cur={protein:T.protein||0,carbs:T.carbs||0,fat:T.fat||0,kcal:kcalGoal()};
+  if(nw.protein===cur.protein&&nw.carbs===cur.carbs&&nw.fat===cur.fat&&(!T.kcal||T.kcal===nw.kcal))return;
+  const row=(l,a,b,u)=>'<div class="gqrow"><span>'+l+'</span><s>'+Math.round(a).toLocaleString()+'</s><i>→</i><b class="'+(b>a?'up':b<a?'dn':'')+'">'+Math.round(b).toLocaleString()+' '+u+'</b></div>';
+  openSheet('Update your targets?','<p class="muted" style="margin-bottom:12px">You switched to <b>'+esc(GOALS[g])+'</b>. Recalculate your calories and macros for it?</p>'+
+    '<div class="gqbox">'+row('Calories',cur.kcal,nw.kcal,'kcal')+row('Protein',cur.protein,nw.protein,'g')+row('Carbs',cur.carbs,nw.carbs,'g')+row('Fat',cur.fat,nw.fat,'g')+'</div>'+
+    '<p class="tiny" style="margin:10px 0 14px">'+esc(GOALHINT[g]||'')+' Based on '+S.settings.weight+' kg. You can still change any of them in Nutrition goals.</p>'+
+    '<button class="btn btn-primary" style="width:100%" onclick="goalApply(\''+g+'\',this)">Update targets</button><button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeSheet()">Keep my current ones</button>');
+  haptic('light');
+}
+function goalApply(g,btn){const nw=goalTargets(g);if(!nw)return;Object.assign(S.targets,{protein:nw.protein,carbs:nw.carbs,fat:nw.fat});S.targets.kcal=0;
+  save();if(btn)burstAt(btn,'#3ecf8e');haptic('success');closeSheet();renderSettings();toast('Targets updated for '+GOALS[g]+' — '+nw.kcal.toLocaleString()+' kcal a day','ok');}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
