@@ -1845,7 +1845,7 @@ function fresh(){return {v:2,settings:{name:'',goal:'recomp',weight:null,height:
   workouts:{},food:{},body:{},tomb:{},cur:null};}
 function merge(base,d){
   const out=Object.assign(base,d||{});const f=fresh();
-  out.settings=Object.assign(f.settings,(d&&d.settings)||{});
+  out.settings=Object.assign(f.settings,(d&&d.settings)||{});if(out.settings._ts)out.settings._ts=Object.assign({},out.settings._ts);
   out.targets=Object.assign(f.targets,(d&&d.targets)||{});
   ['splits','exNotes','custom','libcache','workouts','food','body','tomb'].forEach(k=>{if(!out[k]||typeof out[k]!=='object')out[k]={};});
   if(!Array.isArray(out.gyms))out.gyms=[];
@@ -1880,7 +1880,21 @@ function migrate(){
 function cacheKey(){return 'rtcache_'+(user?user.username:'anon');}
 let dataVer=0;const viewVer={};
 function verKey(v){return dataVer+'|'+todayStr()+(v==='diet'?'|'+dDate:'')+(v==='friends'||v==='today'?'|s'+SOC.v:'');}
-function save(){if(typeof csPushSoon==='function')csPushSoon();if(typeof pubPushSoon==='function')pubPushSoon();dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
+const SSNAP={o:null,v:{}};
+function snapSettings(){const st=S&&S.settings;if(!st)return;SSNAP.o=st;SSNAP.v={};for(const k in st)if(k!=='_ts')SSNAP.v[k]=JSON.stringify(st[k]);}
+function stampSettings(){const st=S&&S.settings;if(!st)return;if(SSNAP.o!==st){snapSettings();return;}
+  const now=Date.now(),ts=st._ts||(st._ts={});
+  for(const k in st){if(k==='_ts')continue;const j=JSON.stringify(st[k]);if(SSNAP.v[k]!==j){ts[k]=now;SSNAP.v[k]=j;}}
+  for(const k in SSNAP.v)if(!(k in st)){ts[k]=now;delete SSNAP.v[k];}}
+function mergeSettings(nw,od){
+  nw=nw||{};od=od||{};const tn=nw._ts||{},to=od._ts||{},out={},ts={};
+  for(const k of new Set([...Object.keys(nw),...Object.keys(od)])){if(k==='_ts')continue;
+    const a=tn[k]||0,b=to[k]||0,src=b>a?od:nw;ts[k]=Math.max(a,b)||undefined;if(!ts[k])delete ts[k];
+    if(k in src)out[k]=JSON.parse(JSON.stringify(src[k]));}
+  // a tour seen on any device is seen
+  if(nw.tours||od.tours)out.tours=Object.assign({},od.tours||{},nw.tours||{},out.tours||{});
+  if(Object.keys(ts).length)out._ts=ts;return out;}
+function save(){stampSettings();if(typeof csPushSoon==='function')csPushSoon();if(typeof pubPushSoon==='function')pubPushSoon();dataVer++;schedulePrerender(1500);if(S)S.updatedAt=Date.now();clearTimeout(localT);localT=setTimeout(()=>idle(writeLocal),800);pushSoon();snapSoon();}
 function writeLocal(){clearTimeout(localT);localT=null;if(!S)return;const k=cacheKey();let j;try{j=JSON.stringify(S);}catch(e){return;}
   if(j.length<LBIG){try{localStorage.setItem(k,j);if(LIDB.used||localStorage.getItem(k+'_idb')){localStorage.removeItem(k+'_idb');lidbDel(k);LIDB.used=false;}LIDB.data=null;return;}catch(e){}}
   // too big for localStorage, or it's full: IndexedDB holds it. Only once it's safely written does the old copy go
@@ -1963,6 +1977,7 @@ function mergeStates(a,b){
   const nc=Object.assign({},newer);delete nc.workouts;delete nc.food;   // the logs are rebuilt below: copy only the rest
   const out=merge(fresh(),JSON.parse(JSON.stringify(nc)));
   out.tomb=Object.assign({},older.tomb||{},newer.tomb||{});
+  out.settings=Object.assign(fresh().settings,mergeSettings(newer.settings,older.settings));
   const ow=older.workouts||{};out.workouts=Object.assign({},ow);
   const nw=newer.workouts||{};
   for(const k in nw){const o=out.workouts[k];out.workouts[k]=(!o||((nw[k]&&nw[k].ts)||0)>=((o&&o.ts)||0))?nw[k]:o;}
@@ -2139,7 +2154,8 @@ async function boot(){
   localStorage.setItem('rt_lastuser',user.username);
   const local=await loadLocalAny();
   let cloud=null,reached=false;
-  try{cloud=await loadCloud();reached=true;}catch(e){}
+  for(let i=0;i<3&&!reached;i++){try{cloud=await loadCloud();reached=true;}catch(e){if(i<2)await new Promise(z=>setTimeout(z,1500));}}
+  if(!reached&&!local){show('login');renderHeader();$('loginMsg').textContent='Couldn’t load your account just now — check your connection and tap Sign in to try again.';return;}
   let loaded;cloudReady=reached;
   if(reached){loaded=mergeStates(cloud,local);offlineMode=false;}
   else{loaded=local;offlineMode=true;dirty=true;}
@@ -2164,7 +2180,7 @@ async function bgSync(){
     // merge, then migrate the result too, so an old-format cloud copy doesn't look like a change on every open
     const prev=S;S=merge(fresh(),mergeStates(cloud,prev));migrate();const merged=S;
     cloudReady=true;offlineMode=false;lastPull=Date.now();
-    if(deepEq(merged,prev))S=prev;else{dataVer++;writeLocal();quietRefresh();}
+    if(deepEq(merged,prev))S=prev;else{dataVer++;snapSettings();writeLocal();quietRefresh();}
     if(!cloud||!cloud.sharded||!cloudEq(merged,cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
     processQueue();setTimeout(runPendingAnalyses,4000);
   }finally{syncing=false;renderSync();}
@@ -2185,7 +2201,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){snapSettings();if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -6394,7 +6410,7 @@ const TOURS={
   ['#view-friends .e2epill','Private by design','Everything friends see is end-to-end encrypted. Choose what each friend can see in Setup → Friends & privacy.']]
 };
 const TOUR={k:null,i:0,steps:[]};
-function tourSeen(k){return !!(S&&S.settings.tours&&S.settings.tours[k]);}
+function tourSeen(k){return !S||!S.settings.tours||!!S.settings.tours[k];}
 function tourFind(sel){
   if(sel.startsWith('up:')){const e=tourFind(sel.slice(3));return e?e.parentElement:null;}
   if(sel.startsWith('card:')){const t=sel.slice(5).toLowerCase();return [...document.querySelectorAll('.view.active .card')].find(c=>{const h=c.querySelector('h2');return h&&h.textContent.toLowerCase().includes(t);})||null;}
