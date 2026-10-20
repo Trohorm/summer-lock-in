@@ -771,7 +771,7 @@ async function csApi(db, me, M, p, b) {
     const c = await csRow(db, m[1]);if (!c) return J({ state: 'gone' });
     const mine = await csMember(db, m[1], me);return J({ state: mine ? mine.state : 'removed' });
   }
-  if (!(m = /^\/api\/cs\/([0-9a-f]{16})(?:\/(invite|join|leave|rekey))?$/.exec(p))) return null;
+  if (!(m = /^\/api\/cs\/([0-9a-f]{16})(?:\/(invite|join|leave|rekey|role))?$/.exec(p))) return null;
   const id = m[1], act = m[2] || '', c = await csRow(db, id);
   if (!c) throw new HttpError(404, 'cs_gone', 'That shared split was deleted.');
   const mine = await csMember(db, id, me), owner = c.owner === me;
@@ -779,6 +779,7 @@ async function csApi(db, me, M, p, b) {
   const now = Date.now();
   if (M === 'PUT' && !act) {
     await limit(db, 'u:' + me + ':csput', 240, HOUR);
+    if (mine.state === 'view') throw new HttpError(403, 'cs_view', 'You can only view this split.');
     if (mine.state !== 'in') throw new HttpError(403, 'cs_join', 'Join the split first.');
     if (!b || !csData(b.data) || b.kv !== c.kv) throw new HttpError(400, 'bad', 'Couldn’t save that change.');
     const r = await db.prepare('UPDATE cs SET data=?, ver=ver+1, upd=?, by=? WHERE id=? AND ver=?').bind(b.data, now, me, id, +b.ver || 0).run();
@@ -797,7 +798,7 @@ async function csApi(db, me, M, p, b) {
     for (const x of to) {
       if (!ok.has(x.id)) continue;
       const ex = await csMember(db, id, x.id);
-      if (ex && ex.state === 'in') continue;
+      if (ex && (ex.state === 'in' || ex.state === 'view')) continue;
       if (!ex) { if (room <= 0) break; room--; }
       st.push(db.prepare('INSERT OR REPLACE INTO csm(sid,uid,state,w,wb,rf,"of",ts) VALUES(?,?,?,?,?,?,?,?)').bind(id, x.id, 'invited', x.w, me, x.rf, fp, now)); sent++;
     }
@@ -807,8 +808,18 @@ async function csApi(db, me, M, p, b) {
   if (M === 'POST' && act === 'join') {
     if (!b || !RX.wrap.test(String(b.w))) throw new HttpError(400, 'bad', 'Couldn’t join.');
     const fp = await myFp(db, me);
-    await db.prepare('UPDATE csm SET state=\'in\', w=?, wb=?, rf=?, "of"=?, ts=? WHERE sid=? AND uid=?').bind(b.w, me, fp, fp, now, id, me).run();
+    await db.prepare('UPDATE csm SET state=CASE WHEN state=\'view\' THEN \'view\' ELSE \'in\' END, w=?, wb=?, rf=?, "of"=?, ts=? WHERE sid=? AND uid=?').bind(b.w, me, fp, fp, now, id, me).run();
     return J({ ok: true });
+  }
+  if (M === 'POST' && act === 'role') {
+    // the owner decides who edits: 'in' = can edit, 'view' = sees every update but can't change it
+    if (!owner) throw new HttpError(403, 'cs_owner', 'Only the owner can change who edits.');
+    const uid = String((b && b.uid) || ''), role = b && b.role === 'view' ? 'view' : 'in';
+    if (!RX.uid.test(uid) || uid === me) throw new HttpError(400, 'bad', 'Pick someone in the split.');
+    const t = await csMember(db, id, uid);
+    if (!t || (t.state !== 'in' && t.state !== 'view')) throw new HttpError(404, 'cs_member', 'They’re not in this split.');
+    await db.prepare('UPDATE csm SET state=? WHERE sid=? AND uid=?').bind(role, id, uid).run();
+    return J({ ok: true, state: role });
   }
   if (M === 'POST' && act === 'leave') {
     if (owner) throw new HttpError(400, 'cs_owner', 'You own this split — stop sharing it instead.');

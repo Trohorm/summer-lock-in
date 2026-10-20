@@ -4046,6 +4046,7 @@ function saveSettings(){
   if(w){s.weight=w;if(!S.body[todayStr()])S.body[todayStr()]=w;}if(h)s.height=h;if(a>=10&&a<=90&&dob!==DOB)dobSet(dob);s.sex=$('set-sex').value;{const sp=$('set-sport');if(sp){const v=sp.value.trim().slice(0,60);s.sport=v;}}{const og=s.goal||'recomp';if(setGoal!==og){const was=suggestMacros(s.weight,og),T=S.targets;s.goal=setGoal;
     if(was&&T.protein===was.protein&&T.carbs===was.carbs&&T.fat===was.fat){Object.assign(T,suggestMacros(s.weight,setGoal));toast('Goal: '+GOALS[setGoal]+' — macro goals updated to match','ok');}
     else toast('Goal: '+GOALS[setGoal]+' — tap Suggest under Nutrition goals to update your macros','ok');}}
+  if($('socHandle')&&SOC.me&&$('socHandle').value.trim().toLowerCase().replace(/^@/,'')!==SOC.me.handle)saveHandle(null,true);
   save();renderHeader();renderSettings();socNameSync();
 }
 function saveTargets(){
@@ -5212,6 +5213,7 @@ async function previewShare(code,sendId,secret){
   try{
     const r=await fetch('/api/share/'+encodeURIComponent(code),{cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||'That link doesn’t work any more.');
     const sp=await e2eOpenShare(String(code).toUpperCase(),secret,j.data),from=j.from||{};SOC.shared={sp,from};
+    if(sp&&sp.pubLink&&/^[A-Za-z0-9]{8}$/.test(sp.pubLink.code||'')&&/^[A-Za-z0-9]{10}$/.test(sp.pubLink.key||'')){if(SOC.giftId)giftDone(SOC.giftId);closeSheet();setTimeout(()=>previewFollow(sp.pubLink.code,sp.pubLink.key),320);return;}
     if(!$('shBox'))return;
     $('shBox').innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+' shared a split</div><div class="fname">'+esc(sp.name||'Split')+'</div>'+
       (j.enc?'<div class="e2etag">'+IC.lock+' End-to-end encrypted</div>':'')+'</div>'+
@@ -5220,19 +5222,21 @@ async function previewShare(code,sendId,secret){
 }
 
 /* ---------- Setup: profile photo, username, default privacy ---------- */
+let HDRAFT=null;
 function renderSocialSettings(){
-  const box=$('socSet');if(!box)return;
+  const box=$('socSet');if(!box)return;{const h=$('socHandle');HDRAFT=h&&SOC.me&&h.value.trim().replace(/^@/,'')!==(SOC.me.handle||'')?h.value:null;}const hf=document.activeElement&&document.activeElement.id==='socHandle';
   const me=SOC.me,def=Object.assign({},CATDEF,(me&&me.defaults)||{}),ok=!!me,has=!!avURL(socMe());
   box.innerHTML='<div class="row" style="gap:14px;margin-bottom:14px"><label class="avbtn" for="avIn">'+avHTML(socMe(),62,'me')+'<span class="avcam">'+IC.cam+'</span></label>'+
     '<div class="grow"><b style="font-size:15px">Profile photo</b><div class="tiny">Friends see it next to your name.</div><div class="row" style="margin-top:7px"><label class="btn btn-ghost btn-xs" for="avIn">'+(has?'Change':'Add photo')+'</label>'+
     (has?'<button class="btn btn-ghost btn-xs" onclick="removeAvatar()">Remove</button>':'')+'</div></div></div>'+
-    '<div class="field"><label class="f">Username</label><div class="row"><div class="sfield grow"><span class="at">@</span><input id="socHandle" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" value="'+esc(me?me.handle:'')+'"'+(ok?'':' disabled')+'></div>'+
+    '<div class="field"><label class="f">Username</label><div class="row"><div class="sfield grow"><span class="at">@</span><input id="socHandle" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" onkeydown="if(event.key==\'Enter\'){event.preventDefault();saveHandle(this.parentNode.nextElementSibling);this.blur();}" onchange="saveHandle(this.parentNode.nextElementSibling,true)" value="'+esc(HDRAFT!=null?HDRAFT:(me?me.handle:''))+'"'+(ok?'':' disabled')+'></div>'+
     '<button class="btn btn-ghost btn-sm" onclick="saveHandle(this)"'+(ok?'':' disabled')+'>Save</button></div></div>'+
     '<label class="f" style="margin:14px 0 2px">Friends can see</label>'+
     CATS.map(c=>'<label class="checkline permrow"><span class="grow"><b>'+CATINFO[c][0]+'</b><small>'+CATINFO[c][1]+'</small></span><input type="checkbox" switch '+(def[c]?'checked ':'')+(ok?'':'disabled ')+'onchange="setDefault(\''+c+'\',this.checked,this)"></label>').join('')+
     '<p class="tiny" style="margin-top:10px">'+(ok?'These are your defaults. To change it for one person, open Friends and tap their name. Progress photos: only the ones you post with ↗.':'Connect to the internet to set up your friends profile.')+'</p>'+
     '<button class="e2erow" onclick="openE2EInfo()">'+IC.lock+'<span class="grow"><b>End-to-end encrypted</b><small>'+(E2E.ok?'Everything friends see is encrypted on this phone first':esc(E2E.err||'Keys load when you’re online'))+'</small></span><i class="chev"></i></button>'+
     (ok?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:12px" onclick="deleteSocial(this)">Delete friends profile</button><p class="tiny" style="margin-top:6px">Removes your friends, requests and everything they could see, and frees your username. Your own training data stays.</p>':'');
+  if(hf){const h=$('socHandle');if(h){h.focus();const n=h.value.length;try{h.setSelectionRange(n,n);}catch(e){}}}
 }
 async function deleteSocial(btn){
   if(!confirm('Delete your friends profile? All friends and requests are removed and @'+(SOC.me&&SOC.me.handle)+' becomes free for anyone.'))return;
@@ -5245,11 +5249,11 @@ async function setDefault(c,val,el){
   try{const r=await sapi('/me','PUT',{defaults:def});SOC.me=r;if(SOC.data)SOC.data.me=r;socSave();snapSoon(1500);}
   catch(e){def[c]=!val;if(el)el.checked=!val;toast(e.message,'err');}
 }
-async function saveHandle(btn){
-  const inp=$('socHandle'),v=(inp.value||'').trim().toLowerCase().replace(/^@/,'');
+async function saveHandle(btn,quiet){
+  const inp=$('socHandle');if(!inp)return;const v=(inp.value||'').trim().toLowerCase().replace(/^@/,'');if(quiet&&(!v||(SOC.me&&v===SOC.me.handle)))return;
   if(!/^[a-z0-9_.]{3,20}$/.test(v)){toast('Use 3–20 letters, numbers, _ or .','err');inp.classList.remove('shake');void inp.offsetWidth;inp.classList.add('shake');return;}
-  if(SOC.me&&v===SOC.me.handle){btnOk(btn,'Saved');return;}
-  try{const r=await sapi('/me','PUT',{handle:v});SOC.me=r;if(SOC.data)SOC.data.me=r;socSave();inp.value=r.handle;btnOk(btn,'Saved');SOC.v++;}
+  if(SOC.me&&v===SOC.me.handle){if(btn)btnOk(btn,'Saved');return;}
+  try{const r=await sapi('/me','PUT',{handle:v});SOC.me=r;if(SOC.data)SOC.data.me=r;socSave();HDRAFT=null;const i2=$('socHandle');if(i2)i2.value=r.handle;if(btn&&btn.isConnected)btnOk(btn,'Saved');toast('Username saved — you’re @'+r.handle,'ok');SOC.v++;}
   catch(e){toast(e.message,'err');}
 }
 let CROP=null;
@@ -5774,7 +5778,7 @@ function csSync(){
     if(!S||!socTok()||!(await e2eLoad()))return;
     const seen=new Set();let touched=false;
     for(const r of CS.rows){
-      seen.add(r.id);if(r.state!=='in')continue;
+      seen.add(r.id);if(r.state!=='in'&&r.state!=='view')continue;
       const k=await csKey(r);if(!k)continue;
       let R;try{R=await csOpenData(r,k);}catch(e){continue;}
       // after joining (or after the owner re-keyed) keep our own wrap, so we never depend on the inviter again
@@ -5783,18 +5787,18 @@ function csSync(){
       const info={id:r.id,owner:r.owner,members:(r.members||[]).map(m=>({id:m.id,name:m.name,handle:m.handle,av:m.av,state:m.state}))};
       if(!L){
         const lid='cs_'+r.id;L={id:lid,name:'',days:[],sched:[]};csApply(L,R);
-        L.cs=Object.assign(info,{ver:r.ver,kv:r.kv,t:Date.now()});L.cs.base=csJSON(L);S.splits[lid]=L;touched=true;continue;
+        L.cs=Object.assign(info,{ver:r.ver,kv:r.kv,t:Date.now(),role:r.state});L.cs.base=csJSON(L);S.splits[lid]=L;touched=true;continue;
       }
-      Object.assign(L.cs,info);
+      Object.assign(L.cs,info);if(L.cs.role&&L.cs.role!==r.state)csRoleNote(L,r.state,r);L.cs.role=r.state;
       if(r.ver!==L.cs.ver||r.kv!==L.cs.kv){
-        const local=csJSON(L)!==L.cs.base;
+        const local=csJSON(L)!==L.cs.base&&r.state!=='view';
         if(local){
           const tmp={id:L.id,name:'',days:[],sched:[]};csApply(tmp,R);const rb=csJSON(tmp);
           const merged=csMerge(JSON.parse(L.cs.base),csContent(L),JSON.parse(rb));csApply(L,merged);L.cs.base=rb;
         }else{csApply(L,R);L.cs.base=csJSON(L);if(r.by&&r.by!==csMe()&&r.ver>L.cs.ver){csUpdatedToast(L,r);setTimeout(csLive,60);}}
         L.cs.ver=r.ver;L.cs.kv=r.kv;touched=true;
       }
-      if(csJSON(L)!==L.cs.base)await csPush(L,r,k);
+      if(csJSON(L)!==L.cs.base){if(r.state==='view'){csApply(L,JSON.parse(L.cs.base));touched=true;}else await csPush(L,r,k);}   // view-only: your copy follows theirs
     }
     // gone from the server: the owner stopped sharing, or removed you. Your copy stays as a normal split.
     for(const L of csSplits()){
@@ -5927,10 +5931,10 @@ function drawShareSplit(bodyOnly){
       :(signed?'<p class="tiny" style="margin-top:6px">Add friends to send splits straight to them.</p>':'');
     h+='<button class="btn btn-primary socbtn" style="margin-top:16px" onclick="shareSplit(this)">'+IC.share+' Share a link (AirDrop, Messages…)</button><p class="tiny" style="margin-top:6px;text-align:center">Anyone with the link can add a copy. The link holds the key, so the server can’t read it.</p>';
   }else if(CS.mode==='public'){
-    if(sp.fol)h+='<p class="tiny csexp">This is '+esc(sp.fol.from.name||'someone')+'’s live split — you can pass their link on. To make your own version, duplicate it from Edit split.</p>'+pubLinkBox(sp.fol);
+    if(sp.fol)h+='<p class="tiny csexp">This is '+esc(sp.fol.from.name||'someone')+'’s live split — you can pass their link on. To make your own version, duplicate it from Edit split.</p>'+pubLinkBox(sp.fol)+pubFriends(fr);
     else if(!signed)h+='<p class="tiny csexp">Sign in to make a public link.</p>';
     else if(sp.pub)h+='<p class="tiny csexp">Anyone with this link can follow your split. They always see your latest version but can’t change it — to edit it, they make their own copy.</p>'+pubLinkBox(sp.pub)+
-      '<div class="pubstat">📡 <b>'+(sp.pub.fol||0)+'</b> '+(sp.pub.fol===1?'person follows':'people follow')+' this split</div><button class="btn btn-danger btn-sm" style="width:100%;margin-top:14px" onclick="pubStop()">Turn off public link</button>';
+      pubFriends(fr)+'<div class="pubstat">📡 <b>'+(sp.pub.fol||0)+'</b> '+(sp.pub.fol===1?'person follows':'people follow')+' this split</div><button class="btn btn-danger btn-sm" style="width:100%;margin-top:14px" onclick="pubStop()">Turn off public link</button>';
     else h+='<p class="tiny csexp">Make one link anyone can open — post it on Instagram, TikTok or Discord. Followers always get your latest version, but only you can change it. Encrypted: only people with the link can read it.</p>'+
       '<button class="btn btn-primary socbtn" onclick="pubCreate(this)">🔗 Create public link</button>';
   }else{
@@ -5940,7 +5944,8 @@ function drawShareSplit(bodyOnly){
       h+='<p class="tiny csexp">Everyone you invite trains from this same split. When anyone changes it — exercises, sets, days — it updates for all of you within seconds. Encrypted end to end.</p>';
       const mem=(cs&&cs.members)||[],mids=new Set(mem.map(m=>m.id));
       if(cs){h+='<label class="f" style="margin-top:4px">People</label>'+mem.map(m=>{const isMe=m.id===csMe(),own_=m.id===cs.owner;
-          return '<div class="req">'+avHTML(isMe?socMe():(userOf(m.id)||m),40)+'<div class="grow"><b>'+esc(isMe?'You':m.name)+'</b><div class="tiny">'+(own_?'Owner':m.state==='invited'?'Invited — waiting':'Can edit')+'</div></div>'+
+          return '<div class="req">'+avHTML(isMe?socMe():(userOf(m.id)||m),40)+'<div class="grow"><b>'+esc(isMe?'You':m.name)+'</b><div class="tiny">'+(own_?'Owner':m.state==='invited'?'Invited — waiting':m.state==='view'?'👁 View only':'✏️ Can edit')+'</div></div>'+
+            (owner&&!isMe&&(m.state==='in'||m.state==='view')?'<button class="btn btn-ghost btn-xs" onclick="csRole(\''+m.id+'\',\''+(m.state==='view'?'in':'view')+'\',this)">'+(m.state==='view'?'Allow editing':'View only')+'</button>':'')+
             (owner&&!isMe?'<button class="btn btn-ghost btn-xs" onclick="csRemove(\''+m.id+'\',this)">Remove</button>':'')+'</div>';}).join('');}
       if(!cs||owner){
         const cand=fr.filter(f=>!mids.has(f.id));
@@ -6030,6 +6035,29 @@ async function csDeleteSplit(){
   const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}
   draft=null;save();show('workout');toast('Split deleted');
 }
+
+/* ---- send the public link to friends: it pops up on their phone with Follow ---- */
+CS.psent={};
+function pubFriends(fr){if(!fr.length)return '';return '<label class="f" style="margin-top:14px">Send to friends</label>'+fr.map(f=>{const s=CS.psent[f.id];
+  return '<div class="req">'+avHTML(f,40)+'<div class="grow"><b>'+esc(f.name)+'</b><div class="tiny">@'+esc(f.handle)+'</div></div><button class="btn '+(s?'btn-ok':'btn-ghost')+' btn-sm" onclick="pubSendFriend(\''+f.id+'\',this)"'+(s?' disabled':'')+'>'+(s?'Sent ✓':'Send')+'</button></div>';}).join('');}
+async function pubSendFriend(fid,btn){
+  const sp=S.splits[SOC.shareSp]||activeSplit(),p=sp&&(sp.pub||sp.fol);if(!p)return;btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  try{const f=userOf(fid);if(!f)throw new Error('Not friends any more');const defs={},data=splitPayload(sp,defs);data.defs=defs;delete data.id;data.pubLink={code:p.code,key:p.key};
+    const r=await e2eShare(data,[f]);if(!r.sent)throw new Error('Couldn’t send it');
+    CS.psent[fid]=1;haptic('success');floatEmoji(btn,'📡');toast('Sent to '+first(f.name)+' — they can follow it','ok');drawShareSplit(true);}
+  catch(e){btn.disabled=false;btn.textContent='Send';toast(e.message,'err');}
+}
+/* ---- who edits: the owner can make someone view-only (and back) ---- */
+async function csRole(uid,role,btn){
+  const L=S.splits[SOC.shareSp]||activeSplit();if(!L||!L.cs||L.cs.owner!==csMe())return;if(btn)btn.disabled=true;
+  try{await sapi('/cs/'+L.cs.id+'/role','POST',{uid,role});const m=(L.cs.members||[]).find(x=>x.id===uid);if(m)m.state=role;
+    const r=CS.rows.find(x=>x.id===L.cs.id),rm=r&&(r.members||[]).find(x=>x.id===uid);if(rm)rm.state=role;save();haptic('selection');
+    toast(first((m&&m.name)||'They')+(role==='view'?' can only view it now':' can edit it again'),'ok');socRefresh(true);}
+  catch(e){toast(e.message,'err');}
+  drawShareSplit(true);csLine();
+}
+function csRoleNote(L,role,r){const o=csWho(r,r.owner);haptic('medium');
+  toast(role==='view'?first(o.name)+' made you view-only on “'+L.name+'” — you still get every update':'You can edit “'+L.name+'” again','ok');setTimeout(()=>{csLine();csLive();},60);}
 
 /* ================= PUBLIC SPLIT LINKS: anyone can follow, only the owner edits ================= */
 // The owner's app keeps one encrypted, always-latest copy on the server. The key sits after the # of the link,
@@ -6150,8 +6178,12 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.20.2';
+const WEB_VER='2026.10.20.3';
 const WHATSNEW=[
+ {v:'2026.10.20.3',d:'20 Oct',items:[
+  ['👁','View-only members','Own a shared split? Make anyone view-only (or let them edit again) in Share → Edit together. They still get every change.'],
+  ['📡','Send public links to friends','Share → Public link now lists your friends — it pops up on their phone with Follow.'],
+  ['🏷️','Username saves','Your username in Setup saves when you press Enter, leave the field or tap Save profile.']]},
  {v:'2026.10.20.2',d:'20 Oct',items:[
   ['📊','Yesterday, scored','Every morning Today shows how yesterday went — food and training out of 100, what went well, what to fix, and a coach note. Tap it for the details.']]},
  {v:'2026.10.20.1',d:'20 Oct',items:[
@@ -6534,7 +6566,7 @@ function kcalFly(mid){
 
 /* ================= SHARED / PUBLIC SPLIT BANNER on Lift, and the "you were removed" moment ================= */
 function csPeople(cs){   // owner first, then everyone who joined
-  const me=csMe(),mem=(cs.members||[]).filter(m=>m.state==='in'||m.id===cs.owner||m.id===me);
+  const me=csMe(),mem=(cs.members||[]).filter(m=>m.state==='in'||m.state==='view'||m.id===cs.owner||m.id===me);
   const u=m=>m.id===me?Object.assign({},socMe(),{id:m.id}):Object.assign({},userOf(m.id)||{},m);
   return mem.sort((a,b)=>(b.id===cs.owner)-(a.id===cs.owner)).map(u);
 }
@@ -6552,7 +6584,7 @@ function csLine(){
   else if(cs){k='cs';const me=csMe(),owner=cs.owner===me,ppl=csPeople(cs),others=ppl.filter(p=>p.id!==me),inv=(cs.members||[]).filter(m=>m.state==='invited'&&m.id!==me).length;
     const own=ppl.find(p=>p.id===cs.owner);
     const line=owner?(others.length?'You own it · editing with '+others.slice(0,2).map(p=>esc(first(p.name||p.handle))).join(', ')+(others.length>2?' +'+(others.length-2):''):'You own it · invite friends to edit together')
-      :'Owned by '+esc(first((own&&(own.name||own.handle))||'a friend'))+' · you edit it together';
+      :(cs.role==='view'?'👁 View only · owned by '+esc(first((own&&(own.name||own.handle))||'a friend'))+' · updates by itself':'Owned by '+esc(first((own&&(own.name||own.handle))||'a friend'))+' · you edit it together');
     h=csStack(ppl,cs.owner,4)+'<div class="cbtxt"><b>Shared split'+(cs.synced&&Date.now()-cs.synced<6e4?' <i class="cbsync">synced</i>':'')+'</b><span>'+line+(inv?' · '+inv+' invited':'')+'</span></div>'+
       '<button class="btn btn-ghost btn-sm" onclick="openShareSplit()">Manage</button>';}
   else if(sp&&sp.pub){k='mine';h='<span class="cbicon">🔗</span><div class="cbtxt"><b>This split is public</b><span>Your link is on · '+(sp.pub.fol||0)+' following</span></div><button class="btn btn-ghost btn-sm" onclick="openShareSplit(\'public\')">Manage</button>';}
@@ -6580,6 +6612,14 @@ function csRemovedPop(was){
 }
 function csRmClose(open){const o=$('csRm');if(!o)return;const lid=o.dataset.lid;o.classList.remove('show');setTimeout(()=>o.remove(),300);
   if(open&&S.splits[lid]){S.activeSplit=lid;const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}save();show('workout');renderWorkout();renderHeader();csLine();}}
+
+// a view-only shared split can't be edited here: offer a copy instead (followed public splits already work this way)
+const _folBlock0=folBlock;
+folBlock=function(){const sp=activeSplit();
+  if(sp&&sp.cs&&sp.cs.role==='view'){const o=(sp.cs.members||[]).find(m=>m.id===sp.cs.owner)||{};
+    openSheet('View only','<p class="muted" style="margin-bottom:12px"><b>'+esc(first(o.name||'The owner'))+'</b> lets you view “'+esc(sp.name)+'” — you get every change they make, but can’t edit it. Ask them for edit access, or make your own copy.</p>'+
+      '<button class="btn btn-primary socbtn" onclick="folDuplicate()">'+IC.copy+' Duplicate it to edit</button><button class="btn btn-ghost socbtn" style="margin-top:8px" onclick="closeSheet()">OK</button>');return true;}
+  return _folBlock0();};
 
 /* ================= YESTERDAY: one score for how the day went (food + training), with feedback ================= */
 function ydScore(d){
