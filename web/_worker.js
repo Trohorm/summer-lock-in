@@ -766,6 +766,11 @@ async function csApi(db, me, M, p, b) {
     } catch (e) { if (/unique|constraint/i.test(String(e && e.message))) throw new HttpError(409, 'taken', 'Try again.'); throw e; }
     return J({ ok: true, ver: 1 });
   }
+  // a split vanished from your list: were you removed, or did the owner stop sharing it? (no content returned)
+  if (M === 'GET' && (m = /^\/api\/cs\/([0-9a-f]{16})\/status$/.exec(p))) {
+    const c = await csRow(db, m[1]);if (!c) return J({ state: 'gone' });
+    const mine = await csMember(db, m[1], me);return J({ state: mine ? mine.state : 'removed' });
+  }
   if (!(m = /^\/api\/cs\/([0-9a-f]{16})(?:\/(invite|join|leave|rekey))?$/.exec(p))) return null;
   const id = m[1], act = m[2] || '', c = await csRow(db, id);
   if (!c) throw new HttpError(404, 'cs_gone', 'That shared split was deleted.');

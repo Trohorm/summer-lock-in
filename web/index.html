@@ -1399,6 +1399,44 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .kh.kfhit .khring{animation:kfhit .65s var(--sp-bounce)}
 @keyframes kfhit{0%{transform:scale(1)}30%{transform:scale(1.1)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){#dayChips .dpill{transition:none}}
+/* ---- shared / public split banner on Lift ---- */
+.csban{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 14px;border-radius:18px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(110,166,255,.16),rgba(123,108,255,.10));border:1px solid rgba(110,166,255,.28);box-shadow:0 8px 26px rgba(40,70,160,.18)}
+.csban.pub,.csban.mine{background:linear-gradient(135deg,rgba(62,207,142,.14),rgba(110,166,255,.08));border-color:rgba(62,207,142,.3)}
+.csban .cbtxt{flex:1;min-width:0}.csban .cbtxt b{display:block;color:#fff;font-size:14.5px}.csban .cbtxt span{display:block;font-size:12px;color:var(--slate);margin-top:2px;line-height:1.35}
+.csban .btn{flex:none;width:auto}
+.csban .cbicon{font-size:22px;flex:none}
+.cbsync{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7ee2b1;margin-left:6px;vertical-align:1px}
+.cbstack{display:flex;flex:none;padding-left:8px}
+.cbp{position:relative;margin-left:-9px;border-radius:50%;box-shadow:0 0 0 2.5px #1a1f2a;display:inline-grid}
+.cbp.own::after{content:'👑';position:absolute;top:-9px;right:-5px;font-size:12px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.cbmore{width:30px;height:30px;place-items:center;font-size:11px;font-weight:800;color:#fff;background:#2b3240}
+.csban::before{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.10) 50%,transparent 70%);transform:translateX(-100%);pointer-events:none}
+@media (prefers-reduced-motion:no-preference){
+.csban.in{animation:cbin .55s var(--sp-bounce)}.csban.in .cbp{animation:cbpop .5s var(--sp-bounce) both;animation-delay:calc(.12s + var(--j)*70ms)}
+.csban.live::before{animation:cbshine 1.3s ease}
+}
+@keyframes cbin{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes cbpop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+@keyframes cbshine{to{transform:translateX(100%)}}
+/* ---- "you were removed" ---- */
+#csRm{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;padding:24px;background:rgba(6,8,11,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:opacity .3s}
+#csRm.show{opacity:1}
+.rmcard{width:100%;max-width:340px;text-align:center;padding:26px 22px 20px;border-radius:26px;background:#161a21;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.9) translateY(14px);transition:transform .5s var(--sp-bounce)}
+#csRm.show .rmcard{transform:none}
+.rmpair{display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.rmlink{position:relative;width:64px;height:4px;margin:0 6px}
+.rmlink i{position:absolute;top:0;height:4px;width:50%;border-radius:4px;background:linear-gradient(90deg,#6ea6ff,#7b6cff);transition:transform .6s var(--sp-bounce),background .4s,opacity .6s}
+.rmlink i:first-child{left:0}.rmlink i:last-child{right:0}
+.rmlink.snap i{background:#ff8b76}
+.rmlink.snap i:first-child{transform:translate(-6px,8px) rotate(-28deg)}.rmlink.snap i:last-child{transform:translate(6px,8px) rotate(28deg)}
+.rmb{transition:transform .6s var(--sp-bounce),filter .6s,opacity .6s}
+#csRm .rmlink.snap~.rmb{transform:translateX(10px) scale(.92);filter:grayscale(.7);opacity:.75}
+.rmcard h3{font-size:22px;color:#fff;letter-spacing:-.01em}
+.rmsub{color:var(--slate);font-size:14px;margin:6px 0 14px;line-height:1.45}.rmsub b{color:#dbe2ec}
+.rmkeep{text-align:left;padding:12px 14px;border-radius:14px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.22);margin-bottom:16px}
+.rmkeep b{display:block;color:#7ee2b1;font-size:13.5px}.rmkeep span{display:block;color:var(--slate);font-size:12.5px;margin-top:3px;line-height:1.4}
+@media (prefers-reduced-motion:no-preference){#csRm.show .rma{animation:cbpop .5s var(--sp-bounce) .1s both}#csRm.show .rmb{animation:cbpop .5s var(--sp-bounce) .2s both}}
 </style>
 </head>
 <body>
@@ -1469,6 +1507,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
   <!-- LIFT -->
   <section class="view" id="view-workout">
     <div class="card" id="splitIntro" hidden></div>
+    <div class="csban" id="csLine" hidden></div>
     <div class="card">
       <div class="grid2" style="margin-bottom:10px">
         <div><label class="f">Split</label><select id="splitSel"></select></div>
@@ -1479,7 +1518,6 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
         <button class="btn btn-ghost btn-sm grow" onclick="newSplit()">New split</button>
         <button class="btn btn-ghost btn-sm grow socbtn" onclick="openShareSplit()"><svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> Share</button>
       </div>
-      <div class="tiny csline" id="csLine" hidden></div>
       <div class="chipbar scroll" id="dayChips"></div>
       <div class="row" style="margin-bottom:10px"><div class="grow"><label class="f">Date</label><input type="date" id="woDate"></div></div>
       <details class="warm">
@@ -5716,7 +5754,7 @@ function csSync(){
     // gone from the server: the owner stopped sharing, or removed you. Your copy stays as a normal split.
     for(const L of csSplits()){
       if(seen.has(L.cs.id)||!(CS.fetchedAt>(L.cs.t||0)+3000))continue;
-      const nm=L.name;delete L.cs;touched=true;toast('“'+nm+'” isn’t shared any more — you kept your own copy');
+      const was={name:L.name,cs:clone(L.cs),lid:L.id};delete L.cs;touched=true;csGone(was);
     }
     if(touched){save();if(curView==='workout')renderWorkout();csLine();}
   }finally{CS.busy=null;if(CS.again){CS.again=false;setTimeout(csSync,50);}}})();
@@ -6067,8 +6105,11 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.19.6';
+const WEB_VER='2026.10.20.1';
 const WHATSNEW=[
+ {v:'2026.10.20.1',d:'20 Oct',items:[
+  ['👥','See who you share with','A shared split shows at the top of Lift with everyone’s photos — the owner wears the crown. Followed splits say they’re public.'],
+  ['💔','Removed from a split?','You’ll know right away — and you keep the latest version as your own. It just stops updating.']]},
  {v:'2026.10.19.6',d:'19 Oct',items:[
   ['🎯','Pick your goal','Cut, Recomp, Lean bulk or Maintain — in Setup → Profile. Calories, macros and the weight trend follow it.'],
   ['🧭','Tours fixed','The quick tours point at the right thing on iPhone and never hide behind other pop-ups.'],
@@ -6443,6 +6484,55 @@ function kcalFly(mid){
     a.onfinish=()=>{c.remove();const kh=ring.closest('.kh');if(kh){kh.classList.remove('kfhit');void kh.offsetWidth;kh.classList.add('kfhit');setTimeout(()=>kh.classList.remove('kfhit'),700);}burst(x1,y1,'#ffb36e');haptic('light');};
   },360);
 }
+
+/* ================= SHARED / PUBLIC SPLIT BANNER on Lift, and the "you were removed" moment ================= */
+function csPeople(cs){   // owner first, then everyone who joined
+  const me=csMe(),mem=(cs.members||[]).filter(m=>m.state==='in'||m.id===cs.owner||m.id===me);
+  const u=m=>m.id===me?Object.assign({},socMe(),{id:m.id}):Object.assign({},userOf(m.id)||{},m);
+  return mem.sort((a,b)=>(b.id===cs.owner)-(a.id===cs.owner)).map(u);
+}
+function csStack(people,owner,max){
+  const show=people.slice(0,max||4),more=people.length-show.length;
+  return '<div class="cbstack">'+show.map((p,i)=>'<span class="cbp'+(p.id===owner?' own':'')+'" style="--j:'+i+'" title="'+esc(p.name||p.handle||'')+'">'+avHTML(p,30)+'</span>').join('')+
+    (more>0?'<span class="cbp cbmore" style="--j:'+show.length+'">+'+more+'</span>':'')+'</div>';
+}
+function csLine(){
+  const el=$('csLine');if(!el||!S)return;const sp=activeSplit(),cs=sp&&sp.cs;let h='',k='';
+  if(sp&&sp.fol){const by=sp.fol.from||{};k='pub';
+    h='<div class="cbstack"><span class="cbp own" style="--j:0">'+avHTML({id:by.id,name:by.name||by.handle||'?',handle:by.handle,av:by.av},30)+'</span></div>'+
+      '<div class="cbtxt"><b>This split is public</b><span>By '+esc(first(by.name||by.handle||'someone'))+' · view only · updates by itself</span></div>'+
+      '<button class="btn btn-ghost btn-sm" onclick="folBlock()">Duplicate</button>';}
+  else if(cs){k='cs';const me=csMe(),owner=cs.owner===me,ppl=csPeople(cs),others=ppl.filter(p=>p.id!==me),inv=(cs.members||[]).filter(m=>m.state==='invited'&&m.id!==me).length;
+    const own=ppl.find(p=>p.id===cs.owner);
+    const line=owner?(others.length?'You own it · editing with '+others.slice(0,2).map(p=>esc(first(p.name||p.handle))).join(', ')+(others.length>2?' +'+(others.length-2):''):'You own it · invite friends to edit together')
+      :'Owned by '+esc(first((own&&(own.name||own.handle))||'a friend'))+' · you edit it together';
+    h=csStack(ppl,cs.owner,4)+'<div class="cbtxt"><b>Shared split'+(cs.synced&&Date.now()-cs.synced<6e4?' <i class="cbsync">synced</i>':'')+'</b><span>'+line+(inv?' · '+inv+' invited':'')+'</span></div>'+
+      '<button class="btn btn-ghost btn-sm" onclick="openShareSplit()">Manage</button>';}
+  else if(sp&&sp.pub){k='mine';h='<span class="cbicon">🔗</span><div class="cbtxt"><b>This split is public</b><span>Your link is on · '+(sp.pub.fol||0)+' following</span></div><button class="btn btn-ghost btn-sm" onclick="openShareSplit(\'public\')">Manage</button>';}
+  if(!h){el.hidden=true;el.dataset.k='';el.innerHTML='';return;}
+  const fresh=el.hidden||el.dataset.k!==k+(sp&&sp.id);
+  el.className='csban '+k;el.innerHTML=h;el.hidden=false;el.dataset.k=k+(sp&&sp.id);
+  if(fresh&&!RM){el.classList.add('in');setTimeout(()=>el.classList.remove('in'),800);}
+}
+// a shared split disappeared from your list: removed by the owner → a proper moment; the owner stopped sharing → a toast
+async function csGone(was){
+  let st='';try{st=(await sapi('/cs/'+was.cs.id+'/status')).state;}catch(e){}
+  if(st==='removed'&&was.cs.owner!==csMe())csRemovedPop(was);
+  else toast('“'+was.name+'” isn’t shared any more — you kept your own copy');
+}
+function csRemovedPop(was){
+  if($('tourOv')||$('updGate')||document.hidden||$('csRm')){setTimeout(()=>csRemovedPop(was),3000);return;}
+  const cs=was.cs,own=Object.assign({id:cs.owner,name:'The owner'},(cs.members||[]).find(m=>m.id===cs.owner)||{},userOf(cs.owner)||{}),me=socMe();
+  const o=document.createElement('div');o.id='csRm';o.setAttribute('role','dialog');
+  o.innerHTML='<div class="rmcard"><div class="rmpair"><span class="rma">'+avHTML(own,58)+'</span><span class="rmlink"><i></i><i></i></span><span class="rmb">'+avHTML(me,58)+'</span></div>'+
+    '<h3>You were removed</h3><p class="rmsub">'+esc(first(own.name||own.handle||'The owner'))+' removed you from <b>“'+esc(was.name)+'”</b>.</p>'+
+    '<div class="rmkeep"><b>✓ The latest version is yours to keep</b><span>It’s in your splits. It won’t update any more, and the changes you make stay with you.</span></div>'+
+    '<button class="btn btn-primary" style="width:100%" onclick="csRmClose(true)">Open my copy</button><button class="linkbtn" style="margin-top:10px" onclick="csRmClose()">OK</button></div>';
+  o.dataset.lid=was.lid;document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('show'));haptic('warning');
+  setTimeout(()=>{const l=o.querySelector('.rmlink');if(!l)return;l.classList.add('snap');haptic('heavy');const r=l.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,'#ff8b76');},RM?0:700);
+}
+function csRmClose(open){const o=$('csRm');if(!o)return;const lid=o.dataset.lid;o.classList.remove('show');setTimeout(()=>o.remove(),300);
+  if(open&&S.splits[lid]){S.activeSplit=lid;const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}save();show('workout');renderWorkout();renderHeader();csLine();}}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
