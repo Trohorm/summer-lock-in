@@ -1439,6 +1439,31 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .rmkeep{text-align:left;padding:12px 14px;border-radius:14px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.22);margin-bottom:16px}
 .rmkeep b{display:block;color:#7ee2b1;font-size:13.5px}.rmkeep span{display:block;color:var(--slate);font-size:12.5px;margin-top:3px;line-height:1.4}
 @media (prefers-reduced-motion:no-preference){#csRm.show .rma{animation:cbpop .5s var(--sp-bounce) .1s both}#csRm.show .rmb{animation:cbpop .5s var(--sp-bounce) .2s both}}
+/* ---- yesterday's score ---- */
+.ydcard{cursor:pointer;position:relative;overflow:hidden}
+.ydtop{display:flex;gap:16px;align-items:center}
+.ydring{position:relative;width:96px;height:96px;flex:none}.ydring svg{width:100%;height:100%;display:block}
+.ydring.big{width:132px;height:132px;margin:4px auto 14px}
+.ydv{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ydv b{font-size:30px;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums}.ydring.big .ydv b{font-size:40px}
+.ydv small{font-size:11px;font-weight:800;color:var(--slate);letter-spacing:.06em;margin-top:3px}
+.ydcard h3{font-size:17px;color:#fff;margin:2px 0 8px}
+.ydbar{display:grid;grid-template-columns:92px 1fr 28px;align-items:center;gap:8px;font-size:12.5px;color:var(--slate);font-weight:700;margin-top:5px}
+.ydbar i{height:6px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}.ydbar em{display:block;height:100%;border-radius:9px;transform-origin:left}
+.ydbar b{text-align:right;color:#fff;font-variant-numeric:tabular-nums}.ydbar.off b{color:var(--mist)}
+.ydnote{margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:13px;color:#d9e4f8;line-height:1.45}
+.ydnote.ok{animation:sh-in .45s ease}.ydnote.wait{color:var(--slate)}
+.ydsplit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.ydsplit div{text-align:center;padding:10px;border-radius:14px;background:rgba(255,255,255,.04)}
+.ydsplit b{font-size:24px;display:block}.ydsplit small{font-size:11.5px;color:var(--slate)}
+.ydcoach{padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(110,166,255,.14),rgba(123,108,255,.1));border:1px solid rgba(110,166,255,.25);color:#e6eeff;font-size:13.5px;line-height:1.5;margin-bottom:12px}
+.ydli{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13.5px}.ydli.good{color:#bff0d6}.ydli.bad{color:#ffc9bd}
+@media (prefers-reduced-motion:no-preference){
+.view.enter .ydbar em{animation:ydgrow .9s var(--out) both;animation-delay:.25s}
+.ydli{animation:li-in .4s var(--out) both;animation-delay:calc(var(--j)*50ms + .2s)}
+.ydcard::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.07) 50%,transparent 65%);transform:translateX(-100%);pointer-events:none}
+.view.enter .ydcard::after{animation:cbshine 1.4s ease .5s}
+}
+@keyframes ydgrow{from{transform:scaleX(0)}to{transform:none}}
 </style>
 </head>
 <body>
@@ -1499,6 +1524,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
   <section class="view" id="view-today">
     <div id="todayAlert"></div>
     <div id="todayMain"></div>
+    <div id="yday"></div>
     <div class="hubgrid" id="todayHub"></div>
     <div class="card">
       <h2>Last 7 days <span class="right"><span style="color:var(--glacier)">●</span> lifted &nbsp;<span style="color:var(--ok)">●</span> food &nbsp;<b style="color:#8ff0c2">A</b> food grade</span></h2>
@@ -2341,6 +2367,7 @@ function isLimit(k){const g=NMAP[k].g;return g==='anti'||g==='bad';}
 function antiOver(date){const t=dayTotals(date);return NUT.filter(n=>(n[3]==='anti'||n[3]==='bad')&&t[n[0]]>goalFor(n[0])+(n[0]==='seedoil'?0.4:0)).map(n=>({k:n[0],v:t[n[0]],g:goalFor(n[0])}));}
 function microHits(date){const t=dayTotals(date);const ks=NUT.filter(n=>['vit','min','oth'].includes(n[3])).map(n=>n[0]);return {hit:ks.filter(k=>t[k]>=goalFor(k)).length,of:ks.length};}
 function renderToday(){
+  try{renderYday();}catch(e){}
   const t=todayStr(),pd=plannedDay(t),gym=S.gyms.find(g=>g.id===S.activeGym);
   const today=Object.values(S.workouts).filter(w=>w.date===t&&woHasData(w));
   const cur=curWO(),active=cur&&!cur.ended&&woHasData(cur);
@@ -6123,8 +6150,10 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.20.1';
+const WEB_VER='2026.10.20.2';
 const WHATSNEW=[
+ {v:'2026.10.20.2',d:'20 Oct',items:[
+  ['📊','Yesterday, scored','Every morning Today shows how yesterday went — food and training out of 100, what went well, what to fix, and a coach note. Tap it for the details.']]},
  {v:'2026.10.20.1',d:'20 Oct',items:[
   ['👥','See who you share with','A shared split shows at the top of Lift with everyone’s photos — the owner wears the crown. Followed splits say they’re public.'],
   ['💔','Removed from a split?','You’ll know right away — and you keep the latest version as your own. It just stops updating.']]},
@@ -6551,6 +6580,77 @@ function csRemovedPop(was){
 }
 function csRmClose(open){const o=$('csRm');if(!o)return;const lid=o.dataset.lid;o.classList.remove('show');setTimeout(()=>o.remove(),300);
   if(open&&S.splits[lid]){S.activeSplit=lid;const cw=curWO();if(cw&&!cw.ended&&!woHasData(cw)){delete S.workouts[cw.id];S.cur=null;}save();show('workout');renderWorkout();renderHeader();csLine();}}
+
+/* ================= YESTERDAY: one score for how the day went (food + training), with feedback ================= */
+function ydScore(d){
+  const pts=[],good=[],bad=[];let diet=null,train=null;
+  // ---- food
+  const ms=S.food[d]||[];
+  if(ms.length){
+    const an=ms.filter(e=>e.an&&typeof e.an.score==='number');let sc=an.length?an.reduce((a,e)=>a+e.an.score,0)/an.length:70;
+    const t=dayTotals(d),kc=Math.round(kcalOf(t)),kg=kcalGoal(),pg=goalFor('protein')||1,pr=t.protein/pg;
+    if(typeof kcalOn==='function'&&kcalOn()&&kg){const r=kc/kg;if(Math.abs(r-1)<=.1){sc+=6;good.push('Calories on target ('+kc.toLocaleString()+' / '+kg.toLocaleString()+')');}
+      else{sc-=Math.min(22,Math.abs(r-1)*55);bad.push((r<1?'Under':'Over')+' your calories: '+kc.toLocaleString()+' of '+kg.toLocaleString()+' kcal');}}
+    if(pr>=.95){sc+=6;good.push(Math.round(t.protein)+' g protein — goal hit');}else if(pr<.8){sc-=Math.min(22,(.8-pr)*70+6);bad.push('Protein short: '+Math.round(t.protein)+' of '+pg+' g');}
+    if(t.seedoil>0.4){sc-=15;bad.push('Seed oils got in (~'+fmtNum(t.seedoil)+' g)');}else good.push('No seed oils');
+    const ov=antiOver(d).filter(o=>o.k!=='seedoil');if(ov.length){sc-=Math.min(15,ov.length*5);bad.push('Over: '+ov.slice(0,3).map(o=>NMAP[o.k].n).join(', '));}
+    const mh=microHits(d);sc+=(mh.hit/Math.max(1,mh.of))*10-5;if(mh.hit/Math.max(1,mh.of)>=.7)good.push(mh.hit+'/'+mh.of+' micronutrient goals');
+    if(ms.length<2)bad.push('Only '+ms.length+' meal logged — the score may be off');
+    diet=Math.round(Math.max(0,Math.min(100,sc)));
+  }
+  else bad.push('No food logged — log meals to get a food score');
+  // ---- training
+  const pd=plannedDay(d),ws=Object.values(S.workouts).filter(w=>w.date===d&&woHasData(w));
+  if(ws.length){
+    let done=0,plan=0,pr=0;
+    ws.forEach(w=>{done+=countSets(w);plan+=(w.items||[]).reduce((a,it)=>a+(+it.sets||0),0);
+      for(const k in w.ex||{}){const top=Math.max(0,...(w.ex[k]||[]).filter(s=>s&&s.r>0).map(s=>+s.w||0));if(!top)continue;
+        let best=0;for(const id in S.workouts){const o=S.workouts[id];if(!o||o.date>=d||!o.ex||o.gym!==w.gym)continue;const a=o.ex[k];if(a)a.forEach(s=>{if(s&&s.r>0&&+s.w>best)best=+s.w;});}
+        if(best&&top>best)pr++;}});
+    const c=plan?Math.min(1,done/plan):1;train=Math.round(55+35*c+Math.min(10,pr*4));
+    good.push('Trained '+ws.map(w=>w.dayName||'').filter(Boolean).join(' + ')+' · '+done+(plan?'/'+plan:'')+' sets');
+    if(pr)good.push(pr+' new best'+(pr>1?'s':'')+' 🏆');if(plan&&c<.75)bad.push('Only '+Math.round(c*100)+'% of the planned sets');
+  }else if(pd){train=20;bad.push('Missed '+pd.name+' — it was planned');}
+  else{train=100;good.push('Rest day — recovery counts');}
+  const parts=[diet,train].filter(x=>x!=null),total=Math.round(parts.reduce((a,b)=>a+b,0)/parts.length);
+  return {d,total,diet,train,good,bad,meals:ms.length,trained:ws.length>0,planned:pd&&pd.name};
+}
+const ydKey=d=>'lockin_yd_'+(user?user.username:'')+'_'+d;
+function ydHas(d){return (S.food[d]||[]).length||Object.values(S.workouts).some(w=>w.date===d&&woHasData(w))||(!!plannedDay(d)&&Object.values(S.workouts).some(w=>w.date<d&&woHasData(w)));}
+function ydCol(v){return v>=85?'#3ecf8e':v>=70?'#8fd16a':v>=55?'#ffd166':v>=40?'#ff9f6e':'#ef6a56';}
+function ydRing(v,sz){const r=sz/2-7,c=2*Math.PI*r;return '<svg viewBox="0 0 '+sz+' '+sz+'"><circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/>'+
+  '<circle class="khfg" cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="'+ydCol(v)+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+(c*(1-v/100)).toFixed(1)+'" data-off="'+(c*(1-v/100)).toFixed(1)+'" data-rk="yd'+sz+'" transform="rotate(-90 '+sz/2+' '+sz/2+')"/></svg>';}
+function renderYday(){
+  const el=$('yday');if(!el)return;const d=addDays(todayStr(),-1);
+  if(!S||!S.settings.setupDone||S.settings.needSplit||!ydHas(d)){el.innerHTML='';return;}
+  const r=ydScore(d),g=scoreGrade(r.total);let note=null;try{note=JSON.parse(localStorage.getItem(ydKey(d))||'null');}catch(e){}
+  const bar=(lbl,v,ic)=>v==null?'<div class="ydbar off"><span>'+ic+' '+lbl+'</span><b>—</b></div>':'<div class="ydbar"><span>'+ic+' '+lbl+'</span><i><em style="width:'+v+'%;background:'+ydCol(v)+'"></em></i><b>'+v+'</b></div>';
+  el.innerHTML='<div class="card ydcard" onclick="openYday()"><div class="ydtop"><div class="ydring">'+ydRing(r.total,96)+'<div class="ydv"><b data-count="'+r.total+'" data-ck="ydt">'+r.total+'</b><small>'+g+'</small></div></div>'+
+    '<div class="grow"><div class="kicker">Yesterday · '+fmtDY(d)+'</div><h3>'+esc(ydHead(r))+'</h3>'+bar('Food',r.diet,'🍳')+bar('Training',r.train,'🏋️')+'</div></div>'+
+    '<div class="ydnote'+(note?'':' wait')+'" id="ydNote">'+(note?esc(note.t):(r.bad[0]?'⚠ '+esc(r.bad[0]):'✓ '+esc(r.good[0]||'')))+'</div></div>';
+  if(!note)ydCoach(r);
+}
+function ydHead(r){return r.total>=90?'Elite day. Repeat it.':r.total>=78?'Strong day':r.total>=62?'Solid — a couple of things to fix':r.total>=45?'Mixed day':'Rough one — today’s a reset';}
+let YDBUSY='';
+async function ydCoach(r){
+  if(YDBUSY===r.d||typeof online==='function'&&!online()||(typeof aiOutGet==='function'&&aiOutGet()))return;YDBUSY=r.d;
+  const p='You are a sharp, encouraging coach for a '+whoLine()+'. Diet philosophy: animal-based (meat, eggs, fruit, raw honey, A2 dairy), seed oils are bad, refined sugar is bad. '+
+    'Here is how yesterday went (score '+r.total+'/100; food '+(r.diet==null?'not logged':r.diet)+', training '+r.train+'):\nGood: '+(r.good.join('; ')||'—')+'\nTo fix: '+(r.bad.join('; ')||'—')+
+    '\nWrite feedback in 2 short sentences, under 45 words total: what went well, then the single most important thing to do today. Plain text, no lists, no emojis, no score repeat.';
+  try{const t=normChat(await ai(p)).replace(/\s+/g,' ').trim().slice(0,320);if(t){try{localStorage.setItem(ydKey(r.d),JSON.stringify({t}));}catch(e){}
+    const n=$('ydNote');if(n){n.textContent=t;n.classList.remove('wait');n.classList.add('ok');}}}catch(e){}
+  YDBUSY='';
+}
+function openYday(){
+  const d=addDays(todayStr(),-1),r=ydScore(d);let note=null;try{note=JSON.parse(localStorage.getItem(ydKey(d))||'null');}catch(e){}
+  openSheet('Yesterday · '+fmtDY(d),'<div class="ydsheet"><div class="ydring big">'+ydRing(r.total,132)+'<div class="ydv"><b data-count="'+r.total+'" data-ck="ydb">'+r.total+'</b><small>'+scoreGrade(r.total)+' · out of 100</small></div></div>'+
+    '<div class="ydsplit"><div><b style="color:'+(r.diet==null?'var(--slate)':ydCol(r.diet))+'">'+(r.diet==null?'—':r.diet)+'</b><small>Food'+(r.meals?' · '+r.meals+' meals':' · not logged')+'</small></div><div><b style="color:'+ydCol(r.train)+'">'+r.train+'</b><small>Training'+(r.planned&&!r.trained?' · missed':r.trained?'':' · rest')+'</small></div></div>'+
+    (note?'<div class="ydcoach">✨ '+esc(note.t)+'</div>':'')+
+    (r.good.length?'<div class="nsec">What went well</div>'+r.good.map((t,i)=>'<div class="ydli good" style="--j:'+i+'">✓ '+esc(t)+'</div>').join(''):'')+
+    (r.bad.length?'<div class="nsec" style="margin-top:12px">Fix today</div>'+r.bad.map((t,i)=>'<div class="ydli bad" style="--j:'+(i+r.good.length)+'">! '+esc(t)+'</div>').join(''):'')+
+    '<p class="tiny" style="margin-top:14px">Food counts meal grades, calories, protein, seed oils and other limits, and micronutrients. Training counts the planned day and how many sets you did, plus new bests; a planned rest day is full marks.</p></div>');
+  const sb=$('sheetBody');countUp(sb,true);fillRings(sb,true);if(r.total>=85&&!RM)setTimeout(()=>{const g=sb.querySelector('.ydring');if(g){const q=g.getBoundingClientRect();burst(q.left+q.width/2,q.top+q.height/2,'#3ecf8e',true);}},700);
+}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
