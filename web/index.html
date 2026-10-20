@@ -1469,6 +1469,24 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .gqrow:last-child{border-bottom:0}.gqrow span{color:var(--slate);font-weight:700}.gqrow s{color:var(--mist)}.gqrow i{color:#6ea6ff;font-style:normal;text-align:center}
 .gqrow b{color:#fff;min-width:84px;text-align:right}.gqrow b.up{color:#7ee2b1}.gqrow b.dn{color:#ffb39c}
 @media (prefers-reduced-motion:no-preference){.gqrow{animation:li-in .4s var(--out) both}.gqrow:nth-child(2){animation-delay:60ms}.gqrow:nth-child(3){animation-delay:120ms}.gqrow:nth-child(4){animation-delay:180ms}}
+.partrow{grid-template-columns:minmax(0,1fr) 118px 30px}
+.partrow .pg{gap:2px}.partrow .pg input{width:50px;text-align:center;padding:8px 2px}
+.gstep{flex:none;width:26px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:#1b2028;color:#dbe2ec;font-size:17px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit}
+.gstep:active{transform:scale(.9);background:#262d38}
+.pfixbtn{font-size:12px;margin-left:4px}
+.pfix{grid-column:1/-1;margin:8px 0 4px;padding:12px;border-radius:14px;background:rgba(110,166,255,.07);border:1px solid rgba(110,166,255,.22);animation:sh-in .3s ease}
+.partrow.fixed{animation:addedGlow 1.2s var(--out)}
+.wknown{padding:10px 12px}
+/* ---- set ticks: one clean effect — the tick pops, the row tints; a finished exercise gets a calm green outline */
+.excard.justdone::after{display:none}
+.excard.justdone{animation:exdone .9s var(--out)}
+@keyframes exdone{0%{box-shadow:inset 0 0 0 1.5px rgba(62,207,142,0)}35%{box-shadow:inset 0 0 0 1.5px rgba(62,207,142,.75)}100%{box-shadow:inset 0 0 0 1.5px rgba(62,207,142,0)}}
+@keyframes rowflash{0%{background:rgba(62,207,142,.14)}100%{background:transparent}}
+@keyframes ckpop{0%{background-size:0 0;box-shadow:0 0 0 0 rgba(62,207,142,.45)}55%{background-size:20px 20px}100%{background-size:17px 17px;box-shadow:0 0 0 8px rgba(62,207,142,0)}}
+.endask .eaico{width:64px;height:64px;margin:0 auto 12px;border-radius:20px;display:grid;place-items:center;font-size:30px;background:linear-gradient(135deg,rgba(62,207,142,.25),rgba(110,166,255,.2));border:1px solid rgba(62,207,142,.35)}
+.endask .eastats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 16px}.endask .eastats div{padding:10px 6px;border-radius:12px;background:rgba(255,255,255,.04);text-align:center}
+.endask .eastats b{display:block;font-size:20px;color:#fff;font-variant-numeric:tabular-nums}.endask .eastats small{font-size:11px;color:var(--slate)}
+@media (prefers-reduced-motion:no-preference){.endask .eaico{animation:cbpop .55s var(--sp-bounce) both}}
 </style>
 </head>
 <body>
@@ -2460,6 +2478,7 @@ function startNewWorkout(){
   const w=curWO();if(w){if(woHasData(w))w.ended=true;else delete S.workouts[w.id];}
   const sp=activeSplit();makeWO(plannedDay(todayStr())||sp.days[0]);save();renderWorkout();toast('New workout started');
 }
+function gymName(id){const g=S.gyms.find(x=>x.id===id);return g?g.name:'Other gym';}
 function lastSession(k,beforeDate,skipId,gym){
   let same=null,other=null;
   for(const id in S.workouts){
@@ -2469,6 +2488,7 @@ function lastSession(k,beforeDate,skipId,gym){
     if(w.gym===gym){if(!same||w.date>same.date||(w.date===same.date&&w.ts>same.ts))same=w;}
     else if(!other||w.date>other.date)other=w;
   }
+  if(same&&other&&other.date>same.date&&(parseD(beforeDate)-parseD(same.date))/864e5>=28)return {w:other,other:true,away:true};
   return same?{w:same,other:false}:(other?{w:other,other:true}:null);
 }
 function setScore(s){return s.w>0?s.w*(1+s.r/30):s.r;}
@@ -2482,7 +2502,7 @@ function suggestFor(it,t,prev){
   if(t==='d')return {txt:'Easy pace — conversational',cls:'hold'};
   if(prev&&!prev.other&&t!=='t'&&stallInfo(it.k,prev.w.gym))return {txt:'No progress in 3 sessions — take a lighter week (−10%) or swap the variant',cls:'stall'};
   if(!prev)return {txt:t==='t'?'Find a hold you can do for '+it.lo+' s':'New — pick a weight where '+it.lo+' clean reps is close to your limit',cls:'hold'};
-  if(prev.other)return {txt:'First time at this gym — machines differ, start a bit lighter',cls:'hold'};
+  if(prev.other)return prev.away?{txt:'Not done here in 4+ weeks — these are your numbers from '+gymName(prev.w.gym),cls:'hold'}:{txt:'First time at this gym — machines differ, start a bit lighter',cls:'hold'};
   const sets=exSets(prev.w,it.k).filter(s=>s.r);
   if(sets.length>=it.sets&&sets.every(s=>s.r>=it.hi))return {txt:t==='t'?'Hit '+it.hi+' s every set — add load or time':'Top of the range on every set — add the smallest weight jump',cls:'up'};
   return {txt:t==='t'?'Same — add a few seconds':'Same weight — beat a rep',cls:'hold'};
@@ -2536,7 +2556,7 @@ function exCard(wo,it,i){
     (it.note?'<div class="exnote">⚠ '+esc(it.note)+'</div>':'')+
     '<details class="exinfo"><summary>How to · machine settings</summary><div class="body">'+demoBlock(x)+esc(x.c)+
     '<div style="margin-top:8px"><label class="f">Settings at this gym (seat, pin…)</label><input placeholder="e.g. seat 4, back pad 2" value="'+esc(note)+'" onchange="setExNote(\''+it.k+'\',this.value)"></div></div></details>'+
-    '<div class="lastline">'+(prev?esc((prev.other?'Other gym ':'Last ')+'('+fmtD(prev.w.date)+'): '+fmtSets(exSets(prev.w,it.k),t)):'No history yet')+'<span class="suggest '+sug.cls+'">'+esc(sug.txt)+'</span></div>'+
+    '<div class="lastline">'+(prev?esc((prev.other?gymName(prev.w.gym)+' ':'Last ')+'('+fmtD(prev.w.date)+'): '+fmtSets(exSets(prev.w,it.k),t)):'No history yet')+'<span class="suggest '+sug.cls+'">'+esc(sug.txt)+'</span></div>'+
     '<div class="setrow" style="margin-bottom:2px"><div></div><div class="sn">'+c[0]+'</div><div class="sn">'+c[1]+'</div><div class="sn">✓</div></div>'+rows+
     '<div class="exfoot"><div><button class="linkbtn" onclick="addSet('+i+')">+ set</button>'+(n>1?' <button class="linkbtn" onclick="removeSet('+i+')">− set</button>':'')+' <button class="linkbtn red" onclick="removeItem('+i+')">remove</button></div>'+
     (it.rest?'<button class="restbtn" onclick="startTimer('+it.rest+','+i+')">Rest '+restTxt(it.rest)+'</button>':'')+'</div></div>';
@@ -2674,6 +2694,7 @@ function endWorkout(){
     let ob=0;for(const k in S.workouts){const o=S.workouts[k];if(o.id!==w.id&&o.gym===w.gym&&exSets(o,it.k))ob=Math.max(ob,...exSets(o,it.k).map(s=>s.r?(s.w||0):0));}
     if(nb>ob&&ob>0)prs.push(exInfo(it.k).name);
   });
+  try{stopTimer();TICKQ.forEach(t=>clearTimeout(t));TICKQ.clear();TYPED.forEach(t=>clearTimeout(t));TYPED.clear();}catch(e){}
   w.ended=true;w.ts=Date.now();if(!was)w.t1=w.ts;save();snapSoon(2500);woButtons();renderHistory();
   if(was)toast('Workout updated');
   else fxWorkoutDone(w,prs);
@@ -3525,17 +3546,17 @@ function saveMeal(md,date){
 }
 /* ---------- meal editor: foods, grams, cooking fat, add ingredients ---------- */
 function editMeal(id){const f=findMeal(id);if(!f)return;openMealEditor({id,name:f.e.name,parts:mealParts(f.e),mult:f.e.mult||1,src:f.e.src,where:f.e.where},'Edit meal');}
-function openMealEditor(md,title){MD=md;openSheet(title||'Review meal','<div id="mdBox"></div>');drawMD();}
+function openMealEditor(md,title){MD=md;try{whereAuto();}catch(e){}openSheet(title||'Review meal','<div id="mdBox"></div>');drawMD();}
 function drawMD(){
   const box=$('mdBox');if(!box||!MD)return;
   const tot=partsTotal(MD.parts),m=MD.mult||1,v=k=>(tot[k]||0)*m;
   const anti=NUT.filter(x=>x[3]==='anti'&&v(x[0])>0);
   box.innerHTML=(MD.img?'<img class="preview" style="max-height:160px" src="'+MD.img+'">':'')+
-    '<div class="field"><label class="f">Meal name</label><input value="'+esc(MD.name||'')+'" onchange="MD.name=this.value"></div>'+whereHTML()+
+    '<div class="field"><label class="f">Meal name</label><input value="'+esc(MD.name||'')+'" onchange="MD.name=this.value"></div>'+whereHTML()+whereKnownHTML()+
     (MD.note?'<p class="tiny" style="margin:-4px 0 8px">'+esc(MD.note)+'</p>':'')+
     '<label class="f">Foods in this meal</label>'+
-    MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><input type="text" inputmode="decimal" autocomplete="off" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value)"><span>g</span></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
-      '<div class="pm">'+(kcalOn()?'<b class="mkcal">'+Math.round(kcalOf(p.n))+' kcal</b> · ':'')+'P '+fmtNum(p.n.protein||0)+' · C '+fmtNum(p.n.carbs||0)+' · F '+fmtNum(p.n.fat||0)+' g'+(p.flags&&p.flags.length?' '+flagChips(p.flags,1):'')+'</div>'+ingBlock(p)+'</div>').join('')+
+    MD.parts.map((p,i)=>'<div class="partrow"><input class="pn" value="'+esc(p.name)+'" onchange="MD.parts['+i+'].name=this.value"><div class="pg"><button class="gstep" onclick="stepG('+i+',-1)" aria-label="Less">−</button><input type="text" inputmode="decimal" autocomplete="off" value="'+(p.g?Math.round(p.g*10)/10:'')+'" placeholder="g" onchange="setPartG('+i+',this.value);drawMD()"><button class="gstep" onclick="stepG('+i+',1)" aria-label="More">+</button></div><button class="icbtn red" onclick="MD.parts.splice('+i+',1);drawMD()">✕</button>'+
+      '<div class="pm">'+(kcalOn()?'<b class="mkcal">'+Math.round(kcalOf(p.n))+' kcal</b> · ':'')+'P '+fmtNum(p.n.protein||0)+' · C '+fmtNum(p.n.carbs||0)+' · F '+fmtNum(p.n.fat||0)+' g'+(p.flags&&p.flags.length?' '+flagChips(p.flags,1):'')+' <button class="linkbtn pfixbtn" onclick="partFixOpen('+i+')">✨ Fix</button></div>'+ingBlock(p)+partFixHTML(p,i)+'</div>').join('')+
     '<div class="row" style="margin:10px 0 4px"><input id="mdAdd" class="grow" placeholder="Add a food or ingredient, e.g. 2 tbsp peanut butter"><button class="btn btn-ghost btn-sm" id="mdAddBtn" onclick="addPart()">Add</button></div>'+
     '<details class="fold" id="cookFold"'+(MD.cookOpen?' open':'')+' ontoggle="MD.cookOpen=this.open"><summary>How was it cooked? (adds the fat it took up)</summary><div class="fb" id="cookBox"></div></details>'+
     '<div class="multrow" style="margin-top:10px"><span class="tiny" style="align-self:center">Whole meal ×</span>'+[0.5,0.75,1,1.25,1.5,2].map(q=>'<button class="chip sm'+(q===m?' on':'')+'" onclick="MD.mult='+q+';drawMD()">'+q+'</button>').join('')+'</div>'+
@@ -3569,7 +3590,7 @@ const isCookedPart=p=>!p.fat&&!isSure(p)&&(p.cooked||COOKRX.test(p.name||''));
 const isOilPart=p=>!!p.fat||(/\b(oil|margarine|shortening|frying fat)\b/i.test(p.name||'')&&(+((p.n||{}).seedoil)||0)>=0.6*Math.max(1,+((p.n||{}).fat)||0));
 function whereTxt(w){if(w==='rest')return 'restaurant / takeaway — seed oils likely';const f=WHERE_FATS.find(x=>x[0]===w);return w==='none'?'at home with no added fat — no seed oils':'at home with '+(f?f[1].toLowerCase():w)+' — no seed oils';}
 function needsWhere(){
-  if(!MD||['barcode','quick','again'].includes(MD.src))return false;
+  if(!MD||MD.whereFrom||['barcode','quick','again'].includes(MD.src))return false;
   const ps=(MD.orig||MD.parts||[]).filter(p=>!isSure(p));return ps.some(p=>isCookedPart(p)||(+((p.n||{}).seedoil)||0)>0||(p.flags||[]).includes('seed_oil'));
 }
 function fatPart(k,g,name){const f=FATS[k],per100={},n={};for(const x in f[2])per100[x]=f[2][x]/f[1]*100;for(const x in per100)n[x]=per100[x]*g/100;
@@ -3654,7 +3675,7 @@ async function addPart(){
 function toParts(r){
   if(!r)return [];
   if(Array.isArray(r.items)&&r.items.length&&typeof r.items[0]==='object')return r.items.map(it=>{const ing=typeof it.ing==='string'&&it.ing.trim().length>3?it.ing.trim().slice(0,1500):undefined;
-    const fl=[...new Set([...(cleanFlags(it.flags,it.n)||[]),...ingFlags(ing)])];return {name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),ing,flags:fl.length?fl:undefined,cooked:it.cooked?1:undefined,sure:it.sure_seed_oil?1:undefined};});
+    const fl=[...new Set([...(cleanFlags(it.flags,it.n)||[]),...ingFlags(ing)])];return {name:String(it.name||'Food'),g:+it.g>0?+it.g:null,n:cleanN(it.n),ing,flags:fl.length?fl:undefined,cooked:it.cooked?1:undefined,sure:it.sure_seed_oil?1:undefined,fu:['butter','ghee','tallow','olive','coconut','lard','duck','avocado','none','seed_oil'].includes(it.fat_used)?it.fat_used:undefined};});
   if(r.n)return [{name:r.name||'Meal',g:null,n:cleanN(r.n)}];
   return [];
 }
@@ -3687,9 +3708,13 @@ function openDescribe(){
 const SEEDRULES='seedoil = grams of industrial seed oil in the item (canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran, "vegetable oil", margarine, shortening). Fried, restaurant, takeaway, fast-food and packaged foods are made with seed oils unless clearly stated otherwise — estimate the oil absorbed or added. Butter, ghee, tallow, lard, duck fat, coconut, olive and avocado oil are NOT seed oils. '+
   'la = linoleic acid (omega-6, 18:2) in grams from every source. addsugar = grams of refined/added sugar (table sugar, HFCS, glucose syrup, dextrose) — fruit, honey, maple syrup and milk sugar do NOT count. '+
   '"flags" per item: any of seed_oil, fried, ultra_processed, refined_sugar, refined_grain, artificial_sweetener, additives, alcohol that apply; for milk, yogurt, kefir, cream and cheese add a2_dairy when it is A2/A2, goat, sheep or buffalo dairy and a1_dairy for regular cow dairy (butter and ghee get neither). Empty array if none.';
+const PORTIONS=' PORTIONS: "g" is the COOKED, as-eaten weight of the edible part (no bones, shells or skin left on the plate). When the user states a weight or a count ("300 g steak", "3 eggs", "2 slices"), use it exactly. '+
+  'Cooked reference weights: palm-sized steak 1.5–2 cm thick ≈ 170–220 g, restaurant steak 250–400 g; chicken breast 140–220 g; boneless thigh 80–120 g each; burger patty 110–180 g; a portion of mince 150–250 g; '+
+  'salmon or other fish fillet 120–200 g; pork chop 150–220 g; sausage 50–100 g each; rasher of bacon ~10 g; large egg ~50 g; slice of sourdough 40–60 g, sandwich bread 25–35 g; cooked rice or pasta 150–300 g; potatoes 150–300 g. '+
+  'If meat is cut into pieces, add the pieces up. ';
 function nutrientPrompt(hint,photo){
   return 'You are a precise nutritionist with food-composition database knowledge (USDA FoodData Central, Phenol-Explorer, published anti-nutrient data). '+
-    (photo?'Identify every food and drink in this photo, estimate realistic portion sizes from visual cues (plate ~26 cm, utensils), and include cooking fats and sauces as their own items.':'Estimate the food described below with realistic default portions where none are given.')+
+    (photo?'Identify every food and drink in this photo and include cooking fats and sauces as their own items. Estimate how much is REALLY there — do not default to a typical serving: judge the size against the plate (dinner plate 26–28 cm, side plate ~20 cm), cutlery (fork ~19 cm, knife ~22 cm), hands and glasses, and estimate thickness as well as area (cooked meat ≈ 1.05 g per cm³).':'Estimate the food described below; use realistic portions where none are given and list any cooking fat as its own item.')+PORTIONS+
     (hint?'\nUser notes: '+hint:'')+
     '\n\nReturn ONLY JSON: {"name":"short meal name","confidence":"low|medium|high","items":[{"name":"food","g":grams,"n":{nutrient:value},"flags":[],"ing":"ingredient list"}]} — one entry per separate food or ingredient, each with its OWN nutrients for that portion. '+
     '"ing": for packaged, processed, restaurant or fast-food items give the full ingredient list the way it is printed on such products (copy it exactly if an ingredient label is visible in the photo), comma-separated, with E-numbers; leave "ing" out for whole foods like meat, eggs, fish, fruit, milk or butter. '+
@@ -3700,7 +3725,7 @@ function nutrientPrompt(hint,photo){
     'taurine=mg (red meat and fish 40–80 per 100 g, dark poultry meat ~170, clams, scallops and octopus 500–800), coq10=mg (beef heart ~11 per 100 g, liver ~4, beef ~3, sardines ~6), '+
     'k2=µg vitamin K2/menaquinones (egg yolk ~15 each, gouda ~75 per 100 g, butter ~15, goose liver ~370, chicken thigh ~10), carotenoids=mg total of beta-carotene, lutein, zeaxanthin, lycopene and astaxanthin (raw carrot ~8 per 100 g, sweet potato ~9, egg yolk ~0.4), '+
     'polyphenols=mg total (Phenol-Explorer: berries 200–600 per 100 g, dates ~250, apples ~200, coffee ~200 a mug). '+SEEDRULES+
-    ' Add "cooked":true to any item that was cooked in a pan, fryer, oven or on a grill (so cooking fat may be in it). Add "sure_seed_oil":true when the item is made with seed oils whoever makes it — doughnuts, bagged crisps, fast-food fries and nuggets, packaged snacks, biscuits and pastries from a shop, mayonnaise, margarine, store-bought dressings. Add a top-level "place": "restaurant" for restaurant, takeaway or fast food, "home" when it is clearly home-cooked, otherwise "unknown".';
+    ' Add "cooked":true to any item that was cooked in a pan, fryer, oven or on a grill (so cooking fat may be in it). When the user notes (or the photo makes it certain) which fat a cooked item was made with, add "fat_used": one of butter, ghee, tallow, olive, coconut, lard, duck, avocado, none, seed_oil — e.g. "fried in butter" → butter, "air fryer, no oil" → none, restaurant or takeaway → seed_oil; leave it out when you do not know. Add "sure_seed_oil":true when the item is made with seed oils whoever makes it — doughnuts, bagged crisps, fast-food fries and nuggets, packaged snacks, biscuits and pastries from a shop, mayonnaise, margarine, store-bought dressings. Add a top-level "place": "restaurant" for restaurant, takeaway or fast food, "home" when it is clearly home-cooked, otherwise "unknown".';
 }
 async function analyze(photo){
   const hint=($('mealHint')&&$('mealHint').value.trim())||'';
@@ -3714,7 +3739,7 @@ async function analyze(photo){
   const parts=toParts(r);
   if(!parts.length){
     $('estBox').innerHTML='<p class="tiny" style="color:var(--bad);margin-top:8px">Couldn\'t get an estimate — check your connection and try again.</p>'+(photo?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="queuePhoto()">Save photo and analyze later</button>':'');return;}
-  openMealEditor({name:r.name||'Meal',parts,mult:1,place:r.place,src:photo?'photo':'text',img:photo?pendingImg:null,note:r.confidence?'AI estimate · '+r.confidence+' confidence — fix any grams or foods below.':''});
+  openMealEditor({name:r.name||'Meal',parts,mult:1,place:r.place,hint,src:photo?'photo':'text',img:photo?pendingImg:null,note:r.confidence?'AI estimate · '+r.confidence+' confidence — fix any grams or foods below.':''});
 }
 /* ---------- offline photo queue (analyzed automatically when back online) ---------- */
 function qKey(){return 'lockin_q_'+(user?user.username:'anon');}
@@ -6181,8 +6206,14 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.20.4';
+const WEB_VER='2026.10.20.5';
 const WHATSNEW=[
+ {v:'2026.10.20.5',d:'20 Oct',items:[
+  ['🧈','Said it already? Not asked again','Write “fried in butter”, “no oil” or “from a restaurant” and the app uses it — no “Where was it made?” question.'],
+  ['⚖️','Better portions','Weights are the cooked, as-eaten amount, and any weight or count you write is used exactly. Tap − / + to nudge a food by ~10 %.'],
+  ['✨','Fix any food with AI','Tap ✨ Fix on a food — “homemade sourdough bun, no refined flour” — and only that food is re-estimated. You can edit its ingredients too.'],
+  ['🏋️','Your numbers, per gym','Each gym shows its own last weights. New machine here? You see the latest from your other gym — and after 4+ weeks away, the gym you’ve been at.'],
+  ['🏁','All sets done?','Tick the last set and the app asks whether to end the workout. Ending stops every timer.']]},
  {v:'2026.10.20.4',d:'20 Oct',items:[
   ['✅','Smoother set ticks','Type your reps and the set ticks once you stop (or tap Done) — pop, buzz and rest timer all at the same moment.'],
   ['↩️','Untick keeps your numbers','Unticking a set no longer wipes it — the numbers stay, they just don’t count until you tick it again.'],
@@ -6751,15 +6782,28 @@ function markDone(cb,i){
   syncWorkout();
   if(cb.checked)tickEffects(cb,i);else{const card=$('exc_'+i);if(card)card.classList.remove('exdone');haptic('light');}
 }
-// everything a logged set does, at one moment: tick pop, row flash, burst, haptic, exercise done, PR, rest timer
+// everything a logged set does, at one moment: the tick pops, the row tints, a haptic; a finished exercise gets an outline;
+// the last set of the whole workout skips the rest timer and asks whether to end
 function tickEffects(cb,i){
   const card=$('exc_'+i);if(!card)return;
   haptic('medium');tickPop(cb);const row=cb.closest('.setrow');if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}
-  const r=cb.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);
   const was=card.classList.contains('exdone'),now=[...card.querySelectorAll('.done-in')].every(b=>b.checked);card.classList.toggle('exdone',now);
   if(now&&!was){card.classList.remove('justdone');void card.offsetWidth;card.classList.add('justdone');setTimeout(()=>card.classList.remove('justdone'),1000);setTimeout(()=>haptic('success'),120);}
   fxSetPR(cb,i);
-  if(S.settings.autoRest!==false){const w=curWO();const it=w&&!w.ended&&w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
+  const w=curWO(),all=w&&!w.ended&&woAllDone();
+  if(all){stopTimer();clearTimeout(ENDASK.t);ENDASK.t=setTimeout(()=>endAsk(w.id),900);return;}
+  if(S.settings.autoRest!==false){const it=w&&!w.ended&&w.items[i];if(it&&it.rest)startTimer(it.rest,i);}
+}
+const ENDASK={t:0,asked:{}};
+function woAllDone(){const bs=[...document.querySelectorAll('#view-workout .done-in')];return bs.length>0&&bs.every(b=>b.checked);}
+function endAsk(id){
+  const w=curWO();if(!w||w.id!==id||w.ended||!woAllDone()||ENDASK.asked[id]||$('sheet').classList.contains('show'))return;ENDASK.asked[id]=1;
+  const sets=countSets(w),min=w.t0?Math.max(1,Math.round((Date.now()-w.t0)/6e4)):0,vol=Math.round(Object.values(w.ex||{}).reduce((a,arr)=>a+(arr||[]).reduce((b,x)=>b+(x&&x.r>0?(+x.w||0)*x.r:0),0),0));
+  openSheet('All sets done','<div class="endask" style="text-align:center"><div class="eaico">💪</div><p class="muted">That’s every set of '+esc(w.dayName||'today')+'. End the workout and save it?</p>'+
+    '<div class="eastats"><div><b>'+sets+'</b><small>sets</small></div><div><b>'+(vol>=1000?(vol/1000).toFixed(1)+'t':vol+' kg')+'</b><small>volume</small></div><div><b>'+(min||'—')+'</b><small>min</small></div></div>'+
+    '<button class="btn btn-primary" style="width:100%" onclick="closeSheet();setTimeout(()=>$(\'saveWoBtn\').click(),260)">End workout</button>'+
+    '<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="closeSheet()">Not yet — I’ll add more</button></div>');
+  haptic('success');
 }
 function tickFx(cb,i){tickEffects(cb,i);}
 function typedTick(cb,i){tickSoon(cb,i);}
@@ -6778,6 +6822,73 @@ function goalAsk(g){
 }
 function goalApply(g,btn){const nw=goalTargets(g);if(!nw)return;Object.assign(S.targets,{protein:nw.protein,carbs:nw.carbs,fat:nw.fat});S.targets.kcal=0;
   save();if(btn)burstAt(btn,'#3ecf8e');haptic('success');closeSheet();renderSettings();toast('Targets updated for '+GOALS[g]+' — '+nw.kcal.toLocaleString()+' kcal a day','ok');}
+
+/* ================= MEALS v2: the fat you already named isn't asked again; fix any food with AI; quick gram steps ================= */
+const HINTFAT=[[/\bghee\b/i,'ghee'],[/\btallow\b|beef fat|beef dripping/i,'tallow'],[/duck fat/i,'duck'],[/\blard\b|pork fat|bacon fat/i,'lard'],[/coconut oil/i,'coconut'],[/avocado oil/i,'avocado'],
+  [/olive oil|\bin olive\b/i,'olive'],[/\bbutter\b/i,'butter'],[/\bno (added )?(oil|fat)\b|without (any )?(oil|fat)|dry.?fr(y|ied)|air.?fr(y|ied|yer)|\bboiled\b|\bpoached\b|\bsteamed\b|\bgrilled dry\b/i,'none']];
+const HINTREST=/restaurant|takeaway|take-away|take out|fast.?food|mcdonald|\bkfc\b|burger king|subway|kebab|ordered|delivery|wolt|bolt food|foodora|food truck|canteen|cafeteria/i;
+const FATNAME={butter:/butter/i,ghee:/ghee/i,tallow:/tallow|beef fat|dripping/i,olive:/olive/i,coconut:/coconut oil/i,lard:/lard|pork fat|bacon fat/i,duck:/duck fat/i,avocado:/avocado oil/i};
+function whereLabel(w){return w==='rest'?'restaurant food':w==='none'?'no added fat':((WHERE_FATS.find(x=>x[0]===w)||['',w])[1]).toLowerCase();}
+// you said how it was cooked (or the AI could tell): no question — the seed oil it assumed becomes that fat, never counted twice
+function whereAuto(){
+  if(!MD||!MD.parts||['barcode','quick','again'].includes(MD.src)||MD.id)return;
+  const h=MD.hint||'';let w=null,from='';
+  if(HINTREST.test(h)){w='rest';from='you';}
+  else for(const [rx,k] of HINTFAT)if(rx.test(h)){w=k;from='you';break;}
+  if(!w){const told=MD.parts.map(p=>p.fu).filter(x=>x&&x!=='unknown');if(told.length){const c={};told.forEach(x=>c[x]=(c[x]||0)+1);w=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];if(w==='seed_oil')w='rest';from='ai';}}
+  if(!w)return;
+  if(!MD.orig)MD.orig=clone(MD.parts);MD.where=w;MD.whereFrom=from;
+  if(w==='rest')return;   // restaurant food: the AI already counts its seed oils
+  let moved=0,cooked=0;
+  for(const p of MD.parts){if(isSure(p)||p.fu==='seed_oil')continue;
+    if(isCookedPart(p))cooked+=(+p.g||0);
+    const so=+((p.n||{}).seedoil)||0;if(so>0&&!isOilPart(p)){p.n=Object.assign({},p.n);p.n.fat=Math.max(0,(+p.n.fat||0)-so);p.n.la=Math.max(0,(+p.n.la||0)-so*0.5);delete p.n.seedoil;moved+=so;}
+    if(p.flags){p.flags=p.flags.filter(f=>f!=='seed_oil');if(!p.flags.length)delete p.flags;}}
+  // an oil item the AI assumed (e.g. "vegetable oil") becomes the fat you named
+  const oil=MD.parts.filter(p=>isOilPart(p)&&!(FATNAME[w]&&FATNAME[w].test(p.name||'')));oil.forEach(p=>{moved+=(+p.g||+((p.n||{}).fat)||0);});
+  MD.parts=MD.parts.filter(p=>!oil.includes(p));
+  if(w==='none')return;
+  const has=MD.parts.some(p=>FATNAME[w]&&FATNAME[w].test(p.name||''));
+  if(!has){const g=moved>0?moved:cooked*0.03;if(g>0.2)MD.parts.push(fatPart(w,g,(WHERE_FATS.find(x=>x[0]===w)||['',''])[1]+' (cooking)'));}
+}
+function whereKnownHTML(){
+  if(!MD||!MD.whereFrom)return '';const w=MD.where;
+  return '<div class="where done wknown"><p class="tiny wst '+(w==='rest'?'bad':'ok')+'">'+(w==='rest'?'⚠ Restaurant food — seed oils counted':'✓ Cooked with '+esc(whereLabel(w)))+
+    ' · '+(MD.whereFrom==='you'?'from what you wrote':'spotted by the AI')+' <button class="linkbtn" onclick="whereChange()">Change</button></p></div>';
+}
+function whereChange(){if(MD.orig){MD.parts=clone(MD.orig);}MD.whereFrom=null;MD.where='';drawMD();}
+// quick gram steps (about 10 %)
+function stepG(i,d){const p=MD&&MD.parts[i];if(!p)return;const g=+p.g||0;const st=g>=40?Math.max(5,Math.round(g*0.1/5)*5):5;const ng=Math.max(1,g+d*st);setPartG(i,ng);haptic('selection');drawMD();}
+// fix one food with AI: say what's different (and/or correct its ingredients) — only that food is re-estimated
+function partFixOpen(i){MD.fixOpen=MD.fixOpen===i?null:i;drawMD();setTimeout(()=>{const t=$('pfx_'+i);if(t)t.focus();},60);}
+function partFixHTML(p,i){
+  if(MD.fixOpen!==i)return '';
+  return '<div class="pfix"><label class="f">What’s different about “'+esc(p.name)+'”?</label>'+
+    '<textarea id="pfx_'+i+'" rows="2" placeholder="e.g. homemade sourdough bun — no refined flour, no sugar"></textarea>'+
+    '<label class="f" style="margin-top:8px">Ingredients <span class="tiny">optional — edit or add them</span></label>'+
+    '<textarea id="pfi_'+i+'" rows="2" placeholder="e.g. spelt flour, water, salt, sourdough starter">'+esc(p.ing||'')+'</textarea>'+
+    '<div class="row" style="margin-top:8px"><button class="btn btn-primary btn-sm grow" onclick="partFix('+i+',this)">✨ Update with AI</button><button class="btn btn-ghost btn-sm" onclick="partFixOpen('+i+')">Cancel</button></div></div>';
+}
+async function partFix(i,btn){
+  const p=MD&&MD.parts[i];if(!p)return;const fix=(($('pfx_'+i)||{}).value||'').trim(),ingT=(($('pfi_'+i)||{}).value||'').trim(),ingChanged=ingT!==(p.ing||'').trim();
+  if(!fix&&!ingChanged){toast('Say what’s different first');const t=$('pfx_'+i);if(t)t.focus();return;}
+  if(!online()){toast('Connect to the internet to fix it with AI');return;}
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Updating…';
+  const hint='Re-estimate ONLY this one food — it is part of a bigger meal, so do not add anything else: "'+p.name+'"'+(p.g?', '+Math.round(p.g)+' g':'')+'. '+
+    (fix?'What the user says about it (trust this over anything you assumed): '+fix+'. ':'')+
+    (ingT?'Its ingredients: '+ingT+'. ':'')+'Keep the same weight unless the user gives a new one. Return one item (or the few items it truly consists of).';
+  let r=null;try{r=parseJSON(await ai(nutrientPrompt(hint,false)));}catch(e){}
+  const np=toParts(r);
+  if(!np.length){btn.disabled=false;btn.textContent='✨ Try again';toast('Couldn’t update it — try again','err');return;}
+  const said=/\d+(\.\d+)?\s*(g|gram|grams|kg)\b/i.test(fix);
+  if(np.length===1&&p.g>0&&np[0].g>0&&!said&&Math.abs(np[0].g-p.g)>0.5){const f=p.g/np[0].g;for(const k in np[0].n)np[0].n[k]*=f;np[0].g=p.g;}
+  if(ingT&&np.length===1&&!np[0].ing)np[0].ing=ingT.slice(0,1500);
+  if(np.length===1&&p.fu&&!np[0].fu)np[0].fu=p.fu;
+  MD.parts.splice(i,1,...np);MD.fixOpen=null;if(MD.orig)MD.orig=clone(MD.parts.filter(x=>!x.wh));
+  haptic('success');drawMD();
+  const row=document.querySelectorAll('#mdBox .partrow')[i];if(row&&!RM){row.classList.add('fixed');setTimeout(()=>row.classList.remove('fixed'),1200);}
+  toast('Updated '+np[0].name,'ok');
+}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
