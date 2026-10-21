@@ -80,7 +80,11 @@ reads everything again and re-uploads its photos.
 `/api/ai` runs Claude Haiku 5.5 with the Cloudflare secret **`ANTHROPIC_API_KEY`**; without it AI is off. Free: 5 meal reads, 1 AI workout review, 25 other AI requests per (UTC) day;
 Pro: 30, unlimited, 150. `AI_DAY_USD` caps the whole app's AI spend per day (default 3). Admins (`ADMIN_EMAILS`, or
 `ADMIN` for accounts moved from Puter) are unlimited and see everyone's use in Setup, where they can give or remove Pro.
-Payments (Lemon Squeezy, merchant of record): `LS_BUY_MONTHLY` / `LS_BUY_YEARLY` (checkout links), `LS_PORTAL`
+Payments — **Stripe Managed Payments** (Stripe is the merchant of record and handles VAT): `STRIPE_LINK_MONTHLY` /
+`STRIPE_LINK_YEARLY` (Payment Links with Managed Payments on), `STRIPE_PORTAL` (customer portal login link) and the webhook
+signing secret `STRIPE_WHSEC`; webhook URL `https://web.lockin-app.online/api/stripe/webhook` with `checkout.session.completed`
+and `customer.subscription.created/updated/deleted`. The link carries the account as `client_reference_id` (`a__<id>`).
+When Stripe links are set they're used; otherwise Lemon Squeezy (merchant of record): `LS_BUY_MONTHLY` / `LS_BUY_YEARLY` (checkout links), `LS_PORTAL`
 (customer portal) and the webhook secret `LS_SECRET`; webhook URL `https://web.lockin-app.online/api/ls/webhook`.
 The checkout passes the account id as `checkout[custom][uid]` (`a:<account id>`; an old Puter id is mapped to the account
 it moved to); subscription events set Pro until the renewal (+3 days).

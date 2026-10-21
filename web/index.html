@@ -7500,7 +7500,7 @@ function planCardRender(){
   else{
     h+=row('AI meal reads today','meal',false)+row('AI workout reviews today','review',d.plan==='pro');
     if(d.plan==='pro')h+='<p class="tiny" style="margin-top:8px">'+(d.until?'Pro until '+new Date(d.until).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Pro — no end date')+(d.src==='admin'?' · a gift from the admin':'')+'.'+
-      (d.src==='ls'&&buy.portal?' <a href="'+esc(buy.portal)+'" target="_blank" rel="noopener">Manage subscription</a>':'')+'</p>';
+      ((d.src==='ls'||d.src==='stripe')&&buy.portal?' <a href="'+esc(buy.portal)+'" target="_blank" rel="noopener">Manage subscription</a>':'')+'</p>';
     else h+=(buy.monthly||buy.yearly?'<div class="plbuy"><button class="btn btn-primary btn-sm" onclick="planBuy(\'yearly\',this)">Pro — '+pr.y+'/year</button><button class="btn btn-ghost btn-sm" onclick="planBuy(\'monthly\',this)">'+pr.m+'/month</button></div>':
         '<div class="upg-soon" style="margin-top:10px">Pro is coming soon — '+pr.m+' a month or '+pr.y+' a year.</div>')+
       '<p class="tiny" style="margin-top:8px">Pro: 30 AI meal reads a day and unlimited AI workout reviews. Limits reset '+planResetTxt()+'.</p>';
@@ -7523,7 +7523,7 @@ async function planAdmRender(force){
     (a.ai?'':'<p class="tiny" style="margin:6px 0 10px">No Claude key yet — AI is off until ANTHROPIC_API_KEY is added in Cloudflare (Settings → Variables and Secrets).</p>')+
     '<div class="adlist">'+us.map(u=>'<div class="adrow"><div class="grow"><b>'+esc(u.name||u.handle)+'</b> <span class="tiny">@'+esc(u.handle)+'</span><div class="tiny">today '+u.today.meal+' meal · '+u.today.review+' review · '+u.today.other+' other · month '+usd(u.month.cost)+'</div></div>'+
       '<span class="plbadge '+u.plan+'">'+(PLAN_LBL[u.plan]||'Free')+'</span>'+
-      (u.plan==='admin'||u.srcs.includes('ls')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')+'</div>'+
+      (u.plan==='admin'||u.srcs.includes('ls')||u.srcs.includes('stripe')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')+'</div>'+
     (us.length?'':'<p class="tiny">Nobody yet.</p>');
   c.innerHTML=h;
 }
@@ -8401,7 +8401,7 @@ function planAdmList(){
   $('admSum').textContent=q?us.length+' of '+all.length:all.length+' '+(all.length===1?'person':'people')+' · sorted by AI cost this month';
   el.innerHTML=us.map(u=>'<div class="adrow"><div class="grow"><b>'+esc(u.name||u.handle)+'</b> <span class="tiny">@'+esc(u.handle)+'</span><div class="tiny">today '+u.today.meal+' meal · '+u.today.review+' review · '+u.today.other+' other · month '+usd(u.month.cost)+'</div></div>'+
     '<span class="plbadge '+u.plan+'">'+(PLAN_LBL[u.plan]||'Free')+'</span>'+
-    (u.plan==='admin'||u.srcs.includes('ls')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')||
+    (u.plan==='admin'||u.srcs.includes('ls')||u.srcs.includes('stripe')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')||
     '<p class="tiny">'+(q?'Nobody matches “'+esc(PADM.q)+'”.':'Nobody yet.')+'</p>';
 }
 

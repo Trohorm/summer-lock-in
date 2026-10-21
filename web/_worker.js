@@ -118,7 +118,7 @@ const SCHEMA = [
   // public follow links: one encrypted, always-latest copy of a split; the key is only in the link (#)
   `CREATE TABLE IF NOT EXISTS pubs(code TEXT PRIMARY KEY, uid TEXT NOT NULL, data TEXT NOT NULL, ver INTEGER NOT NULL, upd INTEGER NOT NULL, created INTEGER NOT NULL, fol INTEGER NOT NULL DEFAULT 0)`,
   `CREATE INDEX IF NOT EXISTS pubs_uid ON pubs(uid)`,
-  // plans: Pro from a Lemon Squeezy subscription (src 'ls') or given by the admin (src 'admin'); until NULL = no end
+  // plans: Pro from a Stripe (src 'stripe') or Lemon Squeezy (src 'ls') subscription or given by the admin (src 'admin'); until NULL = no end
   `CREATE TABLE IF NOT EXISTS plans(uid TEXT NOT NULL, src TEXT NOT NULL, plan TEXT NOT NULL, until INTEGER, sub TEXT, status TEXT, variant TEXT, lsu INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL, PRIMARY KEY(uid,src))`,
   // AI through the app's own key: what each person used per (UTC) day — count, tokens and cost in micro-dollars
   `CREATE TABLE IF NOT EXISTS ai_use(uid TEXT NOT NULL, day TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, tin INTEGER NOT NULL DEFAULT 0, tout INTEGER NOT NULL DEFAULT 0, cost INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uid,day,kind))`,
@@ -576,7 +576,14 @@ async function usedToday(db, id) {
   for (const x of r) if (x.kind in o) o[x.kind] = x.n;
   return o;
 }
+// Stripe Payment Links (Managed Payments) carry the account as client_reference_id (letters, digits, - and _ only)
+const stripeRef = uid => String(uid).replace(/:/g, '__');
+const stripeUid = ref => String(ref || '').replace(/__/g, ':');
 function buyLinks(env, uid) {
+  if (env.STRIPE_LINK_MONTHLY || env.STRIPE_LINK_YEARLY) {
+    const add = u => u ? u + (u.includes('?') ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(stripeRef(uid)) : '';
+    return { monthly: add(env.STRIPE_LINK_MONTHLY || ''), yearly: add(env.STRIPE_LINK_YEARLY || ''), portal: env.STRIPE_PORTAL || '' };
+  }
   const add = u => u ? u + (u.includes('?') ? '&' : '?') + 'checkout%5Bcustom%5D%5Buid%5D=' + encodeURIComponent(uid) : '';
   return { monthly: add(env.LS_BUY_MONTHLY || ''), yearly: add(env.LS_BUY_YEARLY || ''), portal: env.LS_PORTAL || '' };
 }
@@ -656,7 +663,41 @@ async function adminUsers(db, env) {
   }
   for (const pl of plans) { const u = U.get(pl.uid); if (!u) continue; u.plan = 'pro'; u.srcs.push(pl.src); if (pl.until === null || u.until !== null && pl.until > u.until) u.until = pl.until; }
   for (const u of U.values()) if (u.admin) u.plan = 'admin';
-  return { users: [...U.values()], todayCost, monthCost, cap: Math.round((+env.AI_DAY_USD || 3) * 1e6), ai: !!env.ANTHROPIC_API_KEY, pay: !!(env.LS_SECRET && env.LS_BUY_MONTHLY) };
+  return { users: [...U.values()], todayCost, monthCost, cap: Math.round((+env.AI_DAY_USD || 3) * 1e6), ai: !!env.ANTHROPIC_API_KEY, pay: !!(env.STRIPE_WHSEC && (env.STRIPE_LINK_MONTHLY || env.STRIPE_LINK_YEARLY)) || !!(env.LS_SECRET && env.LS_BUY_MONTHLY) };
+}
+/* Stripe webhooks (Managed Payments: Stripe is the seller and handles VAT). checkout.session.completed ties the
+   subscription to the account (client_reference_id); customer.subscription.* keep Pro until the paid period ends (+3 days). */
+async function stripeWebhook(req, env, db) {
+  if (!env.STRIPE_WHSEC) return err(503, 'off', 'Payments aren’t set up.');
+  const raw = await req.text();
+  if (raw.length > 500000) return err(413, 'too_big', 'Too big.');
+  const sh = String(req.headers.get('stripe-signature') || ''), t = (/(?:^|,)t=(\d+)/.exec(sh) || [])[1];
+  const sigs = [...sh.matchAll(/(?:^|,)v1=([0-9a-f]{64})/g)].map(m => m[1]);
+  if (!t || !sigs.length || Math.abs(Date.now() / 1000 - +t) > 600) return err(401, 'bad_sig', 'Bad signature.');
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.STRIPE_WHSEC), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(t + '.' + raw)))].map(x => x.toString(16).padStart(2, '0')).join('');
+  if (!sigs.some(x => hexEq(x, mac))) return err(401, 'bad_sig', 'Bad signature.');
+  const ev = parse(raw) || {}, o = (ev.data && ev.data.object) || {}, now = Date.now(), GRACE = 3 * DAY, at = (+ev.created || 0) * 1000 || now;
+  if (ev.type === 'checkout.session.completed') {
+    let uid = stripeUid(o.client_reference_id);
+    if (!PUIDRX.test(uid) || !o.subscription) return J({ ok: true, ignored: 'no account' });
+    if (!uid.startsWith('a:')) { const m = await db.prepare('SELECT id FROM accounts WHERE legacy=?').bind(uid).first(); if (m) uid = 'a:' + m.id; }
+    // paid now; the subscription event that follows sets the exact renewal date
+    await db.prepare("INSERT INTO plans(uid,src,plan,until,sub,status,variant,lsu,updated) VALUES(?,'stripe','pro',?,?,'active',?,0,?) ON CONFLICT(uid,src) DO UPDATE SET until=MAX(COALESCE(plans.until,0),excluded.until), sub=excluded.sub, status='active', updated=excluded.updated")
+      .bind(uid, now + 32 * DAY + GRACE, String(o.subscription).slice(0, 60), String(o.mode || '').slice(0, 20), now).run();
+    return J({ ok: true });
+  }
+  if (/^customer\.subscription\.(created|updated|deleted|paused|resumed)$/.test(ev.type || '')) {
+    const row = await db.prepare("SELECT uid FROM plans WHERE src='stripe' AND sub=?").bind(String(o.id || '')).first();
+    if (!row) return J({ ok: true, ignored: 'unknown subscription' });   // checkout.session.completed links it; Stripe retries
+    const item = ((o.items || {}).data || [])[0] || {}, end = (+(o.current_period_end || item.current_period_end) || 0) * 1000, st = String(o.status || '');
+    let until = now;
+    if (ev.type !== 'customer.subscription.deleted' && ['active', 'trialing', 'past_due'].includes(st)) until = Math.max(end, now) + (o.cancel_at_period_end ? 0 : GRACE);
+    await db.prepare("UPDATE plans SET until=?, status=?, lsu=?, updated=? WHERE uid=? AND src='stripe' AND lsu<=?")
+      .bind(until, (o.cancel_at_period_end && st === 'active' ? 'cancelled' : st).slice(0, 20), at, now, row.uid, at).run();
+    return J({ ok: true });
+  }
+  return J({ ok: true, ignored: ev.type || 'event' });
 }
 /* Lemon Squeezy webhooks: subscription_created / _updated / _cancelled / _resumed / _expired / _paused … */
 async function lsWebhook(req, env, db) {
@@ -751,6 +792,7 @@ async function api(req, env, ctx, url) {
     }
     /* Lemon Squeezy tells us about subscriptions (signed with the webhook secret) */
     if (p === '/api/ls/webhook' && M === 'POST') return await lsWebhook(req, env, db);
+    if (p === '/api/stripe/webhook' && M === 'POST') return await stripeWebhook(req, env, db);
     /* signing in (email code, password, Google) */
     if (p.startsWith('/api/auth/')) { const r = await authApi(req, env, ctx, db, M, p, url); if (r) return r; }
     /* everything else: the current app, signed in with Puter */
