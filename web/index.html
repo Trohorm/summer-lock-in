@@ -1487,6 +1487,28 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .endask .eastats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 16px}.endask .eastats div{padding:10px 6px;border-radius:12px;background:rgba(255,255,255,.04);text-align:center}
 .endask .eastats b{display:block;font-size:20px;color:#fff;font-variant-numeric:tabular-nums}.endask .eastats small{font-size:11px;color:var(--slate)}
 @media (prefers-reduced-motion:no-preference){.endask .eaico{animation:cbpop .55s var(--sp-bounce) both}}
+/* ---- Puter allowance */
+.pcnote{display:flex;gap:12px;align-items:flex-start;border-color:rgba(245,194,107,.28);background:linear-gradient(135deg,rgba(245,194,107,.10),rgba(245,194,107,.03) 70%)}
+.pcn-ico{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:15px;color:#f5c26b;background:rgba(245,194,107,.14);border:1px solid rgba(245,194,107,.25)}
+.pcn-b{flex:1;min-width:0}.pcn-b>b{display:block;font-size:15px;color:var(--navy)}
+.pcn-b p{margin:4px 0 0;font-size:13px;line-height:1.42;color:var(--slate)}.pcn-b p b{color:#f5c26b}
+.pcn-a{display:flex;gap:12px;align-items:center;margin-top:10px}
+.pcbar{position:relative;height:10px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:12px 0 9px}
+.pcbar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#3ecf8e,#5b93ff);transform-origin:left center}
+.pcbar.low i{background:linear-gradient(90deg,#f5c26b,#ff9a4d)}.pcbar.out i{background:linear-gradient(90deg,#ff7a6b,#d9443a)}
+@media (prefers-reduced-motion:no-preference){.pcbar i{animation:pcfill .9s cubic-bezier(.2,.8,.2,1) both}.pcbar.out i{animation:pcfill .9s cubic-bezier(.2,.8,.2,1) both,pcpulse 2.4s ease-in-out .9s infinite}}
+@keyframes pcfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pcpulse{0%,100%{opacity:1}50%{opacity:.65}}
+.pcline{font-size:14px;line-height:1.4;color:var(--slate);margin-bottom:6px}.pcline b{color:var(--navy)}
+.pcuse{display:grid;gap:5px;margin:6px 0 10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.035)}
+.pcuse div{display:flex;justify-content:space-between;gap:10px;font-size:13px}.pcuse span{color:var(--slate)}.pcuse b{font-variant-numeric:tabular-nums}
+.pctog{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:13px;line-height:1.42;color:var(--slate);cursor:pointer}
+.pctog input{flex:none;width:18px;height:18px;margin-top:1px;accent-color:#5b93ff}.pctog b{color:var(--navy)}
+#pcCard.pcflash{animation:pcflash 1.4s ease}
+@keyframes pcflash{0%,100%{box-shadow:0 0 0 0 rgba(91,147,255,0)}25%{box-shadow:0 0 0 2px rgba(91,147,255,.75)}}
+.pcell .ppend{position:absolute;left:6px;top:6px;z-index:2;font-size:11px;line-height:20px;width:22px;height:20px;text-align:center;border-radius:7px;background:rgba(14,16,19,.78)}
+.pcell.paused::after{content:'☁';font-size:20px;color:var(--mist);opacity:.8}
+.phnote{margin-top:10px;color:#f5c26b}
 </style>
 </head>
 <body>
@@ -1545,6 +1567,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 
   <!-- TODAY -->
   <section class="view" id="view-today">
+    <div id="pcNote" hidden></div>
     <div id="todayAlert"></div>
     <div id="todayMain"></div>
     <div id="yday"></div>
@@ -1687,6 +1710,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
       <p class="tiny">Same spot, same light, same poses, every 2 weeks. Tap two photos to compare. Stored privately in your account.</p>
       <div style="margin-top:10px"><label class="btn btn-ghost btn-sm photoadd" for="photoInput"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Add progress photos</label><input type="file" id="photoInput" accept="image/*" multiple style="display:none"></div>
       <div id="photoGrid"></div>
+      <p class="tiny phnote" id="photoNote" hidden></p>
       <div id="compareBox"></div>
     </div>
   </section>
@@ -1754,6 +1778,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
       <div class="row" style="margin-top:8px"><input id="srcUrl" readonly value="https://ipa.lockin-app.online"><button class="btn btn-ghost btn-sm" id="srcCopy">Copy</button></div>
       <div class="row" style="margin-top:12px;align-items:center"><span class="tiny grow" id="verLine"></span><button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">What’s new</button></div>
     </div>
+    <div class="card" id="pcCard"></div>
     <div class="card">
       <h2>Account &amp; data</h2>
       <p class="muted" id="acctLine">—</p>
@@ -1884,7 +1909,7 @@ function suggestMacros(w,goal){
   if(!w)return null;
   return {protein:Math.round(w*2.2),carbs:Math.round(w*({cut:3,recomp:4,bulk:5,maintain:4}[goal]||4)),fat:Math.round(w*({cut:0.8,bulk:1.1}[goal]||1))};
 }
-const KV_KEY='state_v1',PDIR='photos',AI_MODEL='claude-sonnet-4-6',AI_TEXT=['anthropic/claude-haiku-5-5','claude-haiku-4-5'],AI_IMG=['anthropic/claude-sonnet-5-5','claude-sonnet-4-6'];
+const KV_KEY='state_v1',PDIR='photos',AI_MODEL='claude-haiku-5-5',AI_TEXT=['anthropic/claude-haiku-5-5','claude-haiku-4-5'],AI_IMG=['anthropic/claude-haiku-5-5','claude-haiku-4-5'];
 
 /* ================= STATE ================= */
 let S=null,user=null,dirty=false,pushT=null,lastSync=null,offlineMode=false,pushed={},cloudReady=false,pushing=false,needsSignIn=false,localT=null,syncing=false,lastPull=0;
@@ -2203,8 +2228,9 @@ async function boot(){
   localStorage.setItem('rt_lastuser',user.username);
   const local=await loadLocalAny();
   let cloud=null,reached=false;
-  for(let i=0;i<3&&!reached;i++){try{cloud=await loadCloud();reached=true;}catch(e){if(i<2)await new Promise(z=>setTimeout(z,1500));}}
-  if(!reached&&!local){show('login');renderHeader();$('loginMsg').textContent='Couldn’t load your account just now — check your connection and tap Sign in to try again.';return;}
+  await pcDue(3000);
+  for(let i=0;i<3&&!reached&&!pcOut();i++){try{cloud=await loadCloud();reached=true;}catch(e){if(pcOut())break;if(i<2)await new Promise(z=>setTimeout(z,1500));}}
+  if(!reached&&!local){show('login');renderHeader();$('loginMsg').textContent=pcOut()?'Your Puter allowance for this month is used up, so your account can’t load on a new device until it refills ('+pcBack()+'). Devices that already have your data keep working.':'Couldn’t load your account just now — check your connection and tap Sign in to try again.';return;}
   let loaded;cloudReady=reached;
   if(reached){loaded=mergeStates(cloud,local);offlineMode=false;}
   else{loaded=local;offlineMode=true;dirty=true;}
@@ -2284,6 +2310,9 @@ function finishWizard(){
 async function doSignIn(){$('loginMsg').textContent='';try{await puter.auth.signIn();await boot();}catch(e){$('loginMsg').textContent='Sign-in was cancelled or failed — try again.';}}
 async function doSignOut(){
   if(!confirm('Sign out on this device? Your data stays safe in your account.'))return;
+  if(dirty&&cloudReady&&!pcOut()&&navigator.onLine){try{clearTimeout(pushT);await pushNow();}catch(e){}}
+  if((pcOut()||dirty||phqGet().length)&&!confirm('Some changes aren’t in your account yet'+(pcOut()?' (your Puter allowance is used up this month)':'')+' — signing out removes them from this device. Export a backup first (Setup → Export backup) to keep them. Sign out anyway?'))return;
+  try{await phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());}catch(e){}
   try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');localStorage.removeItem(socKey());localStorage.removeItem('rt_lastuser');await lidbDel(k);}catch(e){}
   try{await puter.auth.signOut();}catch(e){}location.reload();
 }
@@ -2303,7 +2332,7 @@ function renderView(v){
   if(v==='diet')renderDiet();
   if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
   if(v==='friends')renderFriends();
-  if(v==='settings'){renderSettings();aiAdminList();verLine();}
+  if(v==='settings'){renderSettings();aiAdminList();verLine();pcCardShow();}
   viewVer[v]=verKey(v);
 }
 let enteringView='',swipeFrom=null,heroDeco=null,leaveAnims=[];
@@ -2350,7 +2379,7 @@ function show(v){
   animateView(v,dir,!!prev&&prev!==el);
   sc.scrollTop=0;
   countUp(el,true);fillRings(el,true);requestAnimationFrame(movePill);
-  if(v==='progress')fetchPhotos();
+  if(v==='progress'){fetchPhotos();if(phStale()||!photos.length)loadPhotos();}
   if(v==='workout')dayPillSoon();
   heroDeco=el.querySelector('.hero-card .deco');
   onScroll();requestAnimationFrame(()=>setupReveal(el));
@@ -2390,7 +2419,7 @@ function isLimit(k){const g=NMAP[k].g;return g==='anti'||g==='bad';}
 function antiOver(date){const t=dayTotals(date);return NUT.filter(n=>(n[3]==='anti'||n[3]==='bad')&&t[n[0]]>goalFor(n[0])+(n[0]==='seedoil'?0.4:0)).map(n=>({k:n[0],v:t[n[0]],g:goalFor(n[0])}));}
 function microHits(date){const t=dayTotals(date);const ks=NUT.filter(n=>['vit','min','oth'].includes(n[3])).map(n=>n[0]);return {hit:ks.filter(k=>t[k]>=goalFor(k)).length,of:ks.length};}
 function renderToday(){
-  try{renderYday();}catch(e){}
+  try{renderYday();}catch(e){}try{pcUI();}catch(e){}
   const t=todayStr(),pd=plannedDay(t),gym=S.gyms.find(g=>g.id===S.activeGym);
   const today=Object.values(S.workouts).filter(w=>w.date===t&&woHasData(w));
   const cur=curWO(),active=cur&&!cur.ended&&woHasData(cur);
@@ -3307,7 +3336,7 @@ async function analyzeMeal(id,quiet){
   const loc=localAnalysis(g.e,g.d);
   if(ok&&gr>'B'&&!arr(r.bad,3).length&&!loc.bad.length&&loc.score>=80){gr='B';r.score=Math.max(+r.score||0,76);}
   g.e.an=ok?{grade:gr,score:Math.max(0,Math.min(100,Math.round(+r.score||loc.score))),headline:String(r.headline||loc.headline).slice(0,90),good:arr(r.good,2),bad:arr(r.bad,3),low:arr(r.low,3),next:String(r.next||'').slice(0,160),ts:Date.now()}:loc;
-  if(ok)delete g.e.anPending;else g.e.anPending=1;
+  if(ok){delete g.e.anPending;delete g.e.anTry;delete g.e.anLast;}else g.e.anPending=1;
   save();renderAnCard(true);updateMealPill(id);
   if(!quiet&&!$('view-diet').classList.contains('active'))toast('Meal graded '+g.e.an.grade+' — '+g.e.an.headline,g.e.an.grade>'C'?'warn':'ok');
   if(!quiet)gradeFx(g.e.an);
@@ -3998,7 +4027,7 @@ function renderPhotos(){
   if(!photos.length){g.innerHTML='';$('compareBox').innerHTML='';return;}
   let html='',cm='';
   photos.forEach((p,i)=>{const m=p.date?parseD(p.date).toLocaleDateString('en-GB',{month:'long',year:'numeric'}):'Unknown';if(m!==cm){if(cm)html+='</div>';html+='<div class="ph-month">'+m+'</div><div class="pgrid">';cm=m;}
-    html+='<div class="pcell'+(selPhotos.includes(i)?' sel':'')+(p.url?'':' loading')+'" data-i="'+i+'" onclick="selPhoto('+i+')">'+(p.url?'<img src="'+p.url+'" alt="">':'')+'<div class="pd">'+(p.date?fmtD(p.date):'—')+'</div><div class="px" onclick="event.stopPropagation();delPhoto('+i+')">✕</div>'+(p.url?'<div class="pshare" onclick="event.stopPropagation();postPhoto('+i+')" title="Post to your profile">↗</div>':'')+'</div>';});
+    html+='<div class="pcell'+(selPhotos.includes(i)?' sel':'')+(p.url?'':' loading')+'" data-i="'+i+'" onclick="selPhoto('+i+')">'+(p.url?'<img src="'+p.url+'" alt="">':'')+(p.pend?'<div class="ppend" title="Saved on this device — uploads when it can">⏳</div>':'')+'<div class="pd">'+(p.date?fmtD(p.date):'—')+'</div><div class="px" onclick="event.stopPropagation();delPhoto('+i+')">✕</div>'+(p.url?'<div class="pshare" onclick="event.stopPropagation();postPhoto('+i+')" title="Post to your profile">↗</div>':'')+'</div>';});
   g.innerHTML=html+'</div>';
   const c=$('compareBox');
   if(selPhotos.length===2){const pair=selPhotos.map(i=>photos[i]).filter(p=>p&&p.url).sort((x,y)=>x.date<y.date?-1:1);
@@ -4087,12 +4116,14 @@ function saveTargets(){
 function exportData(){const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='lockin-backup-'+todayStr()+'.json';a.click();URL.revokeObjectURL(a.href);}
 function importData(file){const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.settings)throw 0;S=merge(fresh(),mergeStates(d,S));migrate();save();toast('Backup restored');show('today');}catch(e){alert('That file doesn\'t look like a Lock In backup.');}};r.readAsText(file);}
 async function eraseAll(){
+  if(pcOut()){alert('Erasing your account data needs your Puter allowance, which is used up this month — try again after '+pcBack()+'.');return;}
   if(!confirm('Erase ALL your data (logs, splits, food, photos) from your account? This cannot be undone.')||!confirm('Really sure?'))return;
   try{await puter.kv.del(KV_KEY);for(const k in pushed)await puter.kv.del(k);}catch(e){}
   try{await puter.fs.delete(PDIR,{recursive:true});}catch(e){}
   try{if(SOC.me)await sapi('/me','DELETE');}catch(e){}socWipe();
   try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');lidbDel(k);LIDB.data=null;}catch(e){}
-  S=fresh();pushed={};photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
+  try{phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());PHURL.clear();}catch(e){}
+  S=fresh();pushed={};pushedCore='';photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
 }
 
 /* ================= END-TO-END ENCRYPTION for everything friends can see ================= */
@@ -4124,7 +4155,8 @@ const pubOk=async f=>!!(f&&typeof f.pub==='string'&&/^[A-Za-z0-9_-]{43}\.[A-Za-z
 /* ---------- your keys: this device + your Puter account ---------- */
 function e2eLK(){return 'lockin_e2e_'+(user?user.username:'anon');}
 function e2eValid(st){return !!(st&&st.v===1&&st.id&&K43.test(st.id.x)&&K43.test(st.id.y)&&K43.test(st.id.d)&&K43.test(st.self)&&st.cats&&typeof st.cats==='object');}
-async function e2eKVGet(){const raw=await puter.kv.get(E2E_KV);if(!raw)return null;const o=typeof raw==='string'?JSON.parse(raw):raw;return e2eValid(o)?o:null;}
+async function e2eKVSet(st){if(pcOut())throw new Error('puter_funds');try{await puter.kv.set(E2E_KV,JSON.stringify(st));}catch(e){if(pcIsFunds(e))pcHit('keys');throw e;}}
+async function e2eKVGet(){if(!PC.sess)await pcDue(2500);if(pcOut())throw new Error('puter_funds');let raw;try{raw=await puter.kv.get(E2E_KV);}catch(e){if(pcIsFunds(e))pcHit('keys');throw e;}if(!raw)return null;const o=typeof raw==='string'?JSON.parse(raw):raw;return e2eValid(o)?o:null;}
 function e2eMerge(a,b){const out=JSON.parse(JSON.stringify(a));let ch=false;
   for(const c of CATS){const x=b.cats&&own(b.cats,c)?b.cats[c]:null,y=own(out.cats,c)?out.cats[c]:null;if(x&&(!y||(+x.t||0)>(+y.t||0))){out.cats[c]=x;ch=true;}}
   return {st:out,ch};}
@@ -4152,7 +4184,7 @@ async function e2eLoad(force){
       else if(reach){st=loc||await e2eGen();write=true;}
       else if(loc)st=loc;
       else throw new Error('Couldn’t reach your account to load your encryption keys.');
-      if(write)await puter.kv.set(E2E_KV,JSON.stringify(st));
+      if(write)await e2eKVSet(st);
       try{localStorage.setItem(e2eLK(),JSON.stringify(st));}catch(e){}
       await e2eUse(st);return true;
     }catch(e){E2E.err=(e&&e.message)||'Encryption keys unavailable';return false;}
@@ -4166,7 +4198,7 @@ async function e2eNewKeys(cats){
   const kv=await e2eKVGet();
   if(kv){if(kv.id.d!==st.id.d){await e2eLoad(true);throw new Error('Your keys changed on another device — try again');}st=e2eMerge(st,kv).st;}
   const now=Date.now();for(const c of cats)st.cats[c]={kid:hexs(rnd(4)),k:b64u(rnd(32)),t:now};
-  await puter.kv.set(E2E_KV,JSON.stringify(st));
+  await e2eKVSet(st);
   try{localStorage.setItem(e2eLK(),JSON.stringify(st));}catch(e){}
   await e2eUse(st);
 }
@@ -6206,8 +6238,13 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.20.5';
+const WEB_VER='2026.10.21.1';
 const WHATSNEW=[
+ {v:'2026.10.21.1',d:'21 Oct',items:[
+  ['⏸','No more Puter pop-ups','When your Puter allowance for the month runs out, the app pauses AI, cloud sync and photo downloads by itself. Everything stays on your phone and syncs once it refills.'],
+  ['🔋','See your allowance','Setup → Puter allowance shows how much is left this month and what used it.'],
+  ['💸','Meal photos cost far less','Photos are read by Haiku 5.5 — about 20× less of your allowance than Sonnet. Want Sonnet anyway? Turn on Sharper photo estimates.'],
+  ['🖼️','Photos stay on your phone','Progress photos download once, then open instantly — even offline. Taken one while sync is paused? It uploads later by itself.']]},
  {v:'2026.10.20.5',d:'20 Oct',items:[
   ['🧈','Said it already? Not asked again','Write “fried in butter”, “no oil” or “from a restaurant” and the app uses it — no “Where was it made?” question.'],
   ['⚖️','Better portions','Weights are the cooked, as-eaten amount, and any weight or count you write is used exactly. Tap − / + to nudge a food by ~10 %.'],
@@ -6889,6 +6926,404 @@ async function partFix(i,btn){
   const row=document.querySelectorAll('#mdBox .partrow')[i];if(row&&!RM){row.classList.add('fixed');setTimeout(()=>row.classList.remove('fixed'),1200);}
   toast('Updated '+np[0].name,'ok');
 }
+
+/* ================= PUTER ALLOWANCE: AI, cloud sync and photos run on your Puter account's free monthly allowance =================
+   When it's used up Puter refuses those calls and pops up its own "Low Balance" window. So the app asks Puter how much is
+   left (that check is free and never pops up), and while it's used up it simply doesn't make those calls: everything stays
+   on this device and syncs by itself once the allowance refills. */
+// over: Puter's monthly number says 0 but calls still go through (credit you added) — then only a real refusal pauses
+const PC={u:null,out:false,over:false,t:0,chk:0,hold:0,rem:null,all:null,api:false,usage:null,busy:null,sess:false};
+const pcKey=()=>'lockin_pc_'+(user?user.username:'anon');
+function pcSync(){const u=user?user.username:'';if(PC.u===u)return;PC.u=u;
+  Object.assign(PC,{out:false,over:false,t:0,chk:0,hold:0,rem:null,all:null,api:false,usage:null,sess:false});
+  try{const o=JSON.parse(localStorage.getItem(pcKey())||'null');
+    if(o){PC.api=!!o.api;if(o.m===aiMonth())Object.assign(PC,{out:!!o.out,over:!!o.over,t:+o.t||0,chk:+o.chk||0,hold:+o.hold||0,rem:o.rem,all:o.all,usage:o.usage||null});}}catch(e){}}
+function pcSave(){try{localStorage.setItem(pcKey(),JSON.stringify({m:aiMonth(),out:PC.out,over:PC.over,t:PC.t,chk:PC.chk,hold:PC.hold,rem:PC.rem,all:PC.all,api:PC.api,usage:PC.usage}));}catch(e){}}
+// not checked for 6 h (no usage check available, or it keeps failing): let one real call through to see whether it's back
+function pcOut(){pcSync();if(PC.out&&Date.now()-PC.chk>6*3600e3)return false;return PC.out;}
+function pcBack(){const d=new Date();d.setMonth(d.getMonth()+1,1);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function pcLow(){return PC.all>0&&PC.rem!=null&&PC.rem<PC.all*0.25;}
+// the same test Puter.js uses for its pop-up: 402 / insufficient_funds / usage_limited
+function pcIsFunds(e){
+  if(!e)return false;
+  if(typeof e==='object'){const n=e.error&&typeof e.error==='object'?e.error:{};
+    if(e.code==='insufficient_funds'||n.code==='insufficient_funds'||e.status===402||n.status===402||(e.metadata&&e.metadata.usage_limited===true))return true;}
+  const t=String((e&&(e.message||(e.error&&(e.error.message||e.error.code))||e.code))||e);
+  return /insufficient[_ ]?funds|not have enough funding|funding is insufficient|payment required/i.test(t);
+}
+function pcHit(src){
+  pcSync();const was=PC.out;
+  PC.out=true;PC.over=false;PC.chk=Date.now();PC.hold=Date.now()+30*60e3;if(!was)PC.t=Date.now();if(PC.rem!=null)PC.rem=Math.min(PC.rem,0);pcSave();
+  try{let o=aiOutGet();if(!o)o={m:aiMonth(),t:Date.now()};o.try=Date.now();aiOutSet(o);aiOutReport();const el=$('aiOutNote');if(el)el.hidden=false;}catch(e){}
+  if(!was){renderSync();pcUI();}
+}
+async function pcCheck(force){
+  pcSync();if(PC.busy)return PC.busy;
+  if(typeof puter==='undefined'||!puter.auth||typeof puter.auth.getMonthlyUsage!=='function'||!navigator.onLine)return null;
+  try{if(!puter.auth.isSignedIn())return null;}catch(e){return null;}
+  PC.busy=(async()=>{
+    try{
+      const u=await puter.auth.getMonthlyUsage(),a=u&&u.allowanceInfo;
+      if(!a||typeof a.remaining!=='number'||!isFinite(a.remaining)){PC.failT=Date.now();return null;}
+      pcSync();const was=PC.out;
+      Object.assign(PC,{api:true,chk:Date.now(),rem:a.remaining,all:+a.monthUsageAllowance||null,usage:pcSum(u.usage)});
+      if(a.remaining<=0){if(!PC.over){PC.out=true;if(!was)PC.t=Date.now();}}
+      // right after Puter refused something, give it a while before trusting "there's some left" (unless you tap Refresh)
+      else if(was&&(force||Date.now()>=(PC.hold||0)))PC.out=false;
+      pcSave();
+      if(PC.out&&!was){renderSync();pcUI();}
+      if(was&&!PC.out)pcResume();
+      pcCardRender();
+      return PC;
+    }catch(e){PC.failT=Date.now();return null;}
+    finally{PC.busy=null;}
+  })();
+  return PC.busy;
+}
+// once per app open, then every 30 min (10 when it's getting low, 5 while it's used up).
+// "Once per app open" only counts when Puter actually answered — a check tried before the SDK loaded doesn't.
+function pcNoApi(){return typeof puter!=='undefined'&&!!puter.auth&&typeof puter.auth.getMonthlyUsage!=='function';}
+function pcCheckDue(){pcSync();if(PC.busy)return PC.busy.then(r=>r||PC);
+  const age=Date.now()-(PC.chk||0);
+  const due=!PC.sess||age>(PC.out?5*60e3:pcLow()?10*60e3:30*60e3);
+  if(!due||Date.now()-(PC.failT||0)<20e3)return Promise.resolve(PC);
+  return pcCheck().then(r=>{if(r||pcNoApi())PC.sess=true;return r||PC;});}
+function pcDue(ms){const p=pcCheckDue();return ms?Promise.race([p,new Promise(r=>setTimeout(r,ms))]):p;}
+// a paid call worked although we thought it was used up: carry on (and if Puter's number still says 0, it's added credit)
+function pcOk(){if(PC.out){PC.out=false;PC.hold=0;if(PC.rem!=null&&PC.rem<=0)PC.over=true;pcResume();}}
+function pcResume(){
+  pcSave();
+  try{const o=aiOutGet();aiOutSet(null);const el=$('aiOutNote');if(el)el.hidden=true;if(o&&o.r&&typeof sapi==='function')sapi('/aiout/back','POST',{}).catch(()=>{});}catch(e){}
+  renderSync();pcUI();
+  toast('Your Puter allowance is back — syncing your changes','ok');
+  setTimeout(()=>{try{bgSync();}catch(e){}},400);
+  setTimeout(()=>{try{loadPhotos(true);}catch(e){}},2500);
+}
+const PCL={big:'AI — Sonnet',small:'AI — Haiku',ai:'AI — other',sync:'Cloud sync',files:'Photos & files',other:'Other'};
+function pcSum(us){
+  if(!us||typeof us!=='object')return null;const o={big:0,small:0,ai:0,sync:0,files:0,other:0,tot:0};
+  for(const k in us){const v=us[k],c=+(v&&typeof v==='object'?v.cost:v)||0;if(c<=0)continue;
+    const cat=/sonnet|opus|fable|mythos/i.test(k)?'big':/haiku/i.test(k)?'small':
+      /claude|gpt|gemini|llama|mistral|qwen|deepseek|grok|openai|anthropic|chat|token|tts|stt|ocr|txt2|img2/i.test(k)?'ai':
+      /kv/i.test(k)?'sync':/egress|ingress|fs[:_-]|file|storage|bandwidth|read|write|upload|download|thumb/i.test(k)?'files':'other';
+    o[cat]+=c;o.tot+=c;}
+  return o;
+}
+const pctStr=f=>f<=0?'0%':f<0.01?'<1%':Math.round(f*100)+'%';
+
+/* ---------- what you see ---------- */
+function pcHidden(){try{return localStorage.getItem('lockin_pchide_'+(user?user.username:''))===todayStr();}catch(e){return false;}}
+function pcNoteHTML(){
+  return '<div class="card pcnote"><div class="pcn-ico" aria-hidden="true">⏸</div><div class="pcn-b"><b>Puter allowance used up</b>'+
+    '<p>AI and cloud sync are paused until <b>'+pcBack()+'</b>. Everything you log is saved on this device and syncs by itself when it refills.</p>'+
+    '<div class="pcn-a"><button class="btn btn-ghost btn-sm" onclick="pcOpen()">Details</button><button class="linkbtn" onclick="pcHide()">Hide for today</button></div></div></div>';
+}
+function pcUI(){
+  const el=$('pcNote');
+  if(el){const on=!!user&&pcOut()&&!pcHidden();
+    if(!on){if(!el.hidden||el.innerHTML){el.hidden=true;el.innerHTML='';}}
+    else if(el.hidden||!el.innerHTML){el.innerHTML=pcNoteHTML();el.hidden=false;anim(el.firstChild,[{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});}}
+  // Diet's "AI is paused" line follows the allowance too
+  const an=$('aiOutNote');
+  if(an){const o=!!user&&pcOut();if(o){an.textContent='AI is paused until your Puter allowance refills ('+pcBack()+') — meals still get the built-in grade.';an.hidden=false;}else if(!aiOutGet())an.hidden=true;}
+  try{phNote();}catch(e){}
+  if(curView==='settings')pcCardRender();
+}
+function pcHide(){
+  try{localStorage.setItem('lockin_pchide_'+(user?user.username:''),todayStr());}catch(e){}
+  const el=$('pcNote');if(!el)return;const done=()=>{el.hidden=true;el.innerHTML='';};
+  const a=anim(el.firstChild,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-6px)'}],{duration:200,easing:'ease-in'});if(a)a.onfinish=done;else done();
+}
+function pcOpen(){show('settings');setTimeout(()=>{const c=$('pcCard');if(!c)return;try{c.scrollIntoView({behavior:RM?'auto':'smooth',block:'center'});}catch(e){}c.classList.remove('pcflash');void c.offsetWidth;c.classList.add('pcflash');},420);}
+function pcCardShow(){pcCardRender();if(user&&Date.now()-(PC.chk||0)>120e3)pcCheck();}
+function pcCardRender(){
+  const c=$('pcCard');if(!c||!user)return;pcSync();
+  const a=PC.all,r=PC.rem,known=a>0&&r!=null,used=known?Math.min(1,Math.max(0,(a-r)/a)):null,back=pcBack(),out=pcOut();
+  const best=!!(S&&S.settings.aiPhoto==='best'),app=!!window.__lockinNative;
+  let h='<h2>Puter allowance <span class="right"><button class="linkbtn" onclick="pcRefresh(this)">Refresh</button></span></h2>';
+  if(known){const pct=Math.round(used*100);
+    h+='<div class="pcbar'+(out?' out':PC.over?'':pct>=75?' low':'')+'"><i style="width:'+Math.max(2,out?100:pct)+'%"></i></div>'+
+      '<p class="pcline">'+(out?'<b>Used up</b> — AI and cloud sync are paused until <b>'+back+'</b>.':PC.over?'<b>Monthly allowance used</b> — running on the credit you added.':'<b>'+pct+'% used</b> this month · refills '+back+'.')+'</p>';}
+  else h+='<p class="pcline">'+(out?'<b>Used up</b> — AI and cloud sync are paused until <b>'+back+'</b>.':'<span class="tiny">'+(PC.api||typeof puter!=='undefined'&&puter.auth&&puter.auth.getMonthlyUsage?'Checking how much is left…':'Puter doesn’t say how much is left on this device.')+'</span>')+'</p>';
+  const u=PC.usage;
+  if(u&&u.tot>0&&a>0){const ks=Object.keys(PCL).filter(k=>u[k]>0).sort((x,y)=>u[y]-u[x]);
+    h+='<p class="tiny" style="margin-top:2px">What Lock In used it on</p><div class="pcuse">'+ks.map(k=>'<div><span>'+PCL[k]+'</span><b>'+pctStr(u[k]/a)+'</b></div>').join('')+'</div>';}
+  h+='<p class="tiny">Puter gives every account a free allowance each month — AI, cloud sync and photos use it. When it runs out, the app pauses those and keeps everything on this device; nothing is lost.'+
+    (out?(app?' You can also add credit at puter.com.':' You can also <a href="https://puter.com/dashboard/#home" target="_blank" rel="noopener">add credit at Puter</a>.'):'')+'</p>'+
+    '<label class="pctog"><input type="checkbox"'+(best?' checked':'')+' onchange="pcBest(this.checked)"><span><b>Sharper photo estimates</b> — reads meal photos with Sonnet instead of Haiku. Uses about 20× more of the allowance per photo, and switches back by itself when less than a quarter is left.</span></label>'+
+    (PC.chk?'<p class="tiny" style="margin-top:8px;color:var(--mist)">Checked '+ago(PC.chk)+'</p>':'');
+  c.innerHTML=h;
+}
+async function pcRefresh(btn){
+  if(btn){btn.disabled=true;btn.textContent='Checking…';}
+  const r=await pcCheck(true);
+  // Puter's monthly number can stay at 0 while credit you added still pays: when you ask, try one tiny real call
+  if(pcOut()&&typeof puter!=='undefined'&&puter.kv&&navigator.onLine){try{await puter.kv.get(KV_KEY);PC.chk=Date.now();pcOk();}catch(e){if(pcIsFunds(e))pcHit('sync');}}
+  else if(!r)toast('Couldn’t check right now — try again in a moment');
+  pcCardRender();
+}
+function pcBest(on){S.settings.aiPhoto=on?'best':'std';save();haptic('selection');toast(on?'Meal photos: Sonnet — sharper, about 20× the allowance per photo':'Meal photos: Haiku — uses far less of your allowance','ok');pcCardRender();}
+function renderSync(){
+  const el=$('syncInfo');if(!el)return;
+  if(user&&pcOut()){el.innerHTML='<b>Cloud sync paused</b> — your Puter allowance for this month is used up. Everything is saved on this device and syncs by itself when it refills ('+pcBack()+').';return;}
+  if(needsSignIn){el.innerHTML='Not signed in — your data is safe on this device. <a href="#" onclick="doSignIn();return false">Sign in to sync</a>';return;}
+  if(!cloudReady&&!offlineMode){el.textContent=syncing?'Syncing with your account…':'Saved on this device.';return;}
+  if(offlineMode||!navigator.onLine){el.textContent=dirty?'Offline — changes saved on this device, they sync when you reconnect.':'Offline — using data saved on this device.';return;}
+  el.textContent=dirty?(pushing?'Syncing…':'Saved on this device — syncing shortly.'):(lastSync?'Synced to your account at '+lastSync.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'.':'Synced to your account.');
+}
+
+/* ---------- cloud sync that writes less: only what changed, and batched ---------- */
+let pushedCore='',pushedCoreAt=0,pushedCoreU=0,lastPushAt=0;
+function stableStr(v){
+  if(v===null||typeof v!=='object')return JSON.stringify(v===undefined||typeof v==='function'?null:v);
+  if(Array.isArray(v))return '['+v.map(x=>x===undefined||typeof x==='function'?'null':stableStr(x)).join(',')+']';
+  return '{'+Object.keys(v).sort().filter(k=>v[k]!==undefined&&typeof v[k]!=='function').map(k=>JSON.stringify(k)+':'+stableStr(v[k])).join(',')+'}';
+}
+function coreSig(c){const x=Object.assign({},c);['updatedAt','workouts','food','checkins','cardio'].forEach(k=>delete x[k]);x.sharded=true;return stableStr(x);}
+function woLive(){const w=S&&curWO();return !!(w&&!w.ended&&w.t0);}
+function pushSoon(){const was=dirty;dirty=true;if(!was)renderSync();clearTimeout(pushT);
+  // at most one push every 20 s — every 5 min while a workout is going. Each set is saved on the phone at once,
+  // and leaving the app sends everything straight away.
+  const gap=woLive()?300e3:20e3,since=Date.now()-lastPushAt;
+  pushT=setTimeout(()=>idle(pushNow),since>=gap?1500:gap-since);}
+async function pushNow(){
+  if(!user||!S||!cloudReady)return;
+  if(pushing){clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1200);return;}
+  if(typeof puter==='undefined'||!puter.auth||!puter.auth.isSignedIn()||!navigator.onLine||pcOut()){dirty=true;renderSync();return;}
+  pushing=true;const stamp=S.updatedAt;lastPushAt=Date.now();
+  try{
+    const sh=shards(),jobs=[],done={};
+    for(const k in sh){const js=JSON.stringify(sh[k]);if(pushed[k]!==js){jobs.push(puter.kv.set(k,js));done[k]=js;}}
+    for(const k in pushed){if(!sh[k]&&pushed[k]!=='{}'){jobs.push(puter.kv.set(k,'{}'));done[k]='{}';}}
+    // the main document only when something in it changed — or every 10 min, so its timestamp stays fresh for your other devices
+    const c=core(),sig=coreSig(c),wc=sig!==pushedCore||(c.updatedAt!==pushedCoreU&&Date.now()-pushedCoreAt>600e3);
+    if(wc)jobs.push(puter.kv.set(KV_KEY,JSON.stringify(c)));
+    await Promise.all(jobs);Object.assign(pushed,done);if(wc){pushedCore=sig;pushedCoreAt=Date.now();pushedCoreU=c.updatedAt;}
+    if(S.updatedAt===stamp)dirty=false;offlineMode=false;lastSync=new Date();pcOk();
+  }catch(e){dirty=true;if(pcIsFunds(e))pcHit('sync');}
+  pushing=false;renderSync();
+}
+async function loadCloud(){
+  if(pcOut())throw Object.assign(new Error('puter_funds'),{code:'ai_credit'});
+  let raw;try{raw=await puter.kv.get(KV_KEY);}catch(e){if(pcIsFunds(e))pcHit('sync');throw e;}
+  pcOk();
+  if(!raw){pushedCore='';return null;}
+  const c=JSON.parse(raw);
+  pushedCore=c.sharded?coreSig(c):'';pushedCoreAt=Date.now();pushedCoreU=c.updatedAt||0;
+  if(c.sharded){
+    c.workouts={};c.food={};
+    let list=[];
+    try{list=await puter.kv.list('*',true);}catch(e){if(pcIsFunds(e)){pcHit('sync');throw e;}list=[];}
+    (list||[]).forEach(it=>{
+      const k=it.key||it.name;let v=it.value;
+      if(!k||!(k.startsWith('wo_')||k.startsWith('food_')))return;
+      try{if(typeof v==='string')v=JSON.parse(v);}catch(e){return;}
+      pushed[k]=JSON.stringify(v||{});
+      Object.assign(k.startsWith('wo_')?c.workouts:c.food,v||{});
+    });
+  }
+  return c;
+}
+// equal apart from the save time → nothing to send
+function cloudEq(st,cloud){const x=Object.assign({},st),y=Object.assign({},cloud);['sharded','checkins','cardio','updatedAt'].forEach(k=>{delete x[k];delete y[k];});return deepEq(x,y);}
+async function bgSync(){
+  if(syncing)return;syncing=true;renderSync();
+  try{
+    await window.puterReady;
+    if(typeof puter==='undefined'||!navigator.onLine||window.__offlineCopy){offlineMode=true;dirty=true;return;}
+    if(!puter.auth.isSignedIn()){needsSignIn=true;return;}
+    needsSignIn=false;
+    let u=null;try{u=await puter.auth.getUser();}catch(e){}
+    if(u&&user&&u.username!==user.username){location.reload();return;}
+    if(u){user=u;localStorage.setItem('rt_lastuser',u.username);}
+    // the allowance first: while it's used up Puter would refuse the cloud reads (and pop up), so they wait
+    await pcDue(2500);
+    if(pcOut()){dirty=true;return;}
+    let cloud;try{cloud=await loadCloud();}catch(e){if(!pcOut())offlineMode=true;dirty=true;return;}
+    // merge, then migrate the result too, so an old-format cloud copy doesn't look like a change on every open
+    const prev=S;S=merge(fresh(),mergeStates(cloud,prev));migrate();const merged=S;
+    cloudReady=true;offlineMode=false;lastPull=Date.now();
+    if(deepEq(merged,prev))S=prev;else{dataVer++;snapSettings();writeLocal();quietRefresh();}
+    if(!cloud||!cloud.sharded||!cloudEq(merged,cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
+    processQueue();setTimeout(runPendingAnalyses,4000);
+  }finally{syncing=false;renderSync();try{pcUI();}catch(e){}}
+}
+
+/* ---------- AI: Haiku 5.5 reads photos too (20× cheaper than Sonnet 5.5); Sonnet only if you ask for it ---------- */
+const AI_IMG_BEST=['anthropic/claude-sonnet-5-5','anthropic/claude-haiku-5-5'];
+function aiImgModels(){return S&&S.settings&&S.settings.aiPhoto==='best'&&!pcLow()?AI_IMG_BEST:AI_IMG;}
+async function ai(prompt,img){
+  if(typeof puter==='undefined')throw new Error('offline');
+  if(!PC.sess||PC.busy)await pcDue(2500);
+  if(pcOut())throw aiOutHit();     // the allowance is used up, so AI is too (keeps the AI note and the admin list in step)
+  // out of AI credit this month: don't spend a call (re-check at most every 6 h in case it was topped up)
+  const out=aiOutGet();if(out&&Date.now()-(out.try||0)<6*3600e3){aiOutNote();aiOutReport();throw Object.assign(new Error('ai_credit'),{code:'ai_credit'});}
+  // always the cheap first choice first; a model Puter doesn't know is skipped for the rest of the session
+  // (a passing hiccup isn't — or one blip would leave a pricier fallback in charge)
+  const list=img?aiImgModels():AI_TEXT,skip=(window.__aiSkip=window.__aiSkip||new Set());
+  let order=list.filter(m=>!skip.has(m)),err;if(!order.length)order=list;
+  for(const m of order){let r;
+    try{r=img?await puter.ai.chat(prompt,img,false,{model:m}):await puter.ai.chat(prompt,{model:m});}
+    catch(e){err=e;const t=String((e&&(e.message||e.error&&(e.error.message||e.error.code)||e.code))||e)+' '+(e&&e.status||'');
+      if(pcIsFunds(e)){pcHit('ai');throw aiOutHit();}
+      if(AI_CREDIT.test(t))throw aiOutHit();
+      if(/auth|sign.?in|401|403/i.test(t))throw e;
+      if(/model|not.?found|unknown|unsupported|not available/i.test(t))skip.add(m);continue;}
+    const txt=normChat(r);
+    // Puter can answer with a short "you've hit your usage limit" message instead of an error
+    if(txt&&txt.length<400&&!/[{\[]/.test(txt)&&/insufficient[_ ]?funds?|not have enough funding|usage[-_ ]?limit|out of (ai )?credit|credits? (has |have )?run out|reached your (ai |monthly )?(usage|limit)/i.test(txt))throw aiOutHit();
+    if(out){aiOutSet(null);const el=$('aiOutNote');if(el)el.hidden=true;if(out.r&&typeof sapi==='function')sapi('/aiout/back','POST',{}).catch(()=>{});}
+    pcOk();return txt;}
+  throw err;
+}
+
+/* ---------- no endless retries: each one is a paid AI call ---------- */
+async function processQueue(manual){
+  if(qBusy||!online())return;const q=getQ();if(!q.length)return;
+  if(pcOut()){if(manual)toast('AI is paused until your Puter allowance refills ('+pcBack()+')','warn');return;}
+  qBusy=true;let done=0,tried=false;const now=Date.now();
+  try{for(const item of q){
+    // on its own: at most 3 tries, 30 min apart. "Analyze now" always tries.
+    if(!manual&&((item.tries||0)>=3||now-(item.last||0)<30*60e3))continue;
+    let r=null,credit=false;try{r=parseJSON(await ai(nutrientPrompt(item.hint,true),item.img));}catch(e){credit=!!(e&&e.code==='ai_credit');}
+    if(credit)break;    // nothing was spent; it waits for the allowance
+    const parts=toParts(r);
+    if(!parts.length){const cur=getQ(),it=cur.find(x=>x.id===item.id);if(it){it.tries=(it.tries||0)+1;it.last=Date.now();setQ(cur);}tried=true;continue;}
+    const parts2=parts.map(p=>({name:p.name,g:p.g,n:cleanN(p.n),flags:p.flags}));
+    const e={id:uid('f'),ts:item.ts,name:r.name||'Meal',parts:parts2,n:partsTotal(parts2),mult:1,src:'queued',q:1,anPending:1};
+    (S.food[item.date]=S.food[item.date]||[]).push(e);
+    setQ(getQ().filter(x=>x.id!==item.id));done++;
+  }}finally{qBusy=false;}
+  if(done){save();toast(done+' saved photo'+(done>1?'s':'')+' analyzed and logged');if($('view-diet').classList.contains('active'))renderDiet();runPendingAnalyses();}
+  else if(manual)toast(pcOut()?'AI is paused until your Puter allowance refills ('+pcBack()+')':'Couldn’t analyze yet — try again in a moment');
+  if(tried&&!done&&$('view-diet').classList.contains('active'))renderDiet();
+}
+function queueCard(){
+  const q=getQ();if(!q.length)return '';const out=pcOut(),on=online(),stuck=q.filter(x=>(x.tries||0)>=3).length;
+  const head=out?'Waiting for your Puter allowance':!on?'Waiting for internet':stuck===q.length?'Couldn’t read '+(q.length>1?'these photos':'this photo'):'Waiting to be analyzed';
+  return '<div class="card" style="border-color:#2b3a52"><h2>'+head+' <span class="right">'+q.length+' photo'+(q.length>1?'s':'')+'</span></h2><div class="row wrapr">'+q.map(x=>'<div style="position:relative"><img src="'+x.img+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;display:block'+((x.tries||0)>=3?';opacity:.5':'')+'"><div class="px" style="position:absolute;top:2px;right:2px;background:rgba(192,74,58,.9);color:#fff;border-radius:6px;width:18px;height:18px;font-size:11px;line-height:18px;text-align:center;cursor:pointer" onclick="dropQ(\''+x.id+'\')">✕</div></div>').join('')+'</div><p class="tiny" style="margin-top:8px">'+
+    (out?'AI is paused until your Puter allowance refills ('+pcBack()+') — these get analyzed and logged then.':
+      stuck?'The AI couldn’t read '+(stuck>1?stuck+' of them':(q.length>1?'one of them':'it'))+' after a few tries. Tap Analyze now to try again, or remove it and describe the meal instead.':
+      'These get analyzed and logged automatically the next time the app is online.')+
+    (on&&!out?' <span class="linkbtn" onclick="processQueue(true)">Analyze now</span>':'')+'</p></div>';
+}
+async function runPendingAnalyses(){
+  if(pendBusy||!online()||pcOut())return;pendBusy=true;
+  try{const now=Date.now(),ids=[];
+    // a meal whose grade didn't come back: 2 more tries on its own, 30 min apart ("Grade again" always works)
+    for(let i=0;i<3;i++){(S.food[addDays(todayStr(),-i)]||[]).forEach(e=>{if(e.anPending&&(e.anTry||0)<2&&now-(e.anLast||0)>30*60e3)ids.push(e.id);});}
+    for(const id of ids.slice(0,4)){const f=findMeal(id);if(!f)continue;f.e.anTry=(f.e.anTry||0)+1;f.e.anLast=Date.now();
+      await analyzeMeal(id,true);
+      if(pcOut()){const g=findMeal(id);if(g&&g.e.anTry)g.e.anTry--;break;}}
+  }finally{pendBusy=false;}
+}
+
+/* ---------- progress photos: kept on this device after the first download (no re-downloads, open instantly) ---------- */
+const PHDB={db:null};
+function phdb(){return PHDB.db||(PHDB.db=new Promise((res,rej)=>{try{const r=indexedDB.open('lockin_ph',1);r.onupgradeneeded=()=>r.result.createObjectStore('b');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}}));}
+function phReq(mode,fn){return phdb().then(db=>new Promise((res,rej)=>{const t=db.transaction('b',mode),q=fn(t.objectStore('b'));t.oncomplete=()=>res(q&&q.result);t.onerror=t.onabort=()=>rej(t.error);}));}
+const phK=n=>(user?user.username:'')+'/'+n;
+async function phGetBlob(n){try{const v=await phReq('readonly',s=>s.get(phK(n)));return v&&v.b?new Blob([v.b],{type:v.t||'image/jpeg'}):null;}catch(e){return null;}}
+async function phPutBlob(n,b){try{const buf=b.arrayBuffer?await b.arrayBuffer():await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsArrayBuffer(b);});
+  await phReq('readwrite',s=>s.put({t:b.type||'image/jpeg',b:buf},phK(n)));return true;}catch(e){return false;}}
+function phDelBlob(n){return phReq('readwrite',s=>s.delete(phK(n))).catch(()=>{});}
+function phWipe(){return phReq('readwrite',s=>s.clear()).catch(()=>{});}
+async function phPrune(keep){try{const ks=await phReq('readonly',s=>s.getAllKeys?s.getAllKeys():null),pre=(user?user.username:'')+'/';
+  (ks||[]).forEach(k=>{if(typeof k==='string'&&k.startsWith(pre)&&!keep.has(k.slice(pre.length)))phDelBlob(k.slice(pre.length));});}catch(e){}}
+const phLK=()=>'lockin_phl_'+(user?user.username:''),phQK=()=>'lockin_phq_'+(user?user.username:'');
+function phListGet(){try{return JSON.parse(localStorage.getItem(phLK())||'null');}catch(e){return null;}}
+function phListSet(a){try{localStorage.setItem(phLK(),JSON.stringify({t:Date.now(),a:a.filter(p=>!p.pend).map(p=>({name:p.name,path:p.path,date:p.date}))}));}catch(e){}}
+function phqGet(){try{return JSON.parse(localStorage.getItem(phQK())||'[]')||[];}catch(e){return [];}}
+function phqSet(q){try{q.length?localStorage.setItem(phQK(),JSON.stringify(q)):localStorage.removeItem(phQK());}catch(e){}}
+function phStale(){const c=phListGet();return !c||Date.now()-c.t>15*60e3;}
+const phDate=n=>(String(n).match(/(\d{4}-\d{2}-\d{2})/)||[,''])[1];
+function phWithPending(list){const have=new Set(list.map(p=>p.name));
+  return list.concat(phqGet().filter(x=>!have.has(x.name)).map(x=>({name:x.name,path:PDIR+'/'+x.name,date:phDate(x.name),pend:1,url:null}))).sort((a,b)=>a.name<b.name?1:-1);}
+// one listing at a time (a second request runs right after); shown photos keep their picture by name
+const PHS={busy:null,again:false,refetch:false},PHURL=new Map();
+function loadPhotos(force){
+  if(PHS.busy){PHS.again=PHS.again||!!force||'soft';return PHS.busy;}
+  PHS.busy=loadPhotos1(force).finally(()=>{PHS.busy=null;if(PHS.again){const f=PHS.again===true;PHS.again=false;loadPhotos(f);}});
+  return PHS.busy;
+}
+async function loadPhotos1(force){
+  if(!PC.sess)await pcDue(2500);
+  const keep=p=>Object.assign(p,{url:PHURL.get(p.name)||null});
+  const c=phListGet();
+  if(c&&Array.isArray(c.a))photos=phWithPending(c.a.map(p=>keep(Object.assign({},p))));
+  else if(!photos.length)photos=phWithPending([]);
+  const can=!pcOut()&&typeof puter!=='undefined'&&!!puter.fs&&navigator.onLine&&!window.__offlineCopy;
+  if(can&&(force||!c||Date.now()-c.t>15*60e3)){
+    try{const items=await puter.fs.readdir(PDIR);
+      const list=(items||[]).filter(f=>!f.is_dir&&/\.jpg$/.test(f.name)).map(f=>({name:f.name,path:f.path,date:phDate(f.name)}));
+      phListSet(list);photos=phWithPending(list.map(keep));pcOk();phPrune(new Set(photos.map(p=>p.name)));}
+    catch(e){if(pcIsFunds(e))pcHit('photos');
+      else if(/not.?exist|not.?found|no such|404|subject_does_not_exist/i.test(String((e&&(e.code||e.message||(e.error&&(e.error.code||e.error.message))))||e))){phListSet([]);photos=phWithPending([]);}}
+  }
+  renderPhotos();if(curView==='progress')fetchPhotos();
+  if(can)phqFlush();
+}
+async function fetchPhotos(){
+  if(!PC.sess)await pcDue(2500);
+  if(photoQ){PHS.refetch=true;return;}photoQ=true;let miss=0;
+  try{const todo=photos.filter(p=>!p.url).map(p=>({name:p.name,path:p.path,pend:p.pend}));let i=0;
+    const work=async()=>{while(i<todo.length){const p=todo[i++];let b=PHURL.has(p.name)?null:await phGetBlob(p.name);
+      if(!b&&!PHURL.has(p.name)&&!p.pend&&!pcOut()&&typeof puter!=='undefined'&&puter.fs&&navigator.onLine){
+        try{b=await puter.fs.read(p.path);if(b&&b.size)phPutBlob(p.name,b);pcOk();}catch(e){b=null;if(pcIsFunds(e))pcHit('photos');}}
+      if(b&&b.size&&!PHURL.has(p.name))PHURL.set(p.name,URL.createObjectURL(b));
+      // the list may have been re-read meanwhile: give the picture to whichever entry shows this photo now
+      const u=PHURL.get(p.name),cur=photos.find(x=>x.name===p.name);
+      if(u&&cur){if(!cur.url){cur.url=u;photoCell(cur);}}else if(!u)miss++;}};
+    await Promise.all([work(),work(),work()]);
+  }finally{photoQ=false;}
+  phNote(miss);
+  if(PHS.refetch){PHS.refetch=false;if(photos.some(p=>!p.url))fetchPhotos();}
+}
+function phNote(miss){
+  const el=$('photoNote');if(!el)return;
+  if(miss==null)miss=photos.filter(p=>!p.url).length;
+  const out=!!user&&pcOut(),off=!navigator.onLine,pend=photos.filter(p=>p.pend).length;let t='';
+  if(pend)t+=(pend>1?pend+' photos':'1 photo')+' saved on this device — '+(out?(pend>1?'they upload':'it uploads')+' when your Puter allowance refills ('+pcBack()+').':off?(pend>1?'they upload':'it uploads')+' when you’re online.':'uploading…')+' ';
+  if(miss&&(out||off))t+=(miss>1?miss+' photos aren’t':'1 photo isn’t')+' on this device yet — '+(out?'they load when your Puter allowance refills ('+pcBack()+').':'they load when you’re online.');
+  el.textContent=t.trim();el.hidden=!t;
+  document.querySelectorAll('#photoGrid .pcell.loading').forEach(x=>x.classList.toggle('paused',out||off));
+}
+function addPhotos(files){
+  const q=[...files];let up=0,later=0;
+  const next=()=>{
+    if(!q.length){loadPhotos(up>0);
+      if(later)toast((later>1?later+' photos':'Photo')+' saved on this device — '+(later>1?'they upload':'it uploads')+(pcOut()?' when your Puter allowance refills ('+pcBack()+')':' when you’re online'),'ok');
+      else if(up)toast('Photo saved to your account');return;}
+    const f=q.shift(),img=new Image(),url=URL.createObjectURL(f);
+    img.onload=()=>{const sc=Math.min(1,1000/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);
+      cv.toBlob(async b=>{if(!b){next();return;}const name='p_'+todayStr()+'_'+Date.now()+'.jpg',kept=await phPutBlob(name,b);let ok=false;
+        if(!pcOut()&&online()){try{await puter.fs.write(PDIR+'/'+name,b,{createMissingParents:true});ok=true;pcOk();}catch(e){if(pcIsFunds(e))pcHit('photos');}}
+        if(ok)up++;else if(kept){const qq=phqGet();qq.push({name,t:Date.now()});phqSet(qq);later++;}else toast('Upload failed — are you online?');
+        next();},'image/jpeg',0.72);};
+    img.onerror=()=>{URL.revokeObjectURL(url);next();};img.src=url;};
+  next();
+}
+let phqBusy=false;
+async function phqFlush(){
+  if(phqBusy||pcOut()||!online()||!puter.fs)return;const q=phqGet();if(!q.length)return;phqBusy=true;let up=0;
+  try{for(const it of q){const b=await phGetBlob(it.name);
+      if(!b){phqSet(phqGet().filter(x=>x.name!==it.name));continue;}
+      try{await puter.fs.write(PDIR+'/'+it.name,b,{createMissingParents:true});up++;phqSet(phqGet().filter(x=>x.name!==it.name));pcOk();}
+      catch(e){if(pcIsFunds(e))pcHit('photos');break;}}
+  }finally{phqBusy=false;}
+  if(up){toast(up+' saved photo'+(up>1?'s':'')+' uploaded to your account','ok');loadPhotos(true);}
+}
+async function delPhoto(i){
+  const p=photos[i];if(!p||!confirm('Delete this photo?'))return;
+  if(!p.pend){
+    if(pcOut()){toast('Deleting needs your Puter allowance — try again after '+pcBack(),'warn');return;}
+    try{await puter.fs.delete(p.path);}catch(e){if(pcIsFunds(e)){pcHit('photos');toast('Deleting needs your Puter allowance — try again after '+pcBack(),'warn');}else toast('Could not delete — are you online?');return;}}
+  phqSet(phqGet().filter(x=>x.name!==p.name));phDelBlob(p.name);if(PHURL.has(p.name)){try{URL.revokeObjectURL(PHURL.get(p.name));}catch(e){}PHURL.delete(p.name);}
+  photos.splice(i,1);selPhotos=[];phListSet(photos);renderPhotos();phNote();
+}
+// while it's used up: look again every so often (free), and when you come back to the app
+setInterval(()=>{if(user&&PC.out&&!document.hidden&&Date.now()-PC.chk>15*60e3)pcCheck();},60e3);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&user&&PC.out&&Date.now()-PC.chk>5*60e3)pcCheck();});
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */

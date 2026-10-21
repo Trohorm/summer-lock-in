@@ -40,6 +40,26 @@ once it outgrows it (iPhone caps `localStorage` at about 5 MB). Your account in 
 The service worker keeps the app for offline use: the network is tried first, but after 2.5 s on a slow
 connection the saved copy opens instead (and the new version is ready next time).
 
+## Puter allowance
+Every Puter account gets a free allowance each month, and each person's own account pays for their use:
+AI calls, KV reads/writes (cloud sync and the encryption keys) and file reads/writes/egress (progress photos).
+When it runs out, Puter refuses those calls with `402 insufficient_funds` and Puter.js shows its own
+"Low Balance" window.
+
+- The app asks Puter how much is left (`puter.auth.getMonthlyUsage()` — free, never shows that window)
+  once per app open, then every 30 min (10 when under a quarter is left, 5 while it's used up).
+- While it's used up, nothing that costs credit is called: no AI, no cloud reads or writes, no photo
+  downloads or uploads. Everything stays on the device (new photos wait in IndexedDB `lockin_ph`) and
+  syncs by itself when a check finds the allowance back. Today shows a note; Setup → Puter allowance shows
+  how much is used and what used it.
+- A refusal that slips through anyway (402) pauses the same way, and the app waits 30 min before trusting
+  "there's some left" again (Setup → Refresh skips that wait).
+- Costs: meal photos use Claude Haiku 5.5 (about 20× cheaper than Sonnet 5.5); "Sharper photo estimates"
+  in Setup switches photos to Sonnet 5.5 and falls back to Haiku when under a quarter is left. Text uses Haiku 5.5.
+- Cloud writes: the main document is written only when something in it changed (or every 10 min to keep its
+  timestamp fresh), at most one push every 20 s — every 5 min during a workout — and right away when the app
+  is hidden. Automatic AI retries are capped (offline photo queue: 3 tries 30 min apart; a meal grade: 2 more tries).
+
 ## Public split links
 `/p/<code>#<key>` — anyone can follow; only the owner's app writes (`/api/pub`). The key after `#` never reaches
 the server, so the stored copy is encrypted. Followers poll for the latest version; to change it they duplicate it.
