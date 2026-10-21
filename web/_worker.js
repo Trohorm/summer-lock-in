@@ -261,10 +261,10 @@ async function acctByEmail(db, email, create) {
 async function sendCode(env, email, code) {
   const from = env.MAIL_FROM || 'login@lockin-app.online';
   const html = '<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:420px;margin:auto;padding:24px;color:#1b1f27">' +
-    '<h2 style="margin:0 0 12px">Your Lock In code</h2><p style="margin:0 0 18px;color:#555">Type this in the app to sign in. It works for 10 minutes.</p>' +
+    '<h2 style="margin:0 0 12px">Your Lock In code</h2><p style="margin:0 0 18px;color:#555">Type this in the app to sign in. It works for 20 minutes.</p>' +
     '<div style="font-size:34px;font-weight:800;letter-spacing:8px;padding:14px 18px;background:#f1f4fa;border-radius:12px;text-align:center">' + code + '</div>' +
     '<p style="margin:18px 0 0;color:#888;font-size:13px">Didn’t ask for it? Ignore this email — nobody can sign in without the code.</p></div>';
-  const subject = code + ' is your Lock In code', text = 'Your Lock In code: ' + code + '\n\nIt works for 10 minutes. Didn’t ask for it? Ignore this email.';
+  const subject = code + ' is your Lock In code', text = 'Your Lock In code: ' + code + '\n\nIt works for 20 minutes. Didn’t ask for it? Ignore this email.';
   let r;
   try {
     // Resend (RESEND_KEY) or Brevo (BREVO_KEY) — whichever is set up
@@ -290,9 +290,9 @@ async function authApi(req, env, ctx, db, M, p, url) {
     await limit(db, 'ip:' + ip + ':mail', 20, HOUR); await limit(db, 'mail:' + email, 5, HOUR);
     const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000, code = String(n).padStart(6, '0'), now = Date.now();
     await db.prepare('INSERT INTO codes(email,h,exp,tries,sent) VALUES(?,?,?,0,?) ON CONFLICT(email) DO UPDATE SET h=excluded.h, exp=excluded.exp, tries=0, sent=excluded.sent')
-      .bind(email, await codeHash(env, email, code), now + 10 * 60e3, now).run();
+      .bind(email, await codeHash(env, email, code), now + 20 * 60e3, now).run();
     await sendCode(env, email, code);
-    return J({ ok: true, exp: now + 10 * 60e3 });
+    return J({ ok: true, exp: now + 20 * 60e3 });
   }
   if (p === '/api/auth/verify' && M === 'POST') {
     const b = await readBody(req), email = normEmail(b.email), code = String(b.code || '').replace(/\D/g, '');

@@ -1570,6 +1570,8 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .acc-warn{padding:10px 12px;border-radius:12px;background:rgba(217,164,65,.12);border:1px solid rgba(217,164,65,.35);color:#f0d49a;font-size:13px}
 .acc-del{margin-top:10px;text-align:center}
 .acc-del .linkbtn{color:var(--bad)}
+.adopen{width:100%;display:flex;align-items:center;gap:8px;margin-top:12px;text-align:left}
+#admQ{width:100%}
 </style>
 </head>
 <body>
@@ -7851,7 +7853,7 @@ function authHTML(st){
     '<button class="btn btn-primary au-go" id="auSend" onclick="authSend()">Email me a code</button>'+
     '<p class="tiny au-hint">We’ll send a 6-digit code — no password needed. New here? This makes your account.</p>'+
     '<div class="au-alt"><button class="linkbtn" onclick="authUI(\'pw\')">Use a password instead</button><span>·</span><button class="linkbtn" onclick="authUI(\'home\')">Back</button></div>';
-  if(st==='code')return '<p class="au-sub">We sent a code to <b>'+em+'</b>. It works for 10 minutes.</p>'+
+  if(st==='code')return '<p class="au-sub">We sent a code to <b>'+em+'</b>. It works for 20 minutes.</p>'+
     '<input id="auCode" class="au-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" aria-label="6-digit code" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,6);if(this.value.length===6)authVerify()">'+
     '<button class="btn btn-primary au-go" id="auVerify" onclick="authVerify()">Sign in</button>'+
     '<p class="tiny au-hint">Can’t see it? Check spam and promotions.</p>'+
@@ -8364,6 +8366,43 @@ async function pwSave(){
 async function pwRemove(){
   if(!confirm('Remove your password? You’ll sign in with email codes (or Google).'))return;
   try{await sapi('/account/password','POST',{dk:null});ACC.a.password=false;accWrite();toast('Password removed');accCardRender();}catch(e){toast('Couldn’t remove it — are you online?','warn');}
+}
+
+/* ---------- Setup → Plans & AI (admin): a small card; everyone's use opens in a sheet with search ---------- */
+const PADM={q:''};
+async function planAdmLoad(force){
+  if(force||!PLAN.adm||Date.now()-PLAN.admT>60e3){PLAN.adm=await sapi('/admin/users');PLAN.admT=Date.now();}
+  return PLAN.adm;
+}
+async function planAdmRender(force){
+  const c=$('planAdmCard');if(!c)return;
+  if(typeof AIADM!=='undefined'&&AIADM.admin===false){c.hidden=true;return;}
+  if(typeof AIADM!=='undefined'&&AIADM.admin===null){try{AIADM.admin=!!(await sapi('/admin')).admin;}catch(e){c.hidden=true;return;}}
+  if(!AIADM.admin){c.hidden=true;return;}
+  c.hidden=false;
+  if(!PLAN.adm)c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2><p class="tiny">Loading…</p>';
+  let a;try{a=await planAdmLoad(force);}catch(e){c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2><p class="tiny">Couldn’t load — '+esc(e.message)+'</p>';return;}
+  const us=a.users||[],pro=us.filter(u=>u.plan==='pro').length;
+  c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2>'+
+    '<div class="adst"><div><b>'+(a.ai?'On':'Off')+'</b><small>Claude key</small></div><div><b>'+(a.pay?'On':'Off')+'</b><small>payments</small></div><div><b>'+usd(a.todayCost)+'</b><small>today (cap '+usd(a.cap)+')</small></div><div><b>'+usd(a.monthCost)+'</b><small>this month</small></div></div>'+
+    (a.ai?'':'<p class="tiny" style="margin:6px 0 10px">No Claude key yet — AI is off until ANTHROPIC_API_KEY is added in Cloudflare.</p>')+
+    '<button class="btn btn-ghost adopen" onclick="planAdmSheet()"><span class="grow">Everyone · '+us.length+' '+(us.length===1?'person':'people')+(pro?' · '+pro+' Pro':'')+'</span><i class="chev"></i></button>';
+  if($('admList'))planAdmList();
+}
+function planAdmSheet(){
+  openSheet('Plans & AI','<input id="admQ" type="search" placeholder="Search name or @username" autocomplete="off" value="'+esc(PADM.q)+'" oninput="PADM.q=this.value;planAdmList()">'+
+    '<div class="tiny" id="admSum" style="margin:8px 2px 4px"></div><div class="adlist" id="admList"></div>',{tall:true});
+  planAdmList();planAdmLoad(true).then(()=>{if($('admList'))planAdmList();}).catch(()=>{});
+}
+function planAdmList(){
+  const el=$('admList');if(!el||!PLAN.adm)return;
+  const q=PADM.q.trim().toLowerCase().replace(/^@/,''),all=(PLAN.adm.users||[]).slice().sort((x,y)=>(y.month.cost-x.month.cost)||(y.seen-x.seen));
+  const us=q?all.filter(u=>(String(u.name||'')+' '+u.handle).toLowerCase().includes(q)):all;
+  $('admSum').textContent=q?us.length+' of '+all.length:all.length+' '+(all.length===1?'person':'people')+' · sorted by AI cost this month';
+  el.innerHTML=us.map(u=>'<div class="adrow"><div class="grow"><b>'+esc(u.name||u.handle)+'</b> <span class="tiny">@'+esc(u.handle)+'</span><div class="tiny">today '+u.today.meal+' meal · '+u.today.review+' review · '+u.today.other+' other · month '+usd(u.month.cost)+'</div></div>'+
+    '<span class="plbadge '+u.plan+'">'+(PLAN_LBL[u.plan]||'Free')+'</span>'+
+    (u.plan==='admin'||u.srcs.includes('ls')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')||
+    '<p class="tiny">'+(q?'Nobody matches “'+esc(PADM.q)+'”.':'Nobody yet.')+'</p>';
 }
 
 /* what the lock means */
