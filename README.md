@@ -15,6 +15,11 @@ It opens full-screen like a normal app and stays signed in.
 1. SideStore → Sources → **Add Source** → `https://ipa.lockin-app.online`
 2. Install **Lock In**. Updates appear there automatically.
 
+## Signing in
+Continue with Google, or with your email (a 6-digit code, or a password you add in Setup). A phone you used
+with Lock In before brings its data along the first time you sign in — friends and Pro included.
+
 ## Privacy
-Your data stays in your own account. Anything you share with friends is end-to-end encrypted —
-only you and the friends you allow can read it.
+Your data is encrypted on your phone before it syncs to your Lock In account, and anything you share with friends
+is encrypted too — only the friends you allow can see it. Your keys are kept with your account, so signing in with
+your email on a new phone gets everything back.

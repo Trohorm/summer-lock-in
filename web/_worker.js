@@ -83,7 +83,7 @@ const RX = {
   uid: /^[a-z0-9]{8,32}$/
 };
 
-const SCHEMA_V = '9';
+const SCHEMA_V = '10';
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, puid TEXT NOT NULL UNIQUE, handle TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '',
      av INTEGER NOT NULL DEFAULT 0, invite TEXT NOT NULL UNIQUE, defaults TEXT NOT NULL DEFAULT '{}', created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, pub TEXT, fp TEXT)`,
@@ -127,7 +127,17 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS sync(uid TEXT NOT NULL, k TEXT NOT NULL, ver INTEGER NOT NULL, ts INTEGER NOT NULL, size INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY(uid,k))`,
   `CREATE TABLE IF NOT EXISTS photos(uid TEXT NOT NULL, name TEXT NOT NULL, ts INTEGER NOT NULL, size INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY(uid,name))`,
   // one tiny row per account that changes whenever anything synced does — what open devices check every 30 s
-  `CREATE TABLE IF NOT EXISTS syncv(uid TEXT PRIMARY KEY, v INTEGER NOT NULL, ts INTEGER NOT NULL)`
+  `CREATE TABLE IF NOT EXISTS syncv(uid TEXT PRIMARY KEY, v INTEGER NOT NULL, ts INTEGER NOT NULL)`,
+  // Lock In accounts: email (+ code or password) or Google. legacy = the old Puter account id it was moved from.
+  // keys = the account's encryption keys (so any device that signs in can read your data); kv counts their changes
+  `CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY, email TEXT UNIQUE, gsub TEXT UNIQUE, pwh TEXT, lname TEXT, legacy TEXT UNIQUE, keys TEXT, kv INTEGER NOT NULL DEFAULT 0,
+     created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE TABLE IF NOT EXISTS sessions(h TEXT PRIMARY KEY, aid TEXT NOT NULL, created INTEGER NOT NULL, seen INTEGER NOT NULL, exp INTEGER NOT NULL, dev TEXT)`,
+  `CREATE INDEX IF NOT EXISTS sessions_aid ON sessions(aid)`,
+  `CREATE TABLE IF NOT EXISTS codes(email TEXT PRIMARY KEY, h TEXT NOT NULL, exp INTEGER NOT NULL, tries INTEGER NOT NULL DEFAULT 0, sent INTEGER NOT NULL)`,
+  // Google sign-in started in the app, finished in the browser: the app waits for its state to come back (mode 'r' = the
+  // whole page went to Google, so the callback sends it back to the app instead of closing a pop-up)
+  `CREATE TABLE IF NOT EXISTS handoff(state TEXT PRIMARY KEY, created INTEGER NOT NULL, tok TEXT, err TEXT, mode TEXT)`
 ];
 // columns added after the first release (fresh databases get them from SCHEMA, the ALTERs then just fail)
 const MIGRATE = [
@@ -217,12 +227,263 @@ async function limit(db, key, max, ms) {
   if (r && r.n > max) throw new HttpError(429, 'slow_down', 'Too many tries — wait a minute and try again.');
 }
 
-/* ---------- identity: the Puter sign-in token, verified with Puter, cached by hash (never stored) ---------- */
+
+/* ============================== LOCK IN ACCOUNTS ==============================
+   Sign in with an email code, an (optional) password or Google. Sessions are long-lived random tokens ("lk1.…"),
+   stored hashed. Needs RESEND_KEY or BREVO_KEY (+ MAIL_FROM) for email codes and GOOGLE_CLIENT_ID /
+   GOOGLE_CLIENT_SECRET for Google. The old Puter account can be linked once (data, friends, username and Pro move over). */
+const SESSION_TTL = 180 * DAY;
+const EMAILRX = /^[^\s@<>()",;:]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$/;
+const normEmail = e => String(e || '').trim().toLowerCase();
+const b64uRand = n => b64u(crypto.getRandomValues(new Uint8Array(n)));
+function hexEq(a, b) { a = String(a || ''); b = String(b || ''); let d = a.length ^ b.length; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ (b.charCodeAt(i) || 0); return d === 0 && a.length > 0; }
+async function newSession(db, aid, req) {
+  const tok = 'lk1.' + b64uRand(32), now = Date.now();
+  await db.prepare('INSERT INTO sessions(h,aid,created,seen,exp,dev) VALUES(?,?,?,?,?,?)')
+    .bind(await sha256(tok), aid, now, now, now + SESSION_TTL, String(req.headers.get('user-agent') || '').slice(0, 120)).run();
+  if (Math.random() < 0.05) await db.prepare('DELETE FROM sessions WHERE exp<?').bind(now).run();
+  return tok;
+}
+async function acctOut(db, a) {
+  const u = await db.prepare('SELECT handle, name FROM users WHERE puid=?').bind('a:' + a.id).first();
+  return { id: a.id, email: a.email || null, google: !!a.gsub, password: !!a.pwh, lname: a.lname || null, linked: !!a.legacy,
+    created: a.created, handle: u ? u.handle : null, keys: !!a.keys, kv: a.kv || 0 };
+}
+async function acctByEmail(db, email, create) {
+  let a = await db.prepare('SELECT * FROM accounts WHERE email=?').bind(email).first();
+  if (!a && create) {
+    const id = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+    await db.prepare('INSERT OR IGNORE INTO accounts(id,email,created) VALUES(?,?,?)').bind(id, email, Date.now()).run();
+    a = await db.prepare('SELECT * FROM accounts WHERE email=?').bind(email).first();
+  }
+  return a;
+}
+async function sendCode(env, email, code) {
+  const from = env.MAIL_FROM || 'login@lockin-app.online';
+  const html = '<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:420px;margin:auto;padding:24px;color:#1b1f27">' +
+    '<h2 style="margin:0 0 12px">Your Lock In code</h2><p style="margin:0 0 18px;color:#555">Type this in the app to sign in. It works for 10 minutes.</p>' +
+    '<div style="font-size:34px;font-weight:800;letter-spacing:8px;padding:14px 18px;background:#f1f4fa;border-radius:12px;text-align:center">' + code + '</div>' +
+    '<p style="margin:18px 0 0;color:#888;font-size:13px">Didn’t ask for it? Ignore this email — nobody can sign in without the code.</p></div>';
+  const subject = code + ' is your Lock In code', text = 'Your Lock In code: ' + code + '\n\nIt works for 10 minutes. Didn’t ask for it? Ignore this email.';
+  let r;
+  try {
+    // Resend (RESEND_KEY) or Brevo (BREVO_KEY) — whichever is set up
+    r = env.RESEND_KEY
+      ? await fetch((env.RESEND_API || 'https://api.resend.com') + '/emails', { method: 'POST',
+          headers: { authorization: 'Bearer ' + env.RESEND_KEY, 'content-type': 'application/json' },
+          body: JSON.stringify({ from: 'Lock In <' + from + '>', to: [email], subject, html, text }) })
+      : await fetch((env.BREVO_API || 'https://api.brevo.com') + '/v3/smtp/email', { method: 'POST',
+          headers: { 'api-key': env.BREVO_KEY, 'content-type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ sender: { name: 'Lock In', email: from }, to: [{ email }], subject, htmlContent: html, textContent: text }) });
+  } catch (e) { throw new HttpError(503, 'email_failed', 'Couldn’t send the email — try again in a moment.'); }
+  if (!r.ok) { console.log('email', env.RESEND_KEY ? 'resend' : 'brevo', r.status, (await r.text().catch(() => '')).slice(0, 300)); throw new HttpError(503, 'email_failed', 'Couldn’t send the email — try again in a moment.'); }
+}
+const mailOn = env => !!(env.RESEND_KEY || env.BREVO_KEY);
+const codeHash = (env, email, code) => sha256(email + ':' + code + ':' + (env.CODE_PEPPER || 'lockin'));
+async function authApi(req, env, ctx, db, M, p, url) {
+  const ip = ipOf(req);
+  if (p === '/api/auth/config' && M === 'GET') return J({ email: mailOn(env), google: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET), apple: false });
+  if (p === '/api/auth/email' && M === 'POST') {
+    if (!mailOn(env)) return err(503, 'email_off', 'Email sign-in isn’t switched on yet.');
+    const b = await readBody(req), email = normEmail(b.email);
+    if (!EMAILRX.test(email) || email.length > 254) return err(400, 'bad_email', 'That email doesn’t look right.');
+    await limit(db, 'ip:' + ip + ':mail', 20, HOUR); await limit(db, 'mail:' + email, 5, HOUR);
+    const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000, code = String(n).padStart(6, '0'), now = Date.now();
+    await db.prepare('INSERT INTO codes(email,h,exp,tries,sent) VALUES(?,?,?,0,?) ON CONFLICT(email) DO UPDATE SET h=excluded.h, exp=excluded.exp, tries=0, sent=excluded.sent')
+      .bind(email, await codeHash(env, email, code), now + 10 * 60e3, now).run();
+    await sendCode(env, email, code);
+    return J({ ok: true, exp: now + 10 * 60e3 });
+  }
+  if (p === '/api/auth/verify' && M === 'POST') {
+    const b = await readBody(req), email = normEmail(b.email), code = String(b.code || '').replace(/\D/g, '');
+    await limit(db, 'ip:' + ip + ':verify', 40, HOUR);
+    const c = await db.prepare('SELECT h, exp, tries FROM codes WHERE email=?').bind(email).first();
+    if (!c || c.exp < Date.now()) return err(400, 'code_expired', 'That code has expired — ask for a new one.');
+    if (c.tries >= 5) return err(429, 'code_tries', 'Too many wrong codes — ask for a new one.');
+    if (code.length !== 6 || !hexEq(await codeHash(env, email, code), c.h)) {
+      await db.prepare('UPDATE codes SET tries=tries+1 WHERE email=?').bind(email).run();
+      return err(400, 'code_wrong', 'That code isn’t right — check the email and try again.');
+    }
+    await db.prepare('DELETE FROM codes WHERE email=?').bind(email).run();
+    const a = await acctByEmail(db, email, true);
+    return J({ token: await newSession(db, a.id, req), account: await acctOut(db, a) });
+  }
+  if (p === '/api/auth/password' && M === 'POST') {
+    // dk = PBKDF2(password, "lockin:" + email) made on the phone; the server only keeps a hash of it
+    const b = await readBody(req), email = normEmail(b.email), dk = String(b.dk || '');
+    await limit(db, 'ip:' + ip + ':pw', 30, HOUR); await limit(db, 'pw:' + email, 10, HOUR);
+    const a = EMAILRX.test(email) && /^[0-9a-f]{64}$/.test(dk) && await acctByEmail(db, email, false);
+    if (!a || !a.pwh || !hexEq(await sha256(dk + ':' + a.id), a.pwh)) return err(400, 'pw_wrong', 'Wrong email or password.');
+    return J({ token: await newSession(db, a.id, req), account: await acctOut(db, a) });
+  }
+  if (p === '/api/auth/google/start' && M === 'POST') {
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) return err(503, 'google_off', 'Google sign-in isn’t switched on yet.');
+    await limit(db, 'ip:' + ip + ':gstart', 30, HOUR);
+    const b = await readBody(req), state = b64uRand(24), now = Date.now();
+    await db.batch([db.prepare('DELETE FROM handoff WHERE created<?').bind(now - HOUR),
+      db.prepare('INSERT INTO handoff(state,created,mode) VALUES(?,?,?)').bind(state, now, b.redirect ? 'r' : 'p')]);
+    const q = new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, redirect_uri: url.origin + '/api/auth/google/callback', response_type: 'code',
+      scope: 'openid email profile', state, prompt: 'select_account', access_type: 'online' });
+    // the browser that started it carries the state in a cookie: a sign-in link sent to someone else can't finish
+    // (otherwise whoever started it would get the other person's session by polling)
+    const res = J({ state, url: (env.GOOGLE_AUTH_URL || 'https://accounts.google.com/o/oauth2/v2/auth') + '?' + q });
+    res.headers.append('set-cookie', 'lk_gs=' + state + '; Path=/api/auth/google; HttpOnly; SameSite=Lax; Max-Age=1200' + (url.protocol === 'https:' ? '; Secure' : ''));
+    return res;
+  }
+  if (p === '/api/auth/google/callback' && M === 'GET') return await googleCallback(req, env, db, url);
+  if (p === '/api/auth/poll' && M === 'POST') {
+    const b = await readBody(req), state = String(b.state || '');
+    await limit(db, 'ip:' + ip + ':poll', 600, HOUR);
+    const h = /^[A-Za-z0-9_-]{32}$/.test(state) && await db.prepare('SELECT tok, err, created FROM handoff WHERE state=?').bind(state).first();
+    if (!h || h.created < Date.now() - 20 * 60e3) return err(410, 'expired', 'That sign-in expired — try again.');
+    if (h.err) { await db.prepare('DELETE FROM handoff WHERE state=?').bind(state).run(); return err(400, 'google_failed', h.err); }
+    if (!h.tok) return J({ pending: true });
+    await db.prepare('DELETE FROM handoff WHERE state=?').bind(state).run();
+    const s = await db.prepare('SELECT aid FROM sessions WHERE h=?').bind(await sha256(h.tok)).first();
+    const a = s && await db.prepare('SELECT * FROM accounts WHERE id=?').bind(s.aid).first();
+    return a ? J({ token: h.tok, account: await acctOut(db, a) }) : err(410, 'expired', 'That sign-in expired — try again.');
+  }
+  return null;
+}
+function resultPage(ok, msg) {
+  const body = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lock In</title>' +
+    '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0e1013;color:#e9ecf1;font:16px -apple-system,Segoe UI,Roboto,sans-serif}' +
+    '.c{max-width:340px;padding:28px;text-align:center}.i{font-size:46px;margin-bottom:10px}h1{font-size:21px;margin:0 0 8px}p{color:#a6aeba;line-height:1.45;margin:0}</style>' +
+    '<div class="c"><div class="i">' + (ok ? '✅' : '⚠️') + '</div><h1>' + (ok ? 'You’re signed in' : 'Couldn’t sign you in') + '</h1><p>' + esc(msg) + '</p></div>' +
+    '<script>setTimeout(function(){try{window.close()}catch(e){}},1200)</script>';
+  return new Response(body, { status: ok ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+}
+async function googleCallback(req, env, db, url) {
+  const state = String(url.searchParams.get('state') || ''), code = String(url.searchParams.get('code') || '');
+  const h = /^[A-Za-z0-9_-]{32}$/.test(state) && await db.prepare('SELECT created, tok, mode FROM handoff WHERE state=?').bind(state).first();
+  if (!h || h.tok || h.created < Date.now() - 20 * 60e3) return resultPage(false, 'This sign-in link expired — go back to Lock In and try again.');
+  const ck = /(?:^|;\s*)lk_gs=([A-Za-z0-9_-]{32})/.exec(req.headers.get('cookie') || '');
+  if (!ck || !hexEq(ck[1], state)) {
+    await db.prepare('UPDATE handoff SET err=? WHERE state=? AND tok IS NULL').bind('That Google sign-in was finished in another browser — try again here.', state).run();
+    return resultPage(false, 'This sign-in was started on another device or browser. Open Lock In here and tap Continue with Google.');
+  }
+  // the whole page went to Google (no pop-up): back to the app, which picks the sign-in up with its state
+  const back = () => new Response(null, { status: 302, headers: { location: url.origin + '/?gs=' + state, 'cache-control': 'no-store' } });
+  const fail = async m => { await db.prepare('UPDATE handoff SET err=? WHERE state=?').bind(m, state).run(); return h.mode === 'r' ? back() : resultPage(false, m + ' Go back to Lock In and try again.'); };
+  if (url.searchParams.get('error') || !code) return await fail('Google sign-in was cancelled.');
+  let t;
+  try {
+    const r = await fetch(env.GOOGLE_TOKEN_URL || 'https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: url.origin + '/api/auth/google/callback', grant_type: 'authorization_code' }) });
+    t = await r.json();
+    if (!r.ok || !t.id_token) throw new Error('token ' + r.status);
+  } catch (e) { console.log('google', e && e.message); return await fail('Google didn’t answer.'); }
+  // the ID token came straight from Google's token endpoint over TLS, in exchange for our secret — its claims can be read directly
+  let c = null;
+  try { c = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.id_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(t.id_token.split('.')[1].length / 4) * 4, '=')), ch => ch.charCodeAt(0)))); } catch (e) {}
+  if (!c || !['accounts.google.com', 'https://accounts.google.com'].includes(c.iss) || c.aud !== env.GOOGLE_CLIENT_ID || !(c.exp * 1000 > Date.now()) || !c.sub)
+    return await fail('Google sign-in didn’t check out.');
+  const email = c.email && c.email_verified ? normEmail(c.email) : null;
+  let a = await db.prepare('SELECT * FROM accounts WHERE gsub=?').bind(String(c.sub)).first();
+  if (!a && email) { a = await acctByEmail(db, email, true); await db.prepare('UPDATE accounts SET gsub=? WHERE id=? AND gsub IS NULL').bind(String(c.sub), a.id).run(); }
+  if (!a) { const id = crypto.randomUUID().replace(/-/g, '').slice(0, 16); await db.prepare('INSERT INTO accounts(id,gsub,created) VALUES(?,?,?)').bind(id, String(c.sub), Date.now()).run(); a = { id }; }
+  const tok = await newSession(db, a.id, req);
+  await db.prepare('UPDATE handoff SET tok=? WHERE state=?').bind(tok, state).run();
+  return h.mode === 'r' ? back() : resultPage(true, 'Go back to Lock In — you’re in.' + (email ? ' (' + email + ')' : ''));
+}
+/* the account behind a session: its friends profile (users row) and everything else are keyed "a:<account id>".
+   Only the session check is cached; the profile is looked up every time (moving an old Puter account swaps it). */
+async function whoSession(req, env, ctx, tok) {
+  const db = env.DB, h = await sha256(tok), now = Date.now();
+  let s = MEM.get(h);
+  if (!s || s.exp < now) {
+    const r = await db.prepare('SELECT s.aid, s.exp, s.seen, a.email, a.lname FROM sessions s JOIN accounts a ON a.id=s.aid WHERE s.h=?').bind(h).first();
+    if (!r || r.exp < now) { MEM.delete(h); return null; }
+    s = { aid: r.aid, base: String(r.lname || (r.email || '').split('@')[0] || 'lifter'), exp: now + 2 * 60e3 };
+    if (MEM.size > 1000) MEM.clear();
+    MEM.set(h, s);
+    // keep the session alive while it's used (sliding 180 days)
+    if (r.seen < now - DAY) { const pp = db.batch([db.prepare('UPDATE sessions SET seen=?, exp=? WHERE h=?').bind(now, now + SESSION_TTL, h), db.prepare('UPDATE accounts SET seen=? WHERE id=?').bind(now, r.aid)]).catch(() => {}); if (ctx && ctx.waitUntil) ctx.waitUntil(pp); }
+  }
+  const puid = 'a:' + s.aid, id = await ensureUser(db, puid, s.base);
+  return { id, aid: s.aid, puid };
+}
+/* the account's keys: the first device stores them (later ones get those back); a change says which version (kv) it
+   changed, like sync — another device that changed them first is handed the newer ones to merge. Open devices notice
+   through syncv and load the new ones. */
+async function keysPut(db, me, js, replace, base) {
+  const q = !replace ? db.prepare('UPDATE accounts SET keys=?, kv=kv+1 WHERE id=? AND keys IS NULL RETURNING kv').bind(js, me.aid)
+    : base === null ? db.prepare('UPDATE accounts SET keys=?, kv=kv+1 WHERE id=? RETURNING kv').bind(js, me.aid)
+    : db.prepare('UPDATE accounts SET keys=?, kv=kv+1 WHERE id=? AND kv=? RETURNING kv').bind(js, me.aid, base);
+  const r = await q.first();
+  if (!r) {
+    const cur = await db.prepare('SELECT keys, kv FROM accounts WHERE id=?').bind(me.aid).first();
+    return J({ ok: false, keys: cur && cur.keys ? parse(cur.keys) : null, kv: cur ? cur.kv || 0 : 0 });
+  }
+  await db.prepare('INSERT INTO syncv(uid,v,ts) VALUES(?,1,?) ON CONFLICT(uid) DO UPDATE SET v=v+1, ts=excluded.ts').bind('a:' + me.aid, Date.now()).run();
+  return J({ ok: true, kv: r.kv });
+}
+/* a write encrypted with keys the account no longer uses would be unreadable for every other device: refused, so the
+   phone loads the current keys first (it says which version it holds as kv) */
+async function keysStale(db, me, b) {
+  if (!me.aid || !b || !Number.isInteger(b.kv)) return null;
+  const a = await db.prepare('SELECT kv FROM accounts WHERE id=?').bind(me.aid).first();
+  return a && (a.kv || 0) !== b.kv ? J({ error: 'keys_changed', kv: a.kv || 0, message: 'Your keys changed on another device.' }, 409) : null;
+}
+/* move the old Puter account into this Lock In account (once): its friends profile, Pro, AI use, synced data */
+const keysOk = k => !!(k && typeof k === 'object' && k.v === 1 && k.id && typeof k.id.d === 'string' && typeof k.self === 'string' && JSON.stringify(k).length <= 30000);
+async function linkLegacy(db, env, me, b) {
+  const tok = String((b && b.puter) || '');
+  if (!tok || tok.length > 4096) return err(400, 'bad', 'Bad request.');
+  const lk = b && keysOk(b.keys) ? b.keys : null;
+  let r;
+  try { r = await fetch((env.PUTER_API || PUTER_API) + '/whoami', { headers: { authorization: 'Bearer ' + tok, accept: 'application/json' } }); }
+  catch (e) { return err(502, 'auth_unreachable', 'Couldn’t reach Puter — try again in a moment.'); }
+  const u = r.ok ? await r.json().catch(() => null) : null;
+  if (!u || !u.username) return err(401, 'puter_auth', 'That Puter sign-in has expired.');
+  const old = String(u.uuid || 'u:' + u.username).slice(0, 80), neu = 'a:' + me.aid;
+  const acct = await db.prepare('SELECT legacy, lname, keys, kv FROM accounts WHERE id=?').bind(me.aid).first();
+  if (!acct) return err(401, 'auth', 'Sign in again.');
+  if (acct.legacy) return acct.legacy === old ? J({ ok: true, already: true, lname: acct.lname, keys: parse(acct.keys), kv: acct.kv || 0 })
+    : err(409, 'linked_other', 'This account already holds the data of another Puter account.');
+  const taken = await db.prepare('SELECT id FROM accounts WHERE legacy=?').bind(old).first();
+  if (taken) return err(409, 'already_linked', 'That Puter account already moved to another Lock In account.');
+  const oldRow = await db.prepare('SELECT id FROM users WHERE puid=?').bind(old).first();
+  const newRow = await db.prepare('SELECT id FROM users WHERE puid=?').bind(neu).first();
+  const st = [], now = Date.now();
+  if (oldRow) {
+    if (newRow) {
+      // the new account made a fresh profile already: the old one (with friends and username) wins if the new one is unused
+      const used = await db.prepare('SELECT (SELECT COUNT(*) FROM links WHERE a=?1 OR b=?1) + (SELECT COUNT(*) FROM posts WHERE uid=?1) + (SELECT COUNT(*) FROM snaps WHERE uid=?1) AS n').bind(newRow.id).first();
+      if (used && used.n > 0) return err(409, 'account_in_use', 'This Lock In account already has its own friends.');
+      st.push(db.prepare('DELETE FROM users WHERE id=?').bind(newRow.id), db.prepare('DELETE FROM tokens WHERE id=?').bind(newRow.id));
+    }
+    st.push(db.prepare('UPDATE users SET puid=? WHERE puid=?').bind(neu, old));
+  }
+  // the old account's keys open its data and its friends' shares, so they become the account's keys. If another device
+  // already made different ones, what it synced can't be opened with these: it's dropped here and that device
+  // uploads its copy again (it notices the new keys by itself).
+  let cur = parse(acct.keys);
+  const swap = lk && (!cur || !cur.id || cur.id.d !== lk.id.d);
+  if (swap) {
+    if (cur) st.push(db.prepare('DELETE FROM sync WHERE uid=?').bind(neu));
+    st.push(db.prepare('UPDATE accounts SET keys=?, kv=kv+1 WHERE id=?').bind(JSON.stringify(lk), me.aid));
+    cur = lk;
+  }
+  for (const t of ['plans', 'ai_use', 'sync', 'photos']) st.push(db.prepare('UPDATE OR IGNORE ' + t + ' SET uid=? WHERE uid=?').bind(neu, old));
+  st.push(db.prepare('DELETE FROM syncv WHERE uid=?').bind(old),
+    db.prepare('INSERT INTO syncv(uid,v,ts) VALUES(?,1,?) ON CONFLICT(uid) DO UPDATE SET v=v+1, ts=excluded.ts').bind(neu, now),
+    db.prepare('UPDATE accounts SET legacy=?, lname=COALESCE(lname,?) WHERE id=?').bind(old, String(u.username).slice(0, 64), me.aid));
+  await db.batch(st);
+  MEM.clear(); PUID.clear();
+  const a = await db.prepare('SELECT * FROM accounts WHERE id=?').bind(me.aid).first();
+  return J({ ok: true, lname: a.lname, keys: cur, kv: a.kv || 0, swapped: !!swap, account: await acctOut(db, a) });
+}
+
+/* ---------- identity: a Lock In session (or, while moving over, the old Puter sign-in token) ---------- */
 const MEM = new Map();
 async function who(req, env, ctx) {
   const m = /^Bearer\s+(.+)$/i.exec(req.headers.get('authorization') || '');
   const tok = m && m[1].trim();
   if (!tok || tok.length > 4096) return null;
+  if (tok.startsWith('lk1.')) return await whoSession(req, env, ctx, tok);
+  // Puter sign-ins are only accepted where LEGACY_PUTER is on (the old app, while people move over)
+  if (env.LEGACY_PUTER !== '1') return null;
   const db = env.DB, h = await sha256(tok), now = Date.now();
   const hit = MEM.get(h);
   if (hit && hit.exp > now) return hit;
@@ -269,9 +530,13 @@ async function ensureUser(db, puid, uname) {
 }
 
 async function isAdmin(db, id, env) {
-  const u = await db.prepare('SELECT pname FROM users WHERE id=?').bind(id).first();
+  const u = await db.prepare('SELECT pname, puid FROM users WHERE id=?').bind(id).first();
+  if (!u) return false;
   const admins = String(env.ADMIN || 'Trohorm').toLowerCase().split(/[\s,]+/);
-  return !!(u && u.pname && admins.includes(String(u.pname).toLowerCase()));
+  if (u.pname && admins.includes(String(u.pname).toLowerCase())) return true;
+  const mails = String(env.ADMIN_EMAILS || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
+  if (mails.length && /^a:/.test(u.puid || '')) { const a = await db.prepare('SELECT email FROM accounts WHERE id=?').bind(u.puid.slice(2)).first(); return !!(a && a.email && mails.includes(a.email)); }
+  return false;
 }
 
 /* ============================== PLANS + AI ON THE APP'S OWN CLAUDE KEY ==============================
@@ -406,8 +671,10 @@ async function lsWebhook(req, env, db) {
   if (diff) return err(401, 'bad_sig', 'Bad signature.');
   const b = parse(raw) || {}, meta = b.meta || {}, d = b.data || {}, a = d.attributes || {};
   if (d.type !== 'subscriptions') return J({ ok: true, ignored: 'not a subscription' });
-  const uid = String((meta.custom_data || {}).uid || '');
+  let uid = String((meta.custom_data || {}).uid || '');
   if (!PUIDRX.test(uid)) return J({ ok: true, ignored: 'no uid' });
+  // bought while signed in with Puter, moved to a Lock In account since: the subscription follows the account
+  if (!uid.startsWith('a:')) { const m = await db.prepare('SELECT id FROM accounts WHERE legacy=?').bind(uid).first(); if (m) uid = 'a:' + m.id; }
   const now = Date.now(), t = s => (s ? Date.parse(s) || 0 : 0), GRACE = 3 * DAY, st = String(a.status || '');
   // paid (or retrying a failed payment) → Pro until the next renewal + a few days; cancelled → until it ends; otherwise it stops now
   let until = now;
@@ -484,11 +751,14 @@ async function api(req, env, ctx, url) {
     }
     /* Lemon Squeezy tells us about subscriptions (signed with the webhook secret) */
     if (p === '/api/ls/webhook' && M === 'POST') return await lsWebhook(req, env, db);
+    /* signing in (email code, password, Google) */
+    if (p.startsWith('/api/auth/')) { const r = await authApi(req, env, ctx, db, M, p, url); if (r) return r; }
     /* everything else: the current app, signed in with Puter */
     if ((req.headers.get('x-lockin') || '') !== API_VERSION) return err(426, 'update', 'Lock In was updated — close and reopen the app to keep using friends.');
     const me = await who(req, env, ctx);
     if (!me) return err(401, 'auth', 'Sign in again to use friends.');
     const id = me.id;
+    if (me.puid) { if (PUID.size > 3000) PUID.clear(); PUID.set(id, me.puid); }   // always this request's own account
     const b = (M === 'POST' || M === 'PUT') ? await readBody(req) : null;
     switch (M + ' ' + p) {
       case 'GET /api/me': return J(await meOut(db, id));
@@ -541,13 +811,62 @@ async function api(req, env, ctx, url) {
         return J({ ok: true });
       }
       case 'GET /api/admin': return J({ admin: await isAdmin(db, id, env) });
+      case 'GET /api/account': {
+        if (!me.aid) return err(401, 'auth', 'Sign in again.');
+        const a = await db.prepare('SELECT * FROM accounts WHERE id=?').bind(me.aid).first();
+        return a ? J(await acctOut(db, a)) : err(401, 'auth', 'Sign in again.');
+      }
+      case 'GET /api/account/keys': {
+        if (!me.aid) return err(401, 'auth', 'Sign in again.');
+        const a = await db.prepare('SELECT keys, kv FROM accounts WHERE id=?').bind(me.aid).first();
+        return J({ keys: a && a.keys ? parse(a.keys) : null, kv: a ? a.kv || 0 : 0 });
+      }
+      case 'PUT /api/account/keys': {
+        // the account's encryption keys (recoverable: they live with the account, so any device that signs in can read your data)
+        if (!me.aid) return err(401, 'auth', 'Sign in again.');
+        await limit(db, 'u:' + id + ':keys', 60, HOUR);
+        const k = b && b.keys, js = JSON.stringify(k || null);
+        if (!k || typeof k !== 'object' || k.v !== 1 || !k.id || typeof k.self !== 'string' || js.length > 30000) return err(400, 'bad', 'Bad keys.');
+        return await keysPut(db, me, js, !!b.replace, Number.isInteger(b.base) ? b.base : null);
+      }
+      case 'POST /api/account/password': {
+        if (!me.aid) return err(401, 'auth', 'Sign in again.');
+        await limit(db, 'u:' + id + ':setpw', 10, HOUR);
+        const dk = b && b.dk;
+        if (dk === null) { await db.prepare('UPDATE accounts SET pwh=NULL WHERE id=?').bind(me.aid).run(); return J({ ok: true, password: false }); }
+        if (!/^[0-9a-f]{64}$/.test(String(dk || ''))) return err(400, 'bad', 'Bad request.');
+        const a = await db.prepare('SELECT email FROM accounts WHERE id=?').bind(me.aid).first();
+        if (!a || !a.email) return err(400, 'no_email', 'Add an email to your account first.');
+        await db.prepare('UPDATE accounts SET pwh=? WHERE id=?').bind(await sha256(dk + ':' + me.aid), me.aid).run();
+        return J({ ok: true, password: true });
+      }
+      case 'POST /api/auth/link': {
+        if (!me.aid) return err(401, 'auth', 'Sign in again.');
+        await limit(db, 'u:' + id + ':link', 10, HOUR);
+        return await linkLegacy(db, env, me, b);
+      }
+      case 'POST /api/auth/logout': {
+        const m2 = /^Bearer\s+(.+)$/i.exec(req.headers.get('authorization') || '');
+        if (m2) { const hh = await sha256(m2[1].trim()); await db.prepare('DELETE FROM sessions WHERE h=?').bind(hh).run(); MEM.delete(hh); }
+        return J({ ok: true });
+      }
+      case 'DELETE /api/account': {
+        if (!me.aid) return err(401, 'auth', 'Sign in again.');
+        const pk = 'a:' + me.aid;
+        await db.batch(['sync', 'photos', 'syncv', 'ai_use'].map(t => db.prepare('DELETE FROM ' + t + ' WHERE uid=?').bind(pk))
+          .concat([db.prepare('DELETE FROM sessions WHERE aid=?').bind(me.aid), db.prepare('DELETE FROM accounts WHERE id=?').bind(me.aid)]));
+        await deleteMe(db, id); MEM.clear(); PUID.clear();
+        return J({ ok: true });
+      }
       case 'GET /api/plan': return J(await planOut(db, id, env));
       case 'GET /api/sync': {
         await limit(db, 'u:' + id + ':syncr', 900, HOUR);
         const pk = await puidOf(db, id);
         const r = (await db.prepare('SELECT k, ver, ts, size FROM sync WHERE uid=?').bind(pk).all()).results || [];
         const v = await db.prepare('SELECT v FROM syncv WHERE uid=?').bind(pk).first();
-        return J({ docs: r, v: v ? v.v : 0, used: r.reduce((a, x) => a + x.size, 0), max: SYNC_MAX });
+        // kv: which version of the account's keys this is encrypted with — a device holding older ones loads the new ones first
+        const kv = me.aid ? await db.prepare('SELECT kv FROM accounts WHERE id=?').bind(me.aid).first() : null;
+        return J({ docs: r, v: v ? v.v : 0, kv: kv ? kv.kv || 0 : null, used: r.reduce((a, x) => a + x.size, 0), max: SYNC_MAX });
       }
       case 'POST /api/sync/get': {
         await limit(db, 'u:' + id + ':syncr', 900, HOUR);
@@ -555,7 +874,7 @@ async function api(req, env, ctx, url) {
         const r = ks.length ? await selectIn(db, 'SELECT k, ver, ts, data FROM sync WHERE uid=? AND k IN ', ks, '', [await puidOf(db, id)]) : [];
         return J({ docs: r });
       }
-      case 'PUT /api/sync': return await syncPut(db, id, await puidOf(db, id), b);
+      case 'PUT /api/sync': { const stale = await keysStale(db, me, b); if (stale) return stale; return await syncPut(db, id, await puidOf(db, id), b); }
       case 'GET /api/sync/v': {
         await limit(db, 'u:' + id + ':syncv', 400, HOUR);
         const r = await db.prepare('SELECT v FROM syncv WHERE uid=?').bind(await puidOf(db, id)).first();
@@ -611,6 +930,7 @@ async function api(req, env, ctx, url) {
       }
       if (M === 'PUT') {
         await limit(db, 'u:' + id + ':photow', 120, HOUR);
+        const stale = await keysStale(db, me, b); if (stale) return stale;
         const data = b && b.data;
         if (typeof data !== 'string' || !SYNCD.test(data) || data.length > 1500000) return err(400, 'bad', 'That photo couldn’t be saved.');
         const n = await db.prepare('SELECT COUNT(*) AS n FROM photos WHERE uid=?').bind(pk).first();

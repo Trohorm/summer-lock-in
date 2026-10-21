@@ -1,10 +1,9 @@
-/* Lock In — offline shell. App shell + puter.js cached; exercise demos (ExerciseDB / free-exercise-db)
-   cached as you view them in a separate long-lived cache. Puter API calls always hit the network. */
-const CACHE = 'lockin-v35';
+/* Lock In — offline shell. App shell cached; exercise demos (ExerciseDB / free-exercise-db) cached as you view
+   them in a separate long-lived cache. API calls always hit the network. */
+const CACHE = 'lockin-v36';
 const MEDIA_CACHE = 'lockin-media-v1';
 const SHELL = ['./', './index.html', './exlib.json', './manifest.webmanifest'];
 const ICONS = ['./icon-192.png', './icon-512.png', './apple-touch-icon.png'];
-const PUTER = 'https://js.puter.com/v2/';
 const MEDIA_HOSTS = ['static.exercisedb.dev', 'images.weserv.nl', 'raw.githubusercontent.com'];
 
 self.addEventListener('install', e => {
@@ -12,7 +11,6 @@ self.addEventListener('install', e => {
     const c = await caches.open(CACHE);
     await Promise.allSettled(SHELL.map(u => c.add(u)));
     await Promise.allSettled(ICONS.map(u => c.add(u)));
-    try { await c.add(new Request(PUTER, { mode: 'no-cors' })); } catch (e) {}
     self.skipWaiting();
   })());
 });
@@ -32,7 +30,6 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const isPuterJs = url.href.indexOf('https://js.puter.com/') === 0;
   const sameOrigin = url.origin === location.origin;
   const isMedia = MEDIA_HOSTS.includes(url.hostname) && (req.destination === 'image' || /\.(gif|jpg|png)(\?|$)/.test(url.pathname));
 
@@ -43,7 +40,7 @@ self.addEventListener('fetch', e => {
     }))));
     return;
   }
-  if (!sameOrigin && !isPuterJs) return;
+  if (!sameOrigin) return;
   // friends API + avatars: always live (avatars have their own long-lived HTTP caching)
   if (sameOrigin && url.pathname.startsWith('/api/')) return;
 

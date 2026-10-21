@@ -12,9 +12,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>window.addEventListener("error",function(e){window.__lastErr=(e.message||"error")+" @"+(e.lineno||"")});</script>
-<script>window.puterReady=new Promise(function(res){window.__puterRes=res;setTimeout(res,9000);});</script>
+<script>window.puterReady=Promise.resolve();window.__puterRes=function(){};</script>
 <script>(function(){var n=window.__lockinNative;if(!n||!n.version||!navigator.onLine||!window.fetch)return;try{var c=window.AbortController?new AbortController():null;if(c)setTimeout(function(){c.abort()},5000);window.__appvP=fetch("/api/appver",{cache:"no-store",signal:c?c.signal:undefined}).then(function(r){return r.ok?r.json():null}).catch(function(){return null});}catch(e){}})();</script>
-<script async src="https://js.puter.com/v2/" onload="window.__puterRes()" onerror="window.__puterRes()"></script>
 <style>
 :root{
   color-scheme:dark;
@@ -1531,6 +1530,46 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .adlist{display:grid;gap:6px;margin-top:8px}
 .adrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.03)}
 .adrow .grow{min-width:0}.adrow .grow b{font-size:13.5px}.adrow .btn{flex:none}
+/* ---- sign-in */
+.authbox{width:100%;max-width:340px;display:grid;gap:10px;text-align:left;animation:rise .6s .5s var(--ease) both}
+#authBox2{animation:none;max-width:none}
+.authbox .btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;font-size:15.5px;border-radius:16px}
+.authbox .btn svg{width:20px;height:20px;flex:none}
+.au-g{background:#fff;color:#1f2329;border:1px solid rgba(255,255,255,.2);font-weight:700}
+.au-g:active{background:#e3e7ee}
+.au-g .tdots i{background:#1f2329}
+.au-e svg{stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.authbox label.f{margin:2px 0 -4px}
+.authbox input{width:100%}
+.au-code{font-size:28px;font-weight:800;letter-spacing:.42em;text-align:center;padding:14px 10px 14px calc(10px + .42em);font-variant-numeric:tabular-nums}
+.au-sub{color:var(--slate);font-size:14px;line-height:1.45;margin:0;text-align:center}
+.au-sub b{color:var(--navy);word-break:break-all}
+.au-hint{text-align:center;margin:0}
+.au-alt{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--mist)}
+.au-leg{display:grid;gap:4px;padding:12px 14px;border-radius:16px;background:rgba(91,147,255,.1);border:1px solid rgba(91,147,255,.32);font-size:13px;line-height:1.45;color:#cfdcf5;margin-bottom:4px}
+.au-leg b{color:#fff;font-size:14px}
+.au-wait{display:grid;justify-items:center;gap:8px;text-align:center;padding:14px 8px;color:var(--slate);font-size:13.5px;line-height:1.45}
+.au-wait b{color:var(--navy);font-size:15px}
+.au-spin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(143,183,255,.25);border-top-color:var(--sky);animation:auspin .8s linear infinite}
+@keyframes auspin{to{transform:rotate(360deg)}}
+.au-move{display:grid;gap:10px;text-align:center}
+.au-move .au-ico{font-size:34px;line-height:1}
+.au-move h3{margin:0;font-size:18px;color:var(--navy)}
+.au-move p{margin:0 0 4px;color:var(--slate);font-size:13.5px;line-height:1.5}
+.lg-foot{margin-top:14px;max-width:320px}
+#view-login[data-au]:not([data-au="home"]) .lg-feats{display:none}
+#view-login[data-au]:not([data-au="home"]) .lg-tag{margin-bottom:22px}
+.authmsg.ok{color:var(--ok)}
+/* ---- Setup → account */
+.acctbox{display:grid;gap:10px}
+.acc-row{display:flex;align-items:center;gap:12px}
+.acc-row .grow{display:grid;gap:2px;min-width:0}
+.acc-row b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-av{width:40px;height:40px;border-radius:14px;flex:none;display:grid;place-items:center;font-weight:800;color:#fff;background:var(--grad)}
+.acc-act{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.acc-warn{padding:10px 12px;border-radius:12px;background:rgba(217,164,65,.12);border:1px solid rgba(217,164,65,.35);color:#f0d49a;font-size:13px}
+.acc-del{margin-top:10px;text-align:center}
+.acc-del .linkbtn{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -1554,15 +1593,9 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
         <div><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Snap a meal — every macro, micro &amp; anti-nutrient</div>
         <div><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 7-8"/><path d="M14 7h6v6"/></svg>Progressive overload, PRs and an AI coach</div>
       </div>
-      <button class="btn btn-primary lg-btn" id="loginBtn">Continue</button>
-      <div class="lg-prov">
-        <span><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Google</span>
-        <span><svg viewBox="0 0 384 512" fill="#e9ecf1"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>Apple</span>
-        <span><svg viewBox="0 0 23 23"><rect x="1" y="1" width="10" height="10" fill="#f25022"/><rect x="12" y="1" width="10" height="10" fill="#7fba00"/><rect x="1" y="12" width="10" height="10" fill="#00a4ef"/><rect x="12" y="12" width="10" height="10" fill="#ffb900"/></svg>Microsoft</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="#a6aeba" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Email</span>
-      </div>
+      <div class="authbox" id="authBox"></div>
       <div class="authmsg" id="loginMsg"></div>
-      <p class="tiny" style="margin-top:14px;max-width:320px">Secure sign-in through Puter — free, private to you, and you stay signed in on this device.</p>
+      <p class="tiny lg-foot">Free. You stay signed in on this device, and your data syncs to every device you sign in on.</p>
     </div>
   </section>
 
@@ -1690,7 +1723,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
     </div>
     <div class="card kcalcard" id="kcalCard" hidden></div>
     <div class="card ancard" id="anCard" style="display:none"></div>
-    <div id="aiOutNote" class="ainote" hidden>AI is paused — your Puter AI credit ran out this month. Meals still get the built-in grade.</div>
+    <div id="aiOutNote" class="ainote" hidden></div>
 <div id="dietAlert"></div>
     <div class="card"><h2>Macros <span class="right" id="dietCount"></span></h2><div id="macroBox"></div></div>
     <div class="card cafcard" id="cafCard"><h2>Caffeine <span class="right" id="cafRight"></span></h2><div id="cafBox"></div></div>
@@ -1745,11 +1778,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 
   <!-- SETUP -->
   <section class="view" id="view-settings">
-    <div class="card" id="aiAdmCard" hidden>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0">AI credit</h2><button class="btn btn-ghost btn-sm" onclick="aiAdminList(true)">Refresh</button></div>
-      <p class="tiny" style="margin:6px 0 12px">Only you see this — who ran out of Puter AI credit and when it comes back (<span id="aiAdmCount">…</span>).</p>
-      <div id="aiAdmBox"></div>
-    </div>
+    <div class="card" id="aiAdmCard" hidden></div>
     <div class="card">
       <h2>Profile</h2>
       <div class="field"><label class="f">Display name</label><input id="set-name" maxlength="24"></div>
@@ -1803,10 +1832,10 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
     </div>
     <div class="card" id="planCard" hidden></div>
     <div class="card" id="planAdmCard" hidden></div>
-    <div class="card" id="pcCard"></div>
+    <div class="card" id="pcCard" hidden></div>
     <div class="card">
       <h2>Account &amp; data</h2>
-      <p class="muted" id="acctLine">—</p>
+      <div id="acctLine" class="acctbox">—</div>
       <p class="tiny" id="syncInfo" style="margin-top:6px"></p>
       <div class="grid2" style="margin-top:12px">
         <button class="btn btn-ghost btn-sm" id="exportBtn">Export backup</button>
@@ -1815,11 +1844,12 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
       </div>
       <hr class="sep">
       <div class="grid2"><button class="btn btn-ghost btn-sm" id="signOutBtn">Sign out</button><button class="btn btn-danger btn-sm" id="eraseBtn">Erase all data</button></div>
+      <p class="tiny acc-del"><button class="linkbtn" onclick="accDelete()">Delete my account</button></p>
     </div>
   </section>
 </div>
 
-<footer>Lock In · Powered by <a href="https://developer.puter.com" target="_blank" rel="noopener">Puter</a> · Exercise demos: ExerciseDB &amp; free-exercise-db</footer>
+<footer>Lock In · Exercise demos: ExerciseDB &amp; free-exercise-db</footer>
 </div>
 <nav id="mainNav">
   <button data-v="today" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Today</button>
@@ -2304,7 +2334,7 @@ function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)r
 function enterApp(){snapSettings();planRestore();setTimeout(()=>planLoad(),1800);if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
-  $('wz-name').value=S.settings.name||(user?user.username:'');
+  $('wz-name').value=S.settings.name||accFirst();
   $('wz-weight').value=S.settings.weight||'';$('wz-height').value=S.settings.height||'';$('wz-dob').value=DOB||'';$('wz-dob').max=addDays(todayStr(),-3650);
   $('wz-sex').value=S.settings.sex||'m';$('wz-gym').value=(S.gyms[0]&&S.gyms[0].name)||'';
   wzGoal=S.settings.goal||'recomp';renderGoalChips('wz-goals',wzGoal,g=>{wzGoal=g;});
@@ -3790,7 +3820,9 @@ async function analyze(photo){
   const pv=document.querySelector('#sheetBody .pvwrap');if(pv)pv.classList.add('scanning');
   let r=null;
   try{r=parseJSON(await ai(nutrientPrompt(hint,photo),photo?pendingImg:null,'meal'));}
-  catch(e){if(e&&e.code==='ai_limit'){if(pv)pv.classList.remove('scanning');btn.disabled=false;btn.textContent='Estimate nutrients';const eb=$('estBox');if(eb)eb.innerHTML=upgradeHTML('meal',e.data);haptic('light');return;}}
+  catch(e){if(e&&e.code==='ai_limit'){if(pv)pv.classList.remove('scanning');btn.disabled=false;btn.textContent='Estimate nutrients';const eb=$('estBox');if(eb)eb.innerHTML=upgradeHTML('meal',e.data);haptic('light');return;}
+    if(e&&['ai_off','ai_busy','ai_key','signin','offline'].includes(e.code)){if(pv)pv.classList.remove('scanning');btn.disabled=false;btn.textContent='Estimate nutrients';const eb=$('estBox');
+      if(eb)eb.innerHTML='<p class="tiny" style="color:var(--bad);margin-top:8px">'+esc(e.message)+'</p>'+(photo?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="queuePhoto()">Save photo and analyze later</button>':'');return;}}
   if(pv)pv.classList.remove('scanning');
   btn.disabled=false;btn.textContent='Estimate again';
   const parts=toParts(r);
@@ -4077,7 +4109,7 @@ function addPhotos(files){
 /* ================= SETUP ================= */
 let setGoal='recomp';
 function renderSettings(){
-  $('acctLine').textContent=user?'Signed in as @'+user.username:'—';renderSync();
+  accCardRender();renderSync();
   const s=S.settings;
   $('set-name').value=s.name;if($('set-sport'))$('set-sport').value=s.sport||'';$('set-weight').value=s.weight||'';$('set-height').value=s.height||'';$('set-dob').value=DOB||'';$('set-dob').max=addDays(todayStr(),-3650);$('ageLbl').textContent=s.age?'· age '+s.age:'';$('set-sex').value=s.sex||'m';
   setGoal=s.goal||'recomp';renderGoalChips('set-goals',setGoal,g=>{setGoal=g;});
@@ -4162,7 +4194,8 @@ async function eraseAll(){
      (ECDH → HKDF-SHA-256). The server keeps the wrapped keys but can't open them, and still decides who may download what.
    • Take a category away from someone (or remove them) and it gets a brand-new key they never receive.
    • Shared-split links carry their key after the # (browsers never send that part to a server).
-   • Your private keys live on this device and in your own Puter account (so your other devices get them) — never on our server. */
+   • Your keys live on this device and with your Lock In account (so every device you sign in on gets them — and your
+     email alone gets you back in). That protects your data from other people, not from the Lock In server itself. */
 const E2E={ok:false,busy:null,err:'',st:null,priv:null,pub:'',fp:'',self:null,cat:{},pair:new Map(),fk:new Map(),postK:new Map(),fpc:new Map(),idPub:'',reloaded:false,migrated:false};
 const TE=new TextEncoder(),TD=new TextDecoder(),SUB=()=>crypto.subtle;
 const B62='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',C31='23456789ABCDEFGHJKMNPQRSTUVWXYZ',E2E_KV='e2e_v1';
@@ -4544,7 +4577,7 @@ function socOnShow(){
 }
 
 /* ---------- avatars ---------- */
-function socMe(){const n=(S&&S.settings.name)||'';return SOC.me?(SOC.me.name?SOC.me:Object.assign({},SOC.me,{name:n||SOC.me.handle})):{id:'me',name:n||'You',handle:user?user.username:'',av:0};}
+function socMe(){const n=(S&&S.settings.name)||'';return SOC.me?(SOC.me.name?SOC.me:Object.assign({},SOC.me,{name:n||SOC.me.handle})):{id:'me',name:n||'You',handle:accFirst(),av:0};}
 function avURL(u){if(!u)return '';if(SOC.myAv&&(u.id==='me'||(SOC.me&&u.id===SOC.me.id)))return SOC.myAv;return u.av&&sid(u.id)?'/api/avatar/'+u.id+'?v='+num(u.av):'';}
 function avHTML(u,size,ring){
   const s=size||40,src=avURL(u);
@@ -5145,7 +5178,7 @@ function profileHTML(f,p,mine){
   if(!p)return h+'<div class="skel" style="height:110px;border-radius:16px;margin-top:16px"></div><div class="skel" style="height:70px;border-radius:16px;margin-top:12px"></div><div class="skel" style="height:70px;border-radius:16px;margin-top:12px"></div>';
   const D=p.data||{},can=mine?{photos:1}:(p.can||{});
   if(!Object.keys(D).length&&!s.gym&&!s.diet&&!mine)h+='<div class="okline e2enote">'+IC.lock+'<span>'+(f.pubOk===false||!p.pub?esc(first(f.name))+'’s stats show up after they open the latest Lock In.':
-    'Everything '+esc(first(f.name))+' shares is end-to-end encrypted. It shows up as soon as their app has shared the keys with you — that happens the next time they open Lock In.')+'</span></div>';
+    'Everything '+esc(first(f.name))+' shares is encrypted. It shows up as soon as their app has shared the keys with you — that happens the next time they open Lock In.')+'</span></div>';
   if(D.split)h+=pfDeck(D.split,id,mine);
   h+=pfBadges(s);
   if(can.photos)h+='<div class="pfsec"><div class="pfh">Posts <span id="pfPostN"></span></div><div class="postgrid" id="pfPosts" data-u="'+(mine?'me':id)+'"><div class="skel" style="height:90px;border-radius:12px;margin:0;grid-column:1/-1"></div></div></div>';
@@ -5158,7 +5191,7 @@ function profileHTML(f,p,mine){
   const hid=CATS.filter(c=>p.can&&!p.can[c]);
   if(hid.length)h+='<p class="tiny pflock">🔒 '+esc(first(f.name))+' keeps '+listJoin(hid.map(c=>CATINFO[c][0].toLowerCase()))+' private.</p>';
   h+='<details class="fold pfprivacy" ontoggle="if(this.open)fillSafety(\''+id+'\')"><summary>⚙️ What '+esc(first(f.name))+' can see of you</summary><div class="fb">'+pfPerms(f,p)+
-    '<div class="safety"><div class="pfh">Security code <span>end-to-end encryption</span></div><div class="scode" id="scode">····  ····  ····</div>'+
+    '<div class="safety"><div class="pfh">Security code <span>encryption</span></div><div class="scode" id="scode">····  ····  ····</div>'+
     '<p class="tiny">Compare this with the code on '+esc(first(f.name))+'’s phone (their profile of you). If they match, nobody — not even the Lock In server — can read what you share.</p></div>'+
     '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:14px" onclick="removeFriend(\''+id+'\')">Remove friend</button></div></details>';
   return h;
@@ -5304,7 +5337,7 @@ async function previewShare(code,sendId,secret){
     if(sp&&sp.pubLink&&/^[A-Za-z0-9]{8}$/.test(sp.pubLink.code||'')&&/^[A-Za-z0-9]{10}$/.test(sp.pubLink.key||'')){if(SOC.giftId)giftDone(SOC.giftId);closeSheet();setTimeout(()=>previewFollow(sp.pubLink.code,sp.pubLink.key),320);return;}
     if(!$('shBox'))return;
     $('shBox').innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+' shared a split</div><div class="fname">'+esc(sp.name||'Split')+'</div>'+
-      (j.enc?'<div class="e2etag">'+IC.lock+' End-to-end encrypted</div>':'')+'</div>'+
+      (j.enc?'<div class="e2etag">'+IC.lock+' Encrypted</div>':'')+'</div>'+
       '<button class="btn btn-primary socbtn" style="margin-top:6px" onclick="importSplit(SOC.shared.sp,SOC.shared.sp.defs,SOC.shared.from.name,this);if(SOC.giftId)giftDone(SOC.giftId)">'+IC.copy+' Add to my splits</button><p class="tiny" style="text-align:center;margin-top:6px">A copy that’s yours — changing it won’t change theirs.</p><div style="margin-top:12px">'+splitDaysHTML(sp,sp.defs)+'</div>';
   }catch(e){if($('shBox'))$('shBox').innerHTML=frNote('🔗','Couldn’t open that split',esc(e.message));}
 }
@@ -5322,7 +5355,7 @@ function renderSocialSettings(){
     '<label class="f" style="margin:14px 0 2px">Friends can see</label>'+
     CATS.map(c=>'<label class="checkline permrow"><span class="grow"><b>'+CATINFO[c][0]+'</b><small>'+CATINFO[c][1]+'</small></span><input type="checkbox" switch '+(def[c]?'checked ':'')+(ok?'':'disabled ')+'onchange="setDefault(\''+c+'\',this.checked,this)"></label>').join('')+
     '<p class="tiny" style="margin-top:10px">'+(ok?'These are your defaults. To change it for one person, open Friends and tap their name. Progress photos: only the ones you post with ↗.':'Connect to the internet to set up your friends profile.')+'</p>'+
-    '<button class="e2erow" onclick="openE2EInfo()">'+IC.lock+'<span class="grow"><b>End-to-end encrypted</b><small>'+(E2E.ok?'Everything friends see is encrypted on this phone first':esc(E2E.err||'Keys load when you’re online'))+'</small></span><i class="chev"></i></button>'+
+    '<button class="e2erow" onclick="openE2EInfo()">'+IC.lock+'<span class="grow"><b>Encrypted</b><small>'+(E2E.ok?'Everything friends see is encrypted on this phone first':esc(E2E.err||'Keys load when you’re online'))+'</small></span><i class="chev"></i></button>'+
     (ok?'<button class="btn btn-danger btn-sm" style="width:100%;margin-top:12px" onclick="deleteSocial(this)">Delete friends profile</button><p class="tiny" style="margin-top:6px">Removes your friends, requests and everything they could see, and frees your username. Your own training data stays.</p>':'');
   if(hf){const h=$('socHandle');if(h){h.focus();const n=h.value.length;try{h.setSelectionRange(n,n);}catch(e){}}}
 }
@@ -5702,7 +5735,7 @@ function bdayCheck(){
 function dobAsk(){
   const st=S&&S.settings;if(!st||!st.setupDone||st.dob||st.dobE||DOB)return;
   if($('tourOv')||$('view-wizard').classList.contains('active')||$('sheet').classList.contains('show')){setTimeout(dobAsk,4000);return;}
-  openSheet('When’s your birthday?','<p class="tiny" style="margin:0 0 14px">Lock In now uses your birthday instead of your age — it keeps your targets and limits (like caffeine) right as you get older. It’s encrypted with your own key; nobody else can read it.</p>'+
+  openSheet('When’s your birthday?','<p class="tiny" style="margin:0 0 14px">Lock In now uses your birthday instead of your age — it keeps your targets and limits (like caffeine) right as you get older. It’s encrypted with your account’s own key.</p>'+
     '<div class="field"><label class="f">Birthday</label><input id="ask-dob" type="date" max="'+addDays(todayStr(),-3650)+'" min="1920-01-01"></div>'+
     '<button class="btn btn-primary" id="askDobBtn" style="width:100%;margin-top:6px">Save birthday</button>');
   $('askDobBtn').onclick=async()=>{const v=$('ask-dob').value;
@@ -6078,7 +6111,7 @@ async function csInvitePopup(id){
   let R=null;try{const k=await csKey(r);if(k)R=await csOpenData(r,k);}catch(e){}
   (CS.invR=CS.invR||{})[id]=R;
   const box=$('csInv');if(!box)return;
-  box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(userOf(r.owner)||from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name)+' invited you to edit a split together</div><div class="fname">'+esc(R?R.name||'Split':'Shared split')+'</div><div class="e2etag">'+IC.lock+' End-to-end encrypted</div></div>'+
+  box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(userOf(r.owner)||from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name)+' invited you to edit a split together</div><div class="fname">'+esc(R?R.name||'Split':'Shared split')+'</div><div class="e2etag">'+IC.lock+' Encrypted</div></div>'+
     '<p class="tiny" style="margin-top:12px">You both train from the same split — any change either of you makes shows up for the other. Your logged workouts stay yours.</p>'+
     '<div class="row" style="margin-top:12px"><button class="btn btn-ghost grow" onclick="csDecline(\''+r.id+'\',this)">Decline</button><button class="btn btn-primary grow" onclick="csJoin(\''+r.id+'\',this)">Join</button></div>'+
     (R?'<button class="btn btn-ghost socbtn" style="margin-top:8px;width:100%" onclick="csCopyDecline(\''+r.id+'\',this)">'+IC.copy+' Decline, but keep a copy for me</button><p class="tiny" style="margin-top:6px;text-align:center">A copy is only yours — their changes won’t reach it.</p>':'')+
@@ -6209,7 +6242,7 @@ async function previewFollow(code,key){
   try{
     const j=await pubGet(code),R=await pubOpen(code,key,j.data),from=j.from||{};PUB.prev={code,key,R,j};
     const box=$('pfBox2');if(!box)return;const mine=pubFind(code),own=SOC.me&&from.id===SOC.me.id;
-    box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+'’s split · '+(j.fol?j.fol+' following':'live')+'</div><div class="fname">'+esc(R.name||'Split')+'</div><div class="e2etag">'+IC.lock+' End-to-end encrypted</div></div>'+
+    box.innerHTML='<div class="found" style="padding-top:6px">'+avHTML(from,64,'wk')+'<div class="tiny" style="margin-top:10px">'+esc(from.name||'Someone')+'’s split · '+(j.fol?j.fol+' following':'live')+'</div><div class="fname">'+esc(R.name||'Split')+'</div><div class="e2etag">'+IC.lock+' Encrypted</div></div>'+
       '<p class="tiny" style="margin-top:12px;text-align:center">'+(own?'This is your own public link.':'Follow it and it updates whenever '+esc(first(from.name||'they'))+' changes it. You can’t edit a followed split — duplicate it to make your own version.')+'</p>'+
       (own?'':mine?'<button class="btn btn-ghost socbtn" style="margin-top:12px" onclick="closeSheet();S.activeSplit=\''+mine.id+'\';save();show(\'workout\')">You’re following it — open</button>'
         :'<div class="row" style="margin-top:12px"><button class="btn btn-ghost grow" onclick="pubCopyOnly(this)">Just copy it</button><button class="btn btn-primary grow" onclick="pubFollow(this)">📡 Follow</button></div>')+
@@ -6266,16 +6299,15 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.21.2';
+const WEB_VER='2026.10.21.3';
 const WHATSNEW=[
+ {v:'2026.10.21.3',d:'21 Oct',items:[
+  ['🔑','Your own Lock In account','Sign in with Google or your email — a 6-digit code, or add a password in Setup. No more Puter: signing in is simpler, and you stay signed in.'],
+  ['📦','Everything comes along','Open the app on a phone you used before and sign in: its data moves into your new account — friends, Pro and history included.']]},
+
  {v:'2026.10.21.2',d:'21 Oct',items:[
-  ['🔄','Sync that never stops','Your data now syncs through Lock In itself, encrypted on your phone first. Phone and iPad stay in step all the time — the Puter allowance doesn’t matter any more.'],
+  ['🔄','Sync that never stops','Your data now syncs through Lock In itself, encrypted on your phone first. Phone and iPad stay in step all the time.'],
   ['🖼️','Photos on every device','Progress photos sync too, encrypted, and open on all your devices.']]},
- {v:'2026.10.21.1',d:'21 Oct',items:[
-  ['⏸','No more Puter pop-ups','When your Puter allowance for the month runs out, the app pauses AI, cloud sync and photo downloads by itself. Everything stays on your phone and syncs once it refills.'],
-  ['🔋','See your allowance','Setup → Puter allowance shows how much is left this month and what used it.'],
-  ['💸','Meal photos cost far less','Photos are read by Haiku 5.5 — about 20× less of your allowance than Sonnet. Want Sonnet anyway? Turn on Sharper photo estimates.'],
-  ['🖼️','Photos stay on your phone','Progress photos download once, then open instantly — even offline. Taken one while sync is paused? It uploads later by itself.']]},
  {v:'2026.10.20.5',d:'20 Oct',items:[
   ['🧈','Said it already? Not asked again','Write “fried in butter”, “no oil” or “from a restaurant” and the app uses it — no “Where was it made?” question.'],
   ['⚖️','Better portions','Weights are the cooked, as-eaten amount, and any weight or count you write is used exactly. Tap − / + to nudge a food by ~10 %.'],
@@ -6574,7 +6606,7 @@ const TOURS={
   ['#view-friends .frme .socbtn','Add friends','Show your QR code, send a link or find someone by username.'],
   ['card:Leaderboard','Leaderboard','Compete on sessions, volume and streaks this week.'],
   ['card:Activity','Activity','Friends’ workouts, PRs and meals. React with 💪 🔥 👏.'],
-  ['#view-friends .e2epill','Private by design','Everything friends see is end-to-end encrypted. Choose what each friend can see in Setup → Friends & privacy.']]
+  ['#view-friends .e2epill','Private by design','Everything friends see is encrypted. Choose what each friend can see in Setup → Friends & privacy.']]
 };
 const TOUR={k:null,i:0,steps:[]};
 function tourSeen(k){return !S||!S.settings.tours||!!S.settings.tours[k];}
@@ -7486,7 +7518,7 @@ async function planAdmRender(force){
   const a=PLAN.adm,us=(a.users||[]).slice().sort((x,y)=>(y.month.cost-x.month.cost)||(y.seen-x.seen));
   let h='<h2>Plans &amp; AI <span class="right"><button class="linkbtn" onclick="planAdmRender(true)">Refresh</button></span></h2>'+
     '<div class="adst"><div><b>'+(a.ai?'On':'Off')+'</b><small>Claude key</small></div><div><b>'+(a.pay?'On':'Off')+'</b><small>payments</small></div><div><b>'+usd(a.todayCost)+'</b><small>today (cap '+usd(a.cap)+')</small></div><div><b>'+usd(a.monthCost)+'</b><small>this month</small></div></div>'+
-    (a.ai?'':'<p class="tiny" style="margin:6px 0 10px">No Claude key yet — the app uses everyone’s own Puter allowance. Add the key in Cloudflare to switch.</p>')+
+    (a.ai?'':'<p class="tiny" style="margin:6px 0 10px">No Claude key yet — AI is off until ANTHROPIC_API_KEY is added in Cloudflare (Settings → Variables and Secrets).</p>')+
     '<div class="adlist">'+us.map(u=>'<div class="adrow"><div class="grow"><b>'+esc(u.name||u.handle)+'</b> <span class="tiny">@'+esc(u.handle)+'</span><div class="tiny">today '+u.today.meal+' meal · '+u.today.review+' review · '+u.today.other+' other · month '+usd(u.month.cost)+'</div></div>'+
       '<span class="plbadge '+u.plan+'">'+(PLAN_LBL[u.plan]||'Free')+'</span>'+
       (u.plan==='admin'||u.srcs.includes('ls')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')+'</div>'+
@@ -7760,6 +7792,593 @@ async function delPhoto(i){
   photos.splice(i,1);selPhotos=[];phListSet(photos);renderPhotos();phNote();
 }
 
+/* ================= LOCK IN ACCOUNTS: sign in with an email code, a password or Google (Puter is gone) =================
+   The session is a long-lived token from Lock In's own server (lockin_sess). The app opens straight from this device's
+   copy and syncs in the background, all the time — no allowance involved. Your encryption keys live with the account,
+   so any device you sign in on can read your data (and your email alone gets you back in). A phone that was used with
+   Puter before keeps its data: after signing in it moves into the new account once — friends, Pro and history included. */
+const ACC={tok:'',a:null,cfg:null,bad:false,note:0};
+function accRead(){try{ACC.tok=localStorage.getItem('lockin_sess')||'';ACC.a=JSON.parse(localStorage.getItem('lockin_acct')||'null');}catch(e){ACC.tok='';ACC.a=null;}
+  if(!ACC.a||!ACC.a.id||!ACC.a.local){ACC.tok='';ACC.a=null;}}
+function accWrite(){try{if(ACC.tok&&ACC.a){localStorage.setItem('lockin_sess',ACC.tok);localStorage.setItem('lockin_acct',JSON.stringify(ACC.a));}
+  else{localStorage.removeItem('lockin_sess');localStorage.removeItem('lockin_acct');}}catch(e){}}
+accRead();
+// every server call signs in with the session (a session the server refused isn't sent again until you sign in)
+function socTok(){return ACC.bad?'':ACC.tok||'';}
+function online(){return navigator.onLine;}
+window.puterReady=Promise.resolve();
+// how you're signed in, for people (the account's name on this device is only a storage label)
+function accWho(){const a=ACC.a||{};return a.email||(a.google?'your Google account':'');}
+function accFirst(){const a=ACC.a||{};return (a.linked&&a.lname)||(a.email||'').split('@')[0]||'';}
+
+/* ---------- sign-in calls (no session yet) ---------- */
+async function aapi(path,body){
+  let r;
+  try{r=await fetch('/api/auth/'+path,{method:body===undefined?'GET':'POST',cache:'no-store',headers:body===undefined?{}:{'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});}
+  catch(e){throw Object.assign(new Error('Couldn’t reach Lock In — check your connection and try again.'),{code:'net'});}
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok)throw Object.assign(new Error(j.message||('Something went wrong ('+r.status+') — try again.')),{code:j.error||'http',status:r.status});
+  return j;
+}
+async function authCfg(){if(ACC.cfg)return ACC.cfg;try{ACC.cfg=await aapi('config');}catch(e){return {email:true,google:true};}return ACC.cfg;}
+const normMail=e=>String(e||'').trim().toLowerCase();
+const MAILRX=/^[^\s@<>()",;:]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}$/;
+// a password never leaves the phone: the server only gets a key made from it (PBKDF2, 300k rounds, salted with your email)
+async function pwDk(pw,email){const k=await crypto.subtle.importKey('raw',TE.encode(pw),'PBKDF2',false,['deriveBits']);
+  const b=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:TE.encode('lockin:'+normMail(email)),iterations:300000},k,256);return hexs(new Uint8Array(b));}
+
+/* ---------- this device used Puter before: its data is here, under that username ---------- */
+function legacyName(){let n='';try{n=localStorage.getItem('rt_lastuser')||'';}catch(e){}if(!n||/^a_[0-9a-f]+$/.test(n))return '';
+  try{if(localStorage.getItem('lockin_moved_'+n))return '';}catch(e){}
+  try{return localStorage.getItem('rtcache_'+n)||localStorage.getItem('rtcache_'+n+'_idb')?n:'';}catch(e){return '';}}
+function legacyTok(){try{return localStorage.getItem('puter.auth.token.v2')||localStorage.getItem('puter.auth.token')||'';}catch(e){return '';}}
+function legacyKeys(n){try{const k=JSON.parse(localStorage.getItem('lockin_e2e_'+n)||'null');return e2eValid(k)?k:null;}catch(e){return null;}}
+
+/* ---------- the sign-in box (login screen, or a sheet when a session ran out) ---------- */
+const AUI={el:null,st:'home',email:'',wait:null,pend:null,sheet:false,sent:0,leg:''};
+const ICO_G='<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+const ICO_M='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>';
+function authMsg(t,kind){const m=AUI.sheet?$('auMsg'):$('loginMsg');if(!m)return;m.textContent=t||'';m.classList.toggle('ok',kind==='ok');
+  if(t)anim(m,[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:240,easing:EASE_OUT});}
+function authBusy(id,on,txt){const b=$(id);if(!b)return;if(on){b._t=b._t||b.innerHTML;b.disabled=true;b.innerHTML=(txt||b._t)+'<span class="tdots"><i></i><i></i><i></i></span>';}else{b.disabled=false;if(b._t)b.innerHTML=b._t;b._t=null;}}
+function authHTML(st){
+  const cfg=ACC.cfg||{email:true,google:true},leg=AUI.leg,em=esc(AUI.email);
+  if(st==='home')return (leg&&!AUI.sheet?'<div class="au-leg"><b>Welcome back, @'+esc(leg)+'</b><span>Lock In has its own sign-in now. Sign in once and everything on this phone moves into your account — friends, Pro and history too.</span></div>':'')+
+    (cfg.google!==false?'<button class="btn au-g" id="auG" onclick="authGoogle()">'+ICO_G+'Continue with Google</button>':'')+
+    (cfg.email!==false?'<button class="btn btn-primary au-e" onclick="authUI(\'email\')">'+ICO_M+'Continue with email</button>':'')+
+    (cfg.email===false&&cfg.google===false?'<p class="tiny">Sign-in is being set up — try again in a little while.</p>':'');
+  if(st==='email')return '<label class="f" for="auEmail">Your email</label><input id="auEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" value="'+em+'" onkeydown="if(event.key===\'Enter\')authSend()">'+
+    '<button class="btn btn-primary au-go" id="auSend" onclick="authSend()">Email me a code</button>'+
+    '<p class="tiny au-hint">We’ll send a 6-digit code — no password needed. New here? This makes your account.</p>'+
+    '<div class="au-alt"><button class="linkbtn" onclick="authUI(\'pw\')">Use a password instead</button><span>·</span><button class="linkbtn" onclick="authUI(\'home\')">Back</button></div>';
+  if(st==='code')return '<p class="au-sub">We sent a code to <b>'+em+'</b>. It works for 10 minutes.</p>'+
+    '<input id="auCode" class="au-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" aria-label="6-digit code" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,6);if(this.value.length===6)authVerify()">'+
+    '<button class="btn btn-primary au-go" id="auVerify" onclick="authVerify()">Sign in</button>'+
+    '<p class="tiny au-hint">Can’t see it? Check spam and promotions.</p>'+
+    '<div class="au-alt"><button class="linkbtn" id="auResend" onclick="authSend(true)">Send a new code</button><span>·</span><button class="linkbtn" onclick="authUI(\'email\')">Different email</button></div>';
+  if(st==='pw')return '<label class="f" for="auEmail">Email</label><input id="auEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" value="'+em+'">'+
+    '<label class="f" for="auPw">Password</label><input id="auPw" type="password" autocomplete="current-password" placeholder="Your password" onkeydown="if(event.key===\'Enter\')authPw()">'+
+    '<button class="btn btn-primary au-go" id="auPwBtn" onclick="authPw()">Sign in</button>'+
+    '<p class="tiny au-hint">No password yet? Sign in with a code — you can add one in Setup.</p>'+
+    '<div class="au-alt"><button class="linkbtn" onclick="authUI(\'email\')">Email me a code instead</button><span>·</span><button class="linkbtn" onclick="authUI(\'home\')">Back</button></div>';
+  if(st==='google')return '<div class="au-wait"><span class="au-spin"></span><b>Finish in the Google window</b><span>Pick your account there — you’ll be signed in here by yourself.</span></div>'+
+    '<div class="au-alt"><button class="linkbtn" onclick="authCancel()">Cancel</button></div>';
+  if(st==='retry')return '<div class="au-wait"><b>'+esc(AUI.retryMsg||'Couldn’t load your account just now')+'</b><span>You’re signed in — nothing to do but try again.</span></div>'+
+    '<button class="btn btn-primary au-go" onclick="authRetry()">Try again</button><div class="au-alt"><button class="linkbtn" onclick="legacyOut()">Use a different account</button></div>';
+  if(st==='busy')return '<div class="au-wait"><span class="au-spin"></span><b>'+esc(AUI.busyTxt||'Signing you in…')+'</b></div>';
+  if(st==='move')return '<div class="au-move"><div class="au-ico" aria-hidden="true">📦</div><h3>Bring @'+esc(leg)+'’s data along?</h3>'+
+    '<p>Everything on this phone — workouts, meals, splits and photos — moves into this account. Your friends and Pro come along too.</p>'+
+    '<button class="btn btn-primary au-go" id="auMove" onclick="legacyGo()">Bring it over</button>'+
+    '<button class="btn btn-ghost au-go" onclick="legacySkip()">Not mine — start fresh</button></div>';
+  if(st==='moverr')return '<div class="au-move"><div class="au-ico" aria-hidden="true">⚠️</div><h3>'+esc(AUI.errT||'That didn’t work')+'</h3><p>'+(AUI.errP||'')+'</p>'+(AUI.errB||'')+'</div>';
+  return '';
+}
+function authUI(st,el){
+  if(el)AUI.el=el;if(!AUI.el)AUI.el=$('authBox');
+  const box=AUI.el;if(!box)return;
+  if(st==='email'||st==='pw'){const e=$('auEmail');if(e&&e.value)AUI.email=normMail(e.value);}
+  AUI.st=st;box.innerHTML=authHTML(st);box.dataset.st=st;authMsg('');
+  const lv=$('view-login');if(lv&&!AUI.sheet)lv.dataset.au=st;      // past the first step the feature list makes room
+  anim(box,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:280,easing:EASE_OUT});
+  const f=st==='email'?$('auEmail'):st==='code'?$('auCode'):st==='pw'?$(AUI.email?'auPw':'auEmail'):null;
+  if(f&&!('ontouchstart' in window))setTimeout(()=>{try{f.focus();}catch(e){}},60);
+  else if(f&&st==='code')setTimeout(()=>{try{f.focus();}catch(e){}},60);
+}
+function showLogin(msg){
+  AUI.sheet=false;AUI.leg=legacyName();show('login');renderHeader();
+  authUI(AUI.st&&!['google','busy','move','moverr','retry'].includes(AUI.st)?AUI.st:'home',$('authBox'));if(msg)authMsg(msg);
+  authCfg().then(c=>{if(c&&AUI.st==='home'&&!AUI.sheet&&$('authBox')){const m=$('loginMsg'),t=m?m.textContent:'';authUI('home');if(t)authMsg(t);}});
+}
+// signed in, but the account can't be read on this (new) device right now: try again — no new sign-in needed
+function showRetry(msg){
+  AUI.sheet=false;show('login');renderHeader();AUI.el=$('authBox');AUI.retryMsg=msg;authUI('retry');
+}
+async function authRetry(){AUI.busyTxt='Opening your account…';authUI('busy');await new Promise(z=>setTimeout(z,300));boot();}
+// inside the app (a session ran out, or "Sign in to sync"): the same box in a sheet
+function doSignIn(){
+  AUI.sheet=true;AUI.leg='';AUI.st='home';
+  openSheet('Sign in','<p class="tiny" style="margin:0 0 14px">Your data is safe on this device. Sign in to keep it syncing.</p><div class="authbox" id="authBox2"></div><div class="authmsg" id="auMsg"></div>');
+  authUI('home',$('authBox2'));authCfg().then(()=>{if(AUI.sheet&&AUI.st==='home')authUI('home');});
+}
+async function authSend(again){
+  const e=$('auEmail'),email=normMail(e?e.value:AUI.email);
+  if(!MAILRX.test(email)){authMsg('That email doesn’t look right.');if(e)e.focus();return;}
+  if(again&&Date.now()-AUI.sent<30e3){authMsg('Wait a few seconds before asking for another code.');return;}
+  AUI.email=email;authBusy(again?'auResend':'auSend',true,'Sending');
+  try{await aapi('email',{email});AUI.sent=Date.now();if(!again)authUI('code');authMsg(again?'New code sent — use the newest one.':'','ok');haptic('light');}
+  catch(err){authMsg(err.code==='slow_down'?'Too many codes for now — wait a bit, or use a password if you have one.':err.message);}
+  finally{authBusy(again?'auResend':'auSend',false);}
+}
+async function authVerify(){
+  const c=$('auCode'),code=(c?c.value:'').replace(/\D/g,'');
+  if(code.length!==6){authMsg('Type the 6 digits from the email.');return;}
+  if(AUI.pend)return;authBusy('auVerify',true,'Signing in');
+  AUI.pend=aapi('verify',{email:AUI.email,code});
+  try{const j=await AUI.pend;AUI.pend=null;await accSignedIn(j.token,j.account);}
+  catch(err){AUI.pend=null;authBusy('auVerify',false);if(c){c.value='';c.focus();}
+    authMsg(err.code==='code_expired'||err.code==='code_tries'?err.message:err.code==='code_wrong'?'That code isn’t right — check the email and try again.':err.message);haptic('error');}
+}
+async function authPw(){
+  const email=normMail($('auEmail')&&$('auEmail').value),pw=($('auPw')&&$('auPw').value)||'';
+  if(!MAILRX.test(email)){authMsg('That email doesn’t look right.');return;}
+  if(!pw){authMsg('Type your password.');return;}
+  AUI.email=email;authBusy('auPwBtn',true,'Signing in');
+  try{const j=await aapi('password',{email,dk:await pwDk(pw,email)});await accSignedIn(j.token,j.account);}
+  catch(err){authBusy('auPwBtn',false);authMsg(err.code==='pw_wrong'?'Wrong email or password. No password yet? Sign in with a code.':err.message);haptic('error');}
+}
+// Google: the window opens right away (inside your tap, or browsers block it), then goes to Google; this page waits for it
+async function authGoogle(){
+  authMsg('');let w=null;
+  // a home-screen web app on iPhone opens pop-ups in a separate browser (it wouldn't come back signed in): the page itself goes
+  const home=!window.__lockinNative&&(navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
+  if(!home){try{w=window.open('','lockin_google','popup,width=480,height=640');}catch(e){w=null;}}
+  if(w){try{w.document.write('<!doctype html><title>Lock In</title><meta name="viewport" content="width=device-width"><body style="margin:0;background:#0e1013;color:#a6aeba;font:15px -apple-system,sans-serif;display:grid;place-items:center;height:100vh">Opening Google…</body>');}catch(e){}}
+  authBusy('auG',true,ICO_G+'Opening Google');
+  let st;
+  try{st=await aapi('google/start',w?{}:{redirect:true});}
+  catch(e){authBusy('auG',false);try{if(w)w.close();}catch(_){}authMsg(e.message);return;}
+  // pop-ups blocked: the whole page goes to Google and comes back here (?gs=…)
+  if(!w){location.href=st.url;return;}
+  try{w.location.href=st.url;}catch(e){location.href=st.url;return;}
+  authUI('google');googleWait(st.state,w);
+}
+function authCancel(){AUI.wait=null;authUI('home');}
+async function googleWait(state,w){
+  AUI.wait=state;const t0=Date.now();let closed=0;
+  while(AUI.wait===state&&Date.now()-t0<15*60e3){
+    await new Promise(z=>setTimeout(z,1200));
+    if(AUI.wait!==state)return;
+    let j;
+    try{j=await aapi('poll',{state});}
+    catch(e){if(e.code==='net')continue;AUI.wait=null;authUI('home');authMsg(e.code==='google_failed'?e.message:'That Google sign-in didn’t finish — try again.');return;}
+    if(j.pending){try{if(w&&w.closed){closed=closed||Date.now();if(Date.now()-closed>5000){AUI.wait=null;authUI('home');authMsg('Google sign-in was closed before it finished.');return;}}}catch(e){}continue;}
+    AUI.wait=null;try{if(w&&!w.closed)w.close();}catch(e){}
+    await accSignedIn(j.token,j.account);return;
+  }
+}
+
+/* ---------- signed in: keep the session, bring an old Puter account's data along, start ---------- */
+async function accSignedIn(tok,a){
+  if(!tok||!a||!a.id){authMsg('Sign-in didn’t finish — try again.');return;}
+  haptic('success');
+  // a session that ran out, signed in again in the sheet: same account → just carry on
+  if(AUI.sheet&&ACC.a&&ACC.a.id===a.id){ACC.tok=tok;ACC.bad=false;ACC.a=Object.assign({},ACC.a,a,{local:ACC.a.local});accWrite();closeSheet();needsSignIn=false;toast('Signed in — syncing','ok');pcUI();bgSync();return;}
+  if(AUI.sheet&&ACC.a&&ACC.a.id!==a.id){ACC.tok=tok;ACC.bad=false;ACC.a=Object.assign({},a,{local:a.linked&&a.lname?a.lname:'a_'+a.id});accWrite();location.reload();return;}
+  const leg=legacyName();
+  // where this device keeps your data: the old Puter name when that's this account, else a label of its own
+  ACC.tok=tok;ACC.bad=false;
+  ACC.a=Object.assign({},a,{local:leg&&a.linked&&a.lname===leg?leg:(a.linked&&a.lname?a.lname:'a_'+a.id)});
+  accWrite();
+  if(leg&&a.linked&&a.lname===leg){try{localStorage.setItem('lockin_moved_'+leg,a.id);}catch(e){}accStart();return;}
+  let skip='';try{skip=localStorage.getItem('lockin_lskip_'+leg)||'';}catch(e){}
+  if(leg&&skip!==a.id){AUI.leg=leg;authUI('move');return;}
+  // a device signing in fresh isn't shown What's new (that's for people who used the app here before)
+  try{localStorage.setItem('lockin_wn_'+ACC.a.local,WEB_VER);}catch(e){}
+  accStart();
+}
+function accStart(){AUI.busyTxt='Opening your account…';authUI('busy');setTimeout(()=>location.reload(),RM?0:250);}
+async function legacyGo(){
+  const n=AUI.leg;if(!n)return accStart();
+  AUI.busyTxt='Moving your data…';authUI('busy');
+  let tok=legacyTok(),j=null,err=null;
+  try{j=await sapi('/auth/link','POST',{puter:tok||'-',keys:legacyKeys(n)||undefined});}catch(e){err=e;}
+  if(err&&(err.code==='puter_auth'||err.code==='bad')){legacyPuterAsk(n);return;}
+  if(err)return legacyErr(n,err);
+  legacyDone(n,j);
+}
+function legacyDone(n,j){
+  ACC.a=Object.assign({},ACC.a,j.account||{},{local:n,linked:true,lname:j.lname||n});accWrite();
+  // the account's keys are this phone's old ones now (or the account already had the same): keep them under its name
+  if(j.keys&&e2eValid(j.keys))try{localStorage.setItem('lockin_e2e_'+n,JSON.stringify(j.keys));}catch(e){}
+  try{localStorage.setItem('lockin_moved_'+n,ACC.a.id);localStorage.removeItem('puter.auth.token.v2');localStorage.removeItem('puter.auth.token');localStorage.removeItem('puter.auth.token.origin.v2');}catch(e){}
+  toast('@'+n+'’s data moved into your account','ok');accStart();
+}
+// keep this phone's data without the server-side move (no friends / Pro): it just becomes this account's
+function legacyKeep(n){ACC.a=Object.assign({},ACC.a,{local:n});accWrite();try{localStorage.setItem('lockin_moved_'+n,ACC.a.id);}catch(e){}accStart();}
+function legacySkip(){const n=AUI.leg;try{if(n)localStorage.setItem('lockin_lskip_'+n,ACC.a.id);}catch(e){}accStart();}
+async function legacyOut(){try{await sapi('/auth/logout','POST',{});}catch(e){}ACC.tok='';ACC.a=null;accWrite();AUI.leg=legacyName();authUI('home');}
+function legacyErr(n,e){
+  const keep='<button class="btn btn-primary au-go" onclick="legacyKeep(\''+esc(n)+'\')">Keep this phone’s data in this account</button>',
+    other='<button class="btn btn-ghost au-go" onclick="legacyOut()">Use a different account</button>';
+  AUI.errB=keep+other;
+  if(e.code==='already_linked'){AUI.errT='@'+n+' is already in another account';AUI.errP='Its data moved into the Lock In account you signed in with first. Sign in with that email or Google account to get it.';AUI.errB=other+'<button class="btn btn-ghost au-go" onclick="legacySkip()">Start fresh here</button>';}
+  else if(e.code==='linked_other'){AUI.errT='This account holds someone else’s data';AUI.errP='It already took in another Puter account. Use a different account for @'+esc(n)+', or keep this phone’s data here.';}
+  else if(e.code==='account_in_use'){AUI.errT='This account already has its own friends';AUI.errP='@'+esc(n)+'’s friends can’t move in. Use a different account, or keep just this phone’s data here.';}
+  else{AUI.errT='Couldn’t move your data just now';AUI.errP=esc(e.message||'Check your connection.')+' Nothing is lost — it’s all still on this phone.';AUI.errB='<button class="btn btn-primary au-go" onclick="legacyGo()">Try again</button>'+keep;}
+  authUI('moverr');
+}
+// the old Puter sign-in on this phone ran out: one more Puter sign-in proves the old account is yours (only for the move)
+function legacyPuterAsk(n){
+  AUI.errT='One more step for your friends and Pro';
+  AUI.errP='To move @'+esc(n)+'’s friends and Pro, sign in to Puter one last time. Or just keep this phone’s data in your account.';
+  AUI.errB='<button class="btn btn-primary au-go" id="auPuter" onclick="legacyPuter()">Sign in to Puter</button><button class="btn btn-ghost au-go" onclick="legacyKeep(\''+esc(n)+'\')">Keep this phone’s data only</button>';
+  // the saved Puter sign-in is the one that ran out: forget it, so Puter asks for a fresh one
+  try{['puter.auth.token.v2','puter.auth.token','puter.auth.token.origin.v2'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  authUI('moverr');puterSdk().catch(()=>{});
+}
+let PSDK=null;
+function puterSdk(){if(typeof puter!=='undefined')return Promise.resolve();
+  return PSDK||(PSDK=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://js.puter.com/v2/';s.onload=()=>res();s.onerror=()=>{PSDK=null;rej(new Error('Couldn’t reach Puter'));};document.head.appendChild(s);}));}
+async function legacyPuter(){
+  const n=AUI.leg;
+  if(typeof puter==='undefined'){authMsg('Still connecting to Puter — tap again in a second.');puterSdk().catch(()=>{});return;}
+  try{if(!puter.auth.isSignedIn())await puter.auth.signIn();}catch(e){authMsg('Puter sign-in was cancelled.');return;}
+  const t=puter.authToken;if(!t){authMsg('Puter sign-in didn’t finish — try again.');return;}
+  AUI.busyTxt='Moving your data…';authUI('busy');
+  try{legacyDone(n,await sapi('/auth/link','POST',{puter:t,keys:legacyKeys(n)||undefined}));}
+  catch(e){if(e.code==='puter_auth')legacyPuterAsk(n);else legacyErr(n,e);}
+}
+// a session the server no longer accepts (signed out elsewhere, or expired): the app keeps working on this device
+function accExpired(){
+  if(ACC.bad)return;ACC.bad=true;needsSignIn=true;SY.mode=null;renderSync();pcUI();
+  if(Date.now()-ACC.note>60e3){ACC.note=Date.now();toast('Signed out here — sign in to sync','warn');}
+}
+
+/* ---------- start-up: straight from this device, then the account in the background ---------- */
+async function boot(){
+  const q=new URLSearchParams(location.search),gs=q.get('gs');
+  if(gs){try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
+    if(!ACC.tok){AUI.leg=legacyName();show('login');renderHeader();AUI.el=$('authBox');authUI('google');googleWait(gs,null);return;}}
+  if(!ACC.tok||!ACC.a){showLogin();return;}
+  user={username:ACC.a.local};
+  try{localStorage.setItem('rt_lastuser',ACC.a.local);}catch(e){}
+  const local=await loadLocalAny();
+  if(local){S=merge(fresh(),local);if(S.settings.setupDone){LOCAL_FRESH=true;enterApp();bgSync();return;}}
+  if(!navigator.onLine){if(local){runLocalOnly();return;}showRetry('You’re offline — connect to the internet to open your account here the first time.');return;}
+  let cloud=null,reached=false;
+  for(let i=0;i<3&&!reached;i++){
+    try{cloud=await loadCloud();reached=true;}
+    catch(e){if(e&&e.status===401){ACC.tok='';ACC.a=null;accWrite();showLogin('Your sign-in ran out — sign in again.');return;}if(i<2)await new Promise(z=>setTimeout(z,1500));}}
+  if(!reached&&!local){showRetry('Couldn’t load your account just now — check your connection.');return;}
+  let loaded;cloudReady=reached;
+  if(reached){loaded=mergeStates(cloud,local);offlineMode=false;}else{loaded=local;offlineMode=true;dirty=true;}
+  S=merge(fresh(),loaded);
+  if(reached&&(!cloud||!cloudEq(loaded,cloud)))pushSoon();
+  renderSync();
+  if(!S.settings.setupDone){openWizard();return;}
+  enterApp();
+}
+async function bgSync(){
+  if(syncing)return;
+  if(!ACC.tok||ACC.bad){needsSignIn=true;renderSync();return;}
+  if(!navigator.onLine){offlineMode=true;dirty=true;renderSync();return;}
+  syncing=true;renderSync();
+  try{
+    needsSignIn=false;let cloud;
+    try{cloud=await loadCloud();}catch(e){if(e&&e.status===401)accExpired();else{offlineMode=true;dirty=true;}return;}
+    const prev=S;S=merge(fresh(),mergeStates(cloud,prev));migrate();const merged=S;
+    cloudReady=true;offlineMode=false;lastPull=Date.now();
+    if(deepEq(merged,prev))S=prev;else{dataVer++;snapSettings();writeLocal();quietRefresh();}
+    pushSoon();
+    processQueue();setTimeout(runPendingAnalyses,4000);
+  }finally{syncing=false;renderSync();}
+}
+async function resync(){if(!S)return;lastPull=0;await bgSync();}
+async function loadCloud(){
+  if(!await syUse()){const e=new Error(E2E.err||'Couldn’t reach your account');if(E2E.auth)e.status=401;throw e;}
+  return syLoad();
+}
+async function pushNow(){
+  if(!user||!S||!cloudReady)return;
+  if(pushing){clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1200);return;}
+  if(syOn())return syPushNow();
+  dirty=true;renderSync();
+  if(navigator.onLine&&socTok()&&!syncing)bgSync();     // keys not loaded yet: a read first (it loads them), then the write
+}
+async function doSignOut(){
+  if(!confirm('Sign out on this device? Your data stays safe in your account.'))return;
+  if(dirty&&cloudReady&&syOn()&&navigator.onLine){try{clearTimeout(pushT);await pushNow();}catch(e){}}
+  if((dirty||phqGet().length)&&!confirm('Some changes aren’t in your account yet — signing out removes them from this device. Export a backup first (Setup → Export backup) to keep them. Sign out anyway?'))return;
+  try{await sapi('/auth/logout','POST',{});}catch(e){}
+  await accWipeLocal();ACC.tok='';ACC.a=null;accWrite();location.reload();
+}
+async function accWipeLocal(){
+  try{await phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());}catch(e){}
+  try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');localStorage.removeItem(socKey());localStorage.removeItem(e2eLK());localStorage.removeItem('rt_lastuser');await lidbDel(k);}catch(e){}
+}
+async function eraseAll(){
+  if(!confirm('Erase ALL your data (logs, splits, food, photos) from your account? This cannot be undone.')||!confirm('Really sure?'))return;
+  try{await sapi('/sync','DELETE');}catch(e){toast('Couldn’t erase your account’s copy — are you online?','warn');return;}
+  SY.sv={};SY.full=false;try{if(SOC.me)await sapi('/me','DELETE');}catch(e){}socWipe();
+  try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');lidbDel(k);LIDB.data=null;}catch(e){}
+  try{phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());PHURL.clear();}catch(e){}
+  S=fresh();pushed={};pushedCore='';photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
+}
+async function accDelete(){
+  if(!confirm('Delete your Lock In account? Your data, photos, friends and sign-ins are removed for good. This can’t be undone.'))return;
+  if(!confirm('Really delete the account'+(accWho()?' '+accWho():'')+'?'))return;
+  try{await sapi('/account','DELETE');}catch(e){toast('Couldn’t delete the account — are you online?','warn');return;}
+  await accWipeLocal();ACC.tok='';ACC.a=null;accWrite();location.reload();
+}
+
+/* ---------- your keys live with your account (any device you sign in on gets them) ---------- */
+async function e2eKVGet(){const r=await sapi('/account/keys');E2E.kv=r.kv||0;return r.keys&&e2eValid(r.keys)?r.keys:null;}
+// replace=false: only if the account has none yet (the first device wins — the answer is the keys now in use)
+async function e2eKVSet(st,replace){
+  const r=await sapi('/account/keys','PUT',replace?{keys:st,replace:true,base:E2E.kv||0}:{keys:st});
+  if(typeof r.kv==='number')E2E.kv=r.kv;
+  if(r.ok)return st;if(r.keys&&e2eValid(r.keys))return r.keys;
+  throw new Error('Couldn’t save your encryption keys');
+}
+async function e2eLoad(force){
+  if(E2E.ok&&!force)return true;
+  if(E2E.busy)return E2E.busy;
+  E2E.busy=(async()=>{
+    try{
+      if(!window.crypto||!crypto.subtle)throw new Error('This browser can’t encrypt — update iOS or use Safari.');
+      let loc=null;try{loc=JSON.parse(localStorage.getItem(e2eLK())||'null');}catch(e){}if(!e2eValid(loc))loc=null;
+      let sv=null,reach=false;E2E.auth=false;
+      if(socTok()&&navigator.onLine){try{sv=await e2eKVGet();reach=true;}catch(e){if(e&&e.status===401){E2E.auth=true;accExpired();}}}
+      let st;
+      if(sv){st=sv;if(loc&&loc.id.d===sv.id.d){const m=e2eMerge(sv,loc);if(m.ch){try{st=await e2eKVSet(m.st,true);}catch(e){}}}}
+      else if(reach)st=await e2eKVSet(loc||await e2eGen(),false);
+      else if(loc)st=loc;
+      else throw new Error('Couldn’t reach your account to load your encryption keys.');
+      try{localStorage.setItem(e2eLK(),JSON.stringify(st));}catch(e){}
+      await e2eUse(st);return true;
+    }catch(e){E2E.err=(e&&e.message)||'Encryption keys unavailable';return false;}
+    finally{E2E.busy=null;}
+  })();
+  return E2E.busy;
+}
+async function e2eNewKeys(cats){
+  for(let round=0;round<3;round++){
+    let st=JSON.parse(JSON.stringify(E2E.st));
+    const sv=await e2eKVGet();
+    if(sv){if(sv.id.d!==st.id.d){await e2eLoad(true);throw new Error('Your keys changed on another device — try again');}st=e2eMerge(st,sv).st;}
+    const now=Date.now();for(const c of cats)st.cats[c]={kid:hexs(rnd(4)),k:b64u(rnd(32)),t:now};
+    const r=await sapi('/account/keys','PUT',{keys:st,replace:true,base:E2E.kv||0});
+    if(typeof r.kv==='number')E2E.kv=r.kv;
+    if(r.ok){try{localStorage.setItem(e2eLK(),JSON.stringify(st));}catch(e){}await e2eUse(st);return;}
+  }
+  throw new Error('Couldn’t save new keys — try again');
+}
+
+/* ---------- sync on Lock In's storage only ---------- */
+const PHX={reup:false};
+async function syUse(){
+  if(syOn())return true;
+  if(!socTok()||!navigator.onLine)return false;
+  if(!E2E.ok){try{await e2eLoad();}catch(e){}}
+  if(!E2E.ok||!E2E.self)return false;
+  SY.mode='d1';SY.modeT=Date.now();return true;
+}
+// another device changed the account's keys (an old account moved in, new sharing keys): load them before anything else
+async function syKeysCheck(kv){
+  if(typeof kv!=='number'||kv===E2E.kv)return false;
+  const was=E2E.st&&E2E.st.self;await e2eLoad(true);
+  if(!E2E.ok)throw Object.assign(new Error(E2E.err||'Couldn’t load your keys'),E2E.auth?{status:401}:{});
+  if(E2E.st.self!==was){SY.sv={};SY.bad={};SY.full=false;PHX.reup=true;}
+  return true;
+}
+async function syLoad(){
+  let I=await sapi('/sync');
+  if(await syKeysCheck(I.kv))I=await sapi('/sync');
+  const ix=I.docs||[];if(typeof I.v==='number')SY.v=I.v;
+  const need=ix.filter(d=>!SY.full||!SY.sv[d.k]||SY.sv[d.k].v!==d.ver).map(d=>d.k);
+  const got=await syGet(need);
+  syRemember(got);
+  for(const k in SY.sv)if(!ix.some(d=>d.k===k))delete SY.sv[k];
+  SY.full=true;
+  return ix.length?syCloud(got):null;
+}
+async function syPut(docs){
+  const conflicts=[];let batch=[],size=0;
+  const flush=async()=>{
+    if(!batch.length)return;
+    const r=await sapi('/sync','PUT',{kv:E2E.kv,docs:batch.map(d=>({k:d.k,base:d.base,data:d.data}))});if(r.v)SY.v=r.v;
+    for(const x of r.docs||[]){const d=batch.find(y=>y.k===x.k);if(!d)continue;
+      // gone from the account (erased, or dropped when the keys changed): it goes up as new next round
+      if(x.conflict){conflicts.push(x.k);if(!x.ver)delete SY.sv[x.k];}else SY.sv[d.k]={v:x.ver,h:d.h,u:d.u||0,t:Date.now()};}
+    batch=[];size=0;
+  };
+  for(const d of docs){
+    d.data=await syEnc(d.k,d.obj);
+    if(d.data.length>1400000){SY.err='too_big';continue;}
+    if(size+d.data.length>1400000)await flush();
+    batch.push(d);size+=d.data.length;
+  }
+  await flush();
+  return conflicts;
+}
+async function syPushNow(){
+  if(!E2E.ok||!E2E.self)return;
+  if(!SY.full){if(!syncing)bgSync();return;}
+  if(!navigator.onLine){dirty=true;renderSync();return;}
+  pushing=true;const stamp=S.updatedAt;lastPushAt=Date.now();renderSync();let again=false;
+  try{
+    for(let round=0;round<3;round++){
+      const docs=syDocs();if(!docs.length)break;
+      const conflicts=await syPut(docs);if(!conflicts.length)break;
+      const got=await syGet(conflicts);syRemember(got);
+      const prev=S;S=merge(fresh(),mergeStates(syCloud(got),prev));migrate();
+      if(!deepEq(S,prev)){dataVer++;snapSettings();writeLocal();quietRefresh();}
+    }
+    if(S.updatedAt===stamp)dirty=false;offlineMode=false;lastSync=new Date();SY.err='';
+  }catch(e){dirty=true;SY.err=(e&&e.message)||'';
+    if(e&&e.code==='keys_changed'){SY.full=false;again=true;}else if(e&&e.status===401)accExpired();}
+  pushing=false;renderSync();
+  if(again&&!syncing)bgSync();
+}
+async function syPoll(){
+  if(!syOn()||document.hidden||syncing||pushing||!navigator.onLine)return;
+  try{const r=await sapi('/sync/v');
+    if(SY.v!==null&&r.v!==SY.v){SY.v=r.v;lastPull=0;await bgSync();if(curView==='progress')loadPhotos(true);}
+    else SY.v=r.v;}catch(e){if(e&&e.status===401)accExpired();}
+}
+
+/* ---------- progress photos: Lock In's storage only ---------- */
+async function phMigrate(){return 0;}
+async function phD1Put(name,blob){const buf=new Uint8Array(blob.arrayBuffer?await blob.arrayBuffer():await new Response(blob).arrayBuffer());
+  await sapi('/photos/'+encodeURIComponent(name),'PUT',{kv:E2E.kv,data:'s1.'+await encS(E2E.self,buf,'photo:'+name)});}
+// the keys changed: photos this phone has go up again with the account's current key, so every device can open them
+async function phReup(){
+  if(!PHX.reup||!syOn()||!navigator.onLine)return;PHX.reup=false;
+  for(const p of photos){if(p.pend)continue;const b=await phGetBlob(p.name);if(!b||!b.size)continue;
+    try{await phD1Put(p.name,b);}catch(e){if(e&&e.code==='keys_changed'){PHX.reup=true;break;}}}
+}
+async function loadPhotos1(force){
+  const keep=p=>Object.assign(p,{url:PHURL.get(p.name)||null});
+  const c=phListGet();
+  if(c&&Array.isArray(c.a))photos=phWithPending(c.a.map(p=>keep(Object.assign({},p))));
+  else if(!photos.length)photos=phWithPending([]);
+  const stale=force||!c||Date.now()-c.t>15*60e3;
+  if(stale&&navigator.onLine&&await syUse()){
+    try{const list=await phD1List();phListSet(list);photos=phWithPending(list.map(keep));phPrune(new Set(photos.map(p=>p.name)));}catch(e){}
+  }
+  renderPhotos();if(curView==='progress')fetchPhotos();
+  phqFlush();phReup();
+}
+async function fetchPhotos(){
+  if(photoQ){PHS.refetch=true;return;}photoQ=true;let miss=0;
+  try{const d1=syOn(),todo=photos.filter(p=>!p.url).map(p=>({name:p.name,pend:p.pend}));let i=0;
+    const work=async()=>{while(i<todo.length){const p=todo[i++];let b=PHURL.has(p.name)?null:await phGetBlob(p.name);
+      if(!b&&!PHURL.has(p.name)&&!p.pend&&navigator.onLine&&d1){try{b=await phD1Get(p.name);if(b&&b.size)phPutBlob(p.name,b);}catch(e){b=null;}}
+      if(b&&b.size&&!PHURL.has(p.name))PHURL.set(p.name,URL.createObjectURL(b));
+      const u=PHURL.get(p.name),cur=photos.find(x=>x.name===p.name);
+      if(u&&cur){if(!cur.url){cur.url=u;photoCell(cur);}}else if(!u)miss++;}};
+    await Promise.all([work(),work(),work()]);
+  }finally{photoQ=false;}
+  phNote(miss);
+  if(PHS.refetch){PHS.refetch=false;if(photos.some(p=>!p.url))fetchPhotos();}
+}
+function phCanUpload(){return navigator.onLine&&syOn();}
+async function phUpload(name,b){if(!syOn())throw new Error('Not connected yet');await phD1Put(name,b);}
+async function delPhoto(i){
+  const p=photos[i];if(!p||!confirm('Delete this photo?'))return;
+  if(!p.pend){
+    if(!syOn()||!navigator.onLine){toast('Could not delete — are you online?');return;}
+    try{await sapi('/photos/'+encodeURIComponent(p.name),'DELETE');}catch(e){toast('Could not delete — are you online?');return;}
+  }
+  phqSet(phqGet().filter(x=>x.name!==p.name));phDelBlob(p.name);if(PHURL.has(p.name)){try{URL.revokeObjectURL(PHURL.get(p.name));}catch(e){}PHURL.delete(p.name);}
+  photos.splice(i,1);selPhotos=[];phListSet(photos);renderPhotos();phNote();
+}
+
+/* ---------- AI: always through Lock In (your plan's limits) ---------- */
+async function ai(prompt,img,kind){
+  kind=kind||(img?'meal':'other');
+  if(!socTok())throw Object.assign(new Error('Sign in to use AI'),{code:'signin'});
+  if(!navigator.onLine)throw Object.assign(new Error('You’re offline'),{code:'offline'});
+  try{const j=await aiSrv(kind,prompt,img);PLAN.srv=true;planCount(kind,j);return String(j.text||'');}
+  catch(e){
+    if(e.code==='ai_limit'){planCount(kind,e.data);throw Object.assign(new Error('ai_limit'),{code:'ai_limit',kind,data:e.data||{}});}
+    if(e.code==='ai_off')PLAN.srv=false;
+    if(e.status===401)accExpired();
+    throw e;
+  }
+}
+// errors that mean "try later" (nothing was read): the offline photo queue doesn't spend one of its tries on them
+const AI_LATER=['ai_credit','ai_limit','ai_off','ai_busy','ai_key','net','offline','signin','http','auth'];
+async function processQueue(manual){
+  if(qBusy||!online())return;const q=getQ();if(!q.length)return;
+  qBusy=true;let done=0,tried=false,later=null;const now=Date.now();
+  try{for(const item of q){
+    if(!manual&&((item.tries||0)>=3||now-(item.last||0)<30*60e3))continue;
+    let r=null;try{r=parseJSON(await ai(nutrientPrompt(item.hint,true),item.img,'meal'));}catch(e){if(e&&AI_LATER.includes(e.code)){later=e;break;}}
+    const parts=toParts(r);
+    if(!parts.length){const cur=getQ(),it=cur.find(x=>x.id===item.id);if(it){it.tries=(it.tries||0)+1;it.last=Date.now();setQ(cur);}tried=true;continue;}
+    const parts2=parts.map(p=>({name:p.name,g:p.g,n:cleanN(p.n),flags:p.flags}));
+    const e={id:uid('f'),ts:item.ts,name:r.name||'Meal',parts:parts2,n:partsTotal(parts2),mult:1,src:'queued',q:1,anPending:1};
+    (S.food[item.date]=S.food[item.date]||[]).push(e);
+    setQ(getQ().filter(x=>x.id!==item.id));done++;
+  }}finally{qBusy=false;}
+  if(done){save();toast(done+' saved photo'+(done>1?'s':'')+' analyzed and logged');if($('view-diet').classList.contains('active'))renderDiet();runPendingAnalyses();}
+  else if(manual)toast(later&&later.code==='ai_limit'?'You’ve used today’s AI meal reads — they come back tomorrow':later&&later.message&&later.code!=='http'?later.message:'Couldn’t analyze yet — try again in a moment');
+  if(tried&&!done&&$('view-diet').classList.contains('active'))renderDiet();
+}
+
+/* ---------- no Puter allowance any more: those parts of the app stay out of the way ---------- */
+function pcOut(){return false;}
+function pcHit(){}
+function pcOk(){}
+function pcIsFunds(){return false;}
+async function pcCheck(){return null;}
+function pcCheckDue(){return Promise.resolve();}
+function pcDue(){return Promise.resolve();}
+function pcCardShow(){pcCardRender();}
+function pcCardRender(){const c=$('pcCard');if(c){c.hidden=true;c.innerHTML='';}}
+function aiOutGet(){return null;}
+function aiOutNote(){}
+async function aiOutReport(){}
+async function aiAdminCheck(){}
+async function aiAdminList(){const c=$('aiAdmCard');if(c)c.hidden=true;}
+// Today's note: only when this device is signed out (a session that ran out) — the data is safe here meanwhile
+function pcUI(){
+  const el=$('pcNote');
+  if(el){const on=!!user&&ACC.bad;
+    if(!on){if(!el.hidden||el.innerHTML){el.hidden=true;el.innerHTML='';}}
+    else if(el.hidden||!el.innerHTML){el.innerHTML='<div class="card pcnote"><div class="pcn-ico" aria-hidden="true">🔑</div><div class="pcn-b"><b>Signed out on this device</b><p>Everything you log is saved here. Sign in again to keep it syncing with your other devices.</p><div class="pcn-a"><button class="btn btn-primary btn-sm" onclick="doSignIn()">Sign in</button></div></div></div>';el.hidden=false;
+      anim(el.firstChild,[{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});}}
+  const an=$('aiOutNote');if(an)an.hidden=true;
+  try{phNote();}catch(e){}
+}
+
+/* ---------- Setup → Account ---------- */
+function accCardRender(){
+  const el=$('acctLine');if(!el)return;const a=ACC.a||{};
+  if(!ACC.tok||!a.id){el.innerHTML='—';return;}
+  const how=a.google&&a.email?'Email and Google':a.google?'Google':'Email code'+(a.password?' or password':'');
+  el.innerHTML='<div class="acc-row"><div class="acc-av" aria-hidden="true">'+esc((accFirst()||'?').charAt(0).toUpperCase())+'</div><div class="grow"><b>'+esc(accWho()||'Your account')+'</b>'+
+    '<span class="tiny">Signs in with: '+how+(a.linked&&a.lname?' · moved from Puter (@'+esc(a.lname)+')':'')+'</span></div></div>'+
+    (ACC.bad?'<div class="acc-warn">Signed out on this device — <button class="linkbtn" onclick="doSignIn()">sign in</button> to keep syncing.</div>':'')+
+    (a.email?'<div class="acc-act"><button class="btn btn-ghost btn-sm" onclick="pwSheet()">'+(a.password?'Change password':'Add a password')+'</button>'+(a.password?'<button class="linkbtn" onclick="pwRemove()">Remove password</button>':'')+'</div>':'');
+  if(navigator.onLine&&socTok()&&Date.now()-(ACC.t||0)>60e3){ACC.t=Date.now();
+    sapi('/account').then(r=>{if(r&&r.id===a.id){ACC.a=Object.assign({},ACC.a,r,{local:ACC.a.local});accWrite();if(curView==='settings')accCardRender();}}).catch(e=>{if(e&&e.status===401)accExpired();});}
+}
+function pwSheet(){
+  const a=ACC.a||{};if(!a.email)return;
+  openSheet(a.password?'Change password':'Add a password','<p class="tiny" style="margin:0 0 12px">Sign in with <b>'+esc(a.email)+'</b> and this password — or keep using email codes. At least 8 characters.</p>'+
+    '<input type="email" autocomplete="username" value="'+esc(a.email)+'" hidden>'+
+    '<label class="f" for="pw1">New password</label><input id="pw1" type="password" autocomplete="new-password" placeholder="At least 8 characters">'+
+    '<label class="f" for="pw2" style="margin-top:10px">Same again</label><input id="pw2" type="password" autocomplete="new-password" placeholder="Repeat it" onkeydown="if(event.key===\'Enter\')pwSave()">'+
+    '<div class="authmsg" id="auMsg"></div><button class="btn btn-primary" id="pwBtn" style="width:100%;margin-top:6px" onclick="pwSave()">Save password</button>');
+}
+async function pwSave(){
+  const a=ACC.a||{},p1=$('pw1').value,p2=$('pw2').value,m=$('auMsg');
+  if(p1.length<8){m.textContent='Use at least 8 characters.';return;}
+  if(p1!==p2){m.textContent='The two don’t match.';return;}
+  authBusy('pwBtn',true,'Saving');
+  try{await sapi('/account/password','POST',{dk:await pwDk(p1,a.email)});ACC.a.password=true;accWrite();closeSheet();toast('Password saved — you can sign in with it now','ok');accCardRender();}
+  catch(e){authBusy('pwBtn',false);m.textContent=e.message||'Couldn’t save — try again.';}
+}
+async function pwRemove(){
+  if(!confirm('Remove your password? You’ll sign in with email codes (or Google).'))return;
+  try{await sapi('/account/password','POST',{dk:null});ACC.a.password=false;accWrite();toast('Password removed');accCardRender();}catch(e){toast('Couldn’t remove it — are you online?','warn');}
+}
+
+/* what the lock means */
+function openE2EInfo(){
+  openSheet('How your data is protected','<div class="e2einfo"><div class="e2ehero">'+IC.lock+'</div>'+
+    '<p>Your stats, activity, progress photos and the splits you send are <b>encrypted on this phone</b> before they leave it. Only friends you allow can unlock them in the app.</p>'+
+    '<ul><li><b>Per category.</b> Gym, lifts, splits, food, nutrients, bodyweight and photos each have their own key.</li>'+
+    '<li><b>Per friend.</b> A category key is handed only to friends allowed to see it, sealed with a key only the two of you can compute.</li>'+
+    '<li><b>Take it back.</b> Remove someone or switch a category off and it gets a brand-new key they never receive.</li>'+
+    '<li><b>Links.</b> A shared split link carries its key after the “#”, which is never sent to any server.</li>'+
+    '<li><b>Your keys</b> are kept with your Lock In account, so signing in with your email on any device — even a new phone — gets everything back. The trade-off: it keeps your data from other people, not hidden from Lock In itself.</li></ul>'+
+    '<div class="pfh" style="margin-top:16px">This device <span>'+(E2E.ok?'keys ready':'keys not loaded')+'</span></div>'+
+    '<div class="scode sm">'+(E2E.ok?esc(E2E.fp.slice(0,4)+' '+E2E.fp.slice(4,8)+' '+E2E.fp.slice(8,12)):'—')+'</div>'+
+    '<p class="tiny" style="margin-top:8px">To check a friend, open their profile → “What they can see of you” → Security code, and compare it with theirs.</p></div>');
+}
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','friends','settings'];
@@ -7971,7 +8590,7 @@ function init(){
   {const _show=show;show=function(v){const r=_show.apply(this,arguments);try{tourAuto(v);}catch(e){}return r;};}
   initUI();initGlass();initFx();csPoll();setTimeout(()=>{if(aiOutGet()){const el=$('aiOutNote');if(el)el.hidden=false;aiOutReport();}},1500);setTimeout(aiAdminCheck,4500);
   document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
-  $('loginBtn').addEventListener('click',doSignIn);$('wzSaveBtn').addEventListener('click',finishWizard);
+  $('wzSaveBtn').addEventListener('click',finishWizard);
   $('splitSel').addEventListener('change',e=>{S.activeSplit=e.target.value;const w=curWO();if(w&&!w.ended&&!woHasData(w)){delete S.workouts[w.id];S.cur=null;}save();renderWorkout();renderHeader();});
   $('gymSel').addEventListener('change',e=>{
     if(e.target.value==='__add'){const n=prompt('Name of the gym');const g=addGym(n);if(g)S.activeGym=g.id;}
@@ -8006,7 +8625,7 @@ function init(){
   $('importFile').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value='';});
   $('eraseBtn').addEventListener('click',eraseAll);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&$('view-workout').classList.contains('active'))wakeLock(true);});
-  window.addEventListener('online',()=>{if(typeof puter==='undefined'){const s=document.createElement('script');s.src='https://js.puter.com/v2/';s.onload=()=>{window.puterReady=Promise.resolve();bgSync();};document.head.appendChild(s);}else bgSync();});
+  window.addEventListener('online',()=>bgSync());
   window.addEventListener('offline',()=>{offlineMode=true;renderSync();});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAll();else{if(S&&lastDay!==todayStr()){lastDay=todayStr();renderHeader();quietRefresh();}if(S&&user&&Date.now()-lastPull>60000)bgSync();}});
   setInterval(()=>{if(S&&!document.hidden&&lastDay!==todayStr()){lastDay=todayStr();renderHeader();quietRefresh();}},60000);
