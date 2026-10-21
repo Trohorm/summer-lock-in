@@ -1509,6 +1509,28 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .pcell .ppend{position:absolute;left:6px;top:6px;z-index:2;font-size:11px;line-height:20px;width:22px;height:20px;text-align:center;border-radius:7px;background:rgba(14,16,19,.78)}
 .pcell.paused::after{content:'☁';font-size:20px;color:var(--mist);opacity:.8}
 .phnote{margin-top:10px;color:#f5c26b}
+/* ---- plans */
+.aiq{text-align:center;margin-top:8px;color:var(--sky)}.aiq.out{color:#f5c26b}
+#aiQuota .aiq{margin-top:6px}
+.upg{text-align:center;padding:4px 2px 2px}
+.upg-ico{width:58px;height:58px;margin:4px auto 10px;border-radius:18px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,rgba(123,108,255,.3),rgba(110,166,255,.22));border:1px solid rgba(123,108,255,.45)}
+.upg h3{font-size:18px;margin:0 0 6px;color:var(--navy)}.upg p.muted{margin:0 0 14px;line-height:1.45}.upg b{color:var(--navy)}
+.upg .btn{width:100%}.upg .upg-m{margin-top:8px}.upg-y small{opacity:.8;font-weight:700;margin-left:4px}
+.upg-soon{padding:12px;border-radius:12px;background:rgba(123,108,255,.1);border:1px solid rgba(123,108,255,.28);color:#c9c3ff;font-size:13.5px;line-height:1.4}
+.upg-f{margin-top:12px}
+#estBox .upg{margin-top:12px;padding:14px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.plbadge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:rgba(255,255,255,.08);color:var(--slate)}
+.plbadge.pro{background:linear-gradient(135deg,#7b6cff,#5b93ff);color:#fff}.plbadge.admin{background:rgba(62,207,142,.18);color:#8ff0c2}
+.plrow{display:flex;justify-content:space-between;font-size:13.5px;margin-top:10px;color:var(--slate)}.plrow b{color:var(--navy);font-variant-numeric:tabular-nums}
+.plbar{height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:6px}
+.plbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#5b93ff,#7b6cff);transform-origin:left center}
+@media (prefers-reduced-motion:no-preference){.plbar i{animation:pcfill .8s cubic-bezier(.2,.8,.2,1) both}}
+.plbuy{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}
+.adst{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 8px}
+.adst div{padding:8px 4px;border-radius:12px;background:rgba(255,255,255,.04);text-align:center}.adst b{display:block;font-size:14px;color:var(--navy)}.adst small{font-size:10.5px;color:var(--mist)}
+.adlist{display:grid;gap:6px;margin-top:8px}
+.adrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.03)}
+.adrow .grow{min-width:0}.adrow .grow b{font-size:13.5px}.adrow .btn{flex:none}
 </style>
 </head>
 <body>
@@ -1664,6 +1686,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
       <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none">
       <input type="file" id="libIn" accept="image/*" style="display:none">
       <p class="tiny" style="margin-top:8px;text-align:center">Scan reads barcodes on its own — or snap your plate and the AI estimates every macro, micro and anti-nutrient. <span class="linkbtn" style="font-size:11.5px" onclick="$('libIn').click()">Pick from photos</span></p>
+      <div id="aiQuota" hidden></div>
     </div>
     <div class="card kcalcard" id="kcalCard" hidden></div>
     <div class="card ancard" id="anCard" style="display:none"></div>
@@ -1778,6 +1801,8 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
       <div class="row" style="margin-top:8px"><input id="srcUrl" readonly value="https://ipa.lockin-app.online"><button class="btn btn-ghost btn-sm" id="srcCopy">Copy</button></div>
       <div class="row" style="margin-top:12px;align-items:center"><span class="tiny grow" id="verLine"></span><button class="btn btn-ghost btn-sm" onclick="showWhatsNew(true)">What’s new</button></div>
     </div>
+    <div class="card" id="planCard" hidden></div>
+    <div class="card" id="planAdmCard" hidden></div>
     <div class="card" id="pcCard"></div>
     <div class="card">
       <h2>Account &amp; data</h2>
@@ -2276,7 +2301,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){snapSettings();if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){snapSettings();planRestore();setTimeout(()=>planLoad(),1800);if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||(user?user.username:'');
@@ -2310,8 +2335,8 @@ function finishWizard(){
 async function doSignIn(){$('loginMsg').textContent='';try{await puter.auth.signIn();await boot();}catch(e){$('loginMsg').textContent='Sign-in was cancelled or failed — try again.';}}
 async function doSignOut(){
   if(!confirm('Sign out on this device? Your data stays safe in your account.'))return;
-  if(dirty&&cloudReady&&!pcOut()&&navigator.onLine){try{clearTimeout(pushT);await pushNow();}catch(e){}}
-  if((pcOut()||dirty||phqGet().length)&&!confirm('Some changes aren’t in your account yet'+(pcOut()?' (your Puter allowance is used up this month)':'')+' — signing out removes them from this device. Export a backup first (Setup → Export backup) to keep them. Sign out anyway?'))return;
+  if(dirty&&cloudReady&&(!pcOut()||syOn())&&navigator.onLine){try{clearTimeout(pushT);await pushNow();}catch(e){}}
+  if(((pcOut()&&!syOn())||dirty||phqGet().length)&&!confirm('Some changes aren’t in your account yet'+(pcOut()&&!syOn()?' (your Puter allowance is used up this month)':'')+' — signing out removes them from this device. Export a backup first (Setup → Export backup) to keep them. Sign out anyway?'))return;
   try{await phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());}catch(e){}
   try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');localStorage.removeItem(socKey());localStorage.removeItem('rt_lastuser');await lidbDel(k);}catch(e){}
   try{await puter.auth.signOut();}catch(e){}location.reload();
@@ -2329,10 +2354,10 @@ function prerenderOne(){
 function renderView(v){
   if(v==='today')renderToday();
   if(v==='workout'){renderWorkout();csLine();splitIntro();}
-  if(v==='diet')renderDiet();
+  if(v==='diet'){renderDiet();try{planUI();}catch(e){}}
   if(v==='progress'){renderWeight();renderPhotos();renderStrength();renderMuscles();renderStalls();}
   if(v==='friends')renderFriends();
-  if(v==='settings'){renderSettings();aiAdminList();verLine();pcCardShow();}
+  if(v==='settings'){renderSettings();aiAdminList();verLine();pcCardShow();planCardRender();planAdmRender();planLoad();}
   viewVer[v]=verKey(v);
 }
 let enteringView='',swipeFrom=null,heroDeco=null,leaveAnims=[];
@@ -2773,7 +2798,9 @@ async function aiFeedback(id,manual){
   if(manual&&S.cur!==id)openOld(id);
   showAi('Coach is looking at your session…',true);
   let text='';
-  try{text=await ai(buildPrompt(w));}catch(e){showAi('Feedback unavailable right now — check your connection and retry from History.');return;}
+  try{text=await ai(buildPrompt(w),null,'review');}catch(e){
+    if(e&&e.code==='ai_limit'){showAi('Today’s free AI workout review is used — Pro has unlimited reviews. It resets '+planResetTxt()+'.');if(manual)upgradeAsk('review',e.data);return;}
+    showAi('Feedback unavailable right now — check your connection and retry from History.');return;}
   if(!text){showAi('Feedback came back empty — try again from History.');return;}
   w.ai=text;save();showAi(text);renderHistory();
 }
@@ -3726,12 +3753,12 @@ function handlePhoto(file){
 function photoSheet(){
     if(!$('view-diet').classList.contains('active'))show('diet');
     openSheet('Analyze meal','<div class="pvwrap"><img class="preview" src="'+pendingImg+'"><i class="scanline"></i></div><div class="field"><label class="f">Anything the photo can\'t show? (optional)</label><input id="mealHint" placeholder="e.g. 200 g chicken, oat milk"></div>'+
-      (online()?'<button class="btn btn-primary" id="anBtn" onclick="analyze(true)">Estimate nutrients</button><div id="estBox"></div>':
+      (online()?'<button class="btn btn-primary" id="anBtn" onclick="analyze(true)">Estimate nutrients</button>'+aiQuotaLine()+'<div id="estBox"></div>':
        '<div class="okline">You’re offline. Save the photo and it gets analyzed and logged automatically as soon as you’re back online.</div><button class="btn btn-primary" onclick="queuePhoto()">Save for later</button>'));
 }
 function openDescribe(){
   pendingImg=null;
-  openSheet('Describe a meal','<div class="field"><label class="f">What did you eat?</label><textarea id="mealHint" rows="3" placeholder="e.g. 3 eggs fried in ghee, 2 slices sourdough, a banana, black coffee"></textarea></div><button class="btn btn-primary" id="anBtn" onclick="analyze(false)">Estimate nutrients</button><div id="estBox"></div>');
+  openSheet('Describe a meal','<div class="field"><label class="f">What did you eat?</label><textarea id="mealHint" rows="3" placeholder="e.g. 3 eggs fried in ghee, 2 slices sourdough, a banana, black coffee"></textarea></div><button class="btn btn-primary" id="anBtn" onclick="analyze(false)">Estimate nutrients</button>'+aiQuotaLine()+'<div id="estBox"></div>');
   setTimeout(()=>{const h=$('mealHint');if(h)h.focus();},120);
 }
 const SEEDRULES='seedoil = grams of industrial seed oil in the item (canola/rapeseed, sunflower, soybean, corn, cottonseed, safflower, grapeseed, rice bran, "vegetable oil", margarine, shortening). Fried, restaurant, takeaway, fast-food and packaged foods are made with seed oils unless clearly stated otherwise — estimate the oil absorbed or added. Butter, ghee, tallow, lard, duck fat, coconut, olive and avocado oil are NOT seed oils. '+
@@ -3762,7 +3789,8 @@ async function analyze(photo){
   const btn=$('anBtn');btn.disabled=true;btn.innerHTML=(photo?'Reading your photo':'Estimating')+'<span class="tdots"><i></i><i></i><i></i></span>';
   const pv=document.querySelector('#sheetBody .pvwrap');if(pv)pv.classList.add('scanning');
   let r=null;
-  try{r=parseJSON(await ai(nutrientPrompt(hint,photo),photo?pendingImg:null));}catch(e){}
+  try{r=parseJSON(await ai(nutrientPrompt(hint,photo),photo?pendingImg:null,'meal'));}
+  catch(e){if(e&&e.code==='ai_limit'){if(pv)pv.classList.remove('scanning');btn.disabled=false;btn.textContent='Estimate nutrients';const eb=$('estBox');if(eb)eb.innerHTML=upgradeHTML('meal',e.data);haptic('light');return;}}
   if(pv)pv.classList.remove('scanning');
   btn.disabled=false;btn.textContent='Estimate again';
   const parts=toParts(r);
@@ -4120,7 +4148,7 @@ async function eraseAll(){
   if(!confirm('Erase ALL your data (logs, splits, food, photos) from your account? This cannot be undone.')||!confirm('Really sure?'))return;
   try{await puter.kv.del(KV_KEY);for(const k in pushed)await puter.kv.del(k);}catch(e){}
   try{await puter.fs.delete(PDIR,{recursive:true});}catch(e){}
-  try{if(SOC.me)await sapi('/me','DELETE');}catch(e){}socWipe();
+  try{await sapi('/sync','DELETE');}catch(e){}SY.sv={};SY.full=false;try{if(SOC.me)await sapi('/me','DELETE');}catch(e){}socWipe();
   try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');lidbDel(k);LIDB.data=null;}catch(e){}
   try{phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());PHURL.clear();}catch(e){}
   S=fresh();pushed={};pushedCore='';photos=[];selPhotos=[];document.body.classList.remove('authed');openWizard();toast('Fresh start');
@@ -6238,8 +6266,11 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.21.1';
+const WEB_VER='2026.10.21.2';
 const WHATSNEW=[
+ {v:'2026.10.21.2',d:'21 Oct',items:[
+  ['🔄','Sync that never stops','Your data now syncs through Lock In itself, encrypted on your phone first. Phone and iPad stay in step all the time — the Puter allowance doesn’t matter any more.'],
+  ['🖼️','Photos on every device','Progress photos sync too, encrypted, and open on all your devices.']]},
  {v:'2026.10.21.1',d:'21 Oct',items:[
   ['⏸','No more Puter pop-ups','When your Puter allowance for the month runs out, the app pauses AI, cloud sync and photo downloads by itself. Everything stays on your phone and syncs once it refills.'],
   ['🔋','See your allowance','Setup → Puter allowance shows how much is left this month and what used it.'],
@@ -7013,19 +7044,24 @@ const pctStr=f=>f<=0?'0%':f<0.01?'<1%':Math.round(f*100)+'%';
 
 /* ---------- what you see ---------- */
 function pcHidden(){try{return localStorage.getItem('lockin_pchide_'+(user?user.username:''))===todayStr();}catch(e){return false;}}
+// AI through Lock In's own key, and sync on Lock In's own (encrypted) storage, don't use the Puter allowance
+const pcAiOk=()=>typeof planOn==='function'&&planOn(),pcSyncOk=()=>typeof syOn==='function'&&syOn();
+// what a used-up Puter allowance still pauses: [] when AI and sync both run on Lock In
+function pcPaused(){const a=[];if(!pcAiOk())a.push('AI');if(!pcSyncOk())a.push('cloud sync');return a;}
+const pcPausedTxt=()=>{const a=pcPaused();return a.length?a.join(' and ')+(a.length>1?' are':' is'):'';};
 function pcNoteHTML(){
   return '<div class="card pcnote"><div class="pcn-ico" aria-hidden="true">⏸</div><div class="pcn-b"><b>Puter allowance used up</b>'+
-    '<p>AI and cloud sync are paused until <b>'+pcBack()+'</b>. Everything you log is saved on this device and syncs by itself when it refills.</p>'+
+    '<p>'+(t=>t.charAt(0).toUpperCase()+t.slice(1))(pcPausedTxt())+' paused until <b>'+pcBack()+'</b>. Everything you log is saved on this device'+(pcSyncOk()?'.':' and syncs by itself when it refills.')+'</p>'+
     '<div class="pcn-a"><button class="btn btn-ghost btn-sm" onclick="pcOpen()">Details</button><button class="linkbtn" onclick="pcHide()">Hide for today</button></div></div></div>';
 }
 function pcUI(){
   const el=$('pcNote');
-  if(el){const on=!!user&&pcOut()&&!pcHidden();
+  if(el){const on=!!user&&pcOut()&&!pcHidden()&&pcPaused().length>0;
     if(!on){if(!el.hidden||el.innerHTML){el.hidden=true;el.innerHTML='';}}
     else if(el.hidden||!el.innerHTML){el.innerHTML=pcNoteHTML();el.hidden=false;anim(el.firstChild,[{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});}}
   // Diet's "AI is paused" line follows the allowance too
   const an=$('aiOutNote');
-  if(an){const o=!!user&&pcOut();if(o){an.textContent='AI is paused until your Puter allowance refills ('+pcBack()+') — meals still get the built-in grade.';an.hidden=false;}else if(!aiOutGet())an.hidden=true;}
+  if(an){const o=!!user&&pcOut()&&!pcAiOk();if(o){an.textContent='AI is paused until your Puter allowance refills ('+pcBack()+') — meals still get the built-in grade.';an.hidden=false;}else if(!aiOutGet()||pcAiOk())an.hidden=true;}
   try{phNote();}catch(e){}
   if(curView==='settings')pcCardRender();
 }
@@ -7041,16 +7077,17 @@ function pcCardRender(){
   const a=PC.all,r=PC.rem,known=a>0&&r!=null,used=known?Math.min(1,Math.max(0,(a-r)/a)):null,back=pcBack(),out=pcOut();
   const best=!!(S&&S.settings.aiPhoto==='best'),app=!!window.__lockinNative;
   let h='<h2>Puter allowance <span class="right"><button class="linkbtn" onclick="pcRefresh(this)">Refresh</button></span></h2>';
+  const what=pcPausedTxt(),usedTxt=what?'<b>Used up</b> — '+what+' paused until <b>'+back+'</b>.':'<b>Used up</b> — no problem: Lock In runs your AI and sync itself. It refills '+back+'.';
   if(known){const pct=Math.round(used*100);
     h+='<div class="pcbar'+(out?' out':PC.over?'':pct>=75?' low':'')+'"><i style="width:'+Math.max(2,out?100:pct)+'%"></i></div>'+
-      '<p class="pcline">'+(out?'<b>Used up</b> — AI and cloud sync are paused until <b>'+back+'</b>.':PC.over?'<b>Monthly allowance used</b> — running on the credit you added.':'<b>'+pct+'% used</b> this month · refills '+back+'.')+'</p>';}
-  else h+='<p class="pcline">'+(out?'<b>Used up</b> — AI and cloud sync are paused until <b>'+back+'</b>.':'<span class="tiny">'+(PC.api||typeof puter!=='undefined'&&puter.auth&&puter.auth.getMonthlyUsage?'Checking how much is left…':'Puter doesn’t say how much is left on this device.')+'</span>')+'</p>';
+      '<p class="pcline">'+(out?usedTxt:PC.over?'<b>Monthly allowance used</b> — running on the credit you added.':'<b>'+pct+'% used</b> this month · refills '+back+'.')+'</p>';}
+  else h+='<p class="pcline">'+(out?usedTxt:'<span class="tiny">'+(PC.api||typeof puter!=='undefined'&&puter.auth&&puter.auth.getMonthlyUsage?'Checking how much is left…':'Puter doesn’t say how much is left on this device.')+'</span>')+'</p>';
   const u=PC.usage;
   if(u&&u.tot>0&&a>0){const ks=Object.keys(PCL).filter(k=>u[k]>0).sort((x,y)=>u[y]-u[x]);
     h+='<p class="tiny" style="margin-top:2px">What Lock In used it on</p><div class="pcuse">'+ks.map(k=>'<div><span>'+PCL[k]+'</span><b>'+pctStr(u[k]/a)+'</b></div>').join('')+'</div>';}
-  h+='<p class="tiny">Puter gives every account a free allowance each month — AI, cloud sync and photos use it. When it runs out, the app pauses those and keeps everything on this device; nothing is lost.'+
+  h+='<p class="tiny">'+(pcAiOk()&&pcSyncOk()?'Lock In now runs your AI and sync itself — your Puter account is only used to sign in and to keep your encryption key, which uses almost none of the allowance.':'Puter gives every account a free allowance each month — '+(pcAiOk()?'cloud sync and photos use it (AI now runs through your Lock In plan instead)':pcSyncOk()?'AI uses it (sync now runs on Lock In instead)':'AI, cloud sync and photos use it')+'. When it runs out, the app pauses those and keeps everything on this device; nothing is lost.')+
     (out?(app?' You can also add credit at puter.com.':' You can also <a href="https://puter.com/dashboard/#home" target="_blank" rel="noopener">add credit at Puter</a>.'):'')+'</p>'+
-    '<label class="pctog"><input type="checkbox"'+(best?' checked':'')+' onchange="pcBest(this.checked)"><span><b>Sharper photo estimates</b> — reads meal photos with Sonnet instead of Haiku. Uses about 20× more of the allowance per photo, and switches back by itself when less than a quarter is left.</span></label>'+
+    (pcAiOk()?'':'<label class="pctog"><input type="checkbox"'+(best?' checked':'')+' onchange="pcBest(this.checked)"><span><b>Sharper photo estimates</b> — reads meal photos with Sonnet instead of Haiku. Uses about 20× more of the allowance per photo, and switches back by itself when less than a quarter is left.</span></label>')+
     (PC.chk?'<p class="tiny" style="margin-top:8px;color:var(--mist)">Checked '+ago(PC.chk)+'</p>':'');
   c.innerHTML=h;
 }
@@ -7065,7 +7102,7 @@ async function pcRefresh(btn){
 function pcBest(on){S.settings.aiPhoto=on?'best':'std';save();haptic('selection');toast(on?'Meal photos: Sonnet — sharper, about 20× the allowance per photo':'Meal photos: Haiku — uses far less of your allowance','ok');pcCardRender();}
 function renderSync(){
   const el=$('syncInfo');if(!el)return;
-  if(user&&pcOut()){el.innerHTML='<b>Cloud sync paused</b> — your Puter allowance for this month is used up. Everything is saved on this device and syncs by itself when it refills ('+pcBack()+').';return;}
+  if(user&&pcOut()&&!pcSyncOk()){el.innerHTML='<b>Cloud sync paused</b> — your Puter allowance for this month is used up. Everything is saved on this device and syncs by itself when it refills ('+pcBack()+').';return;}
   if(needsSignIn){el.innerHTML='Not signed in — your data is safe on this device. <a href="#" onclick="doSignIn();return false">Sign in to sync</a>';return;}
   if(!cloudReady&&!offlineMode){el.textContent=syncing?'Syncing with your account…':'Saved on this device.';return;}
   if(offlineMode||!navigator.onLine){el.textContent=dirty?'Offline — changes saved on this device, they sync when you reconnect.':'Offline — using data saved on this device.';return;}
@@ -7086,7 +7123,8 @@ function pushSoon(){const was=dirty;dirty=true;if(!was)renderSync();clearTimeout
   // and leaving the app sends everything straight away.
   const gap=woLive()?300e3:20e3,since=Date.now()-lastPushAt;
   pushT=setTimeout(()=>idle(pushNow),since>=gap?1500:gap-since);}
-async function pushNow(){
+// the Puter KV copy (accounts that can't use Lock In's own sync — d1sync.js decides)
+async function pushNowPuter(){
   if(!user||!S||!cloudReady)return;
   if(pushing){clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1200);return;}
   if(typeof puter==='undefined'||!puter.auth||!puter.auth.isSignedIn()||!navigator.onLine||pcOut()){dirty=true;renderSync();return;}
@@ -7103,7 +7141,7 @@ async function pushNow(){
   }catch(e){dirty=true;if(pcIsFunds(e))pcHit('sync');}
   pushing=false;renderSync();
 }
-async function loadCloud(){
+async function loadCloudPuter(){
   if(pcOut())throw Object.assign(new Error('puter_funds'),{code:'ai_credit'});
   let raw;try{raw=await puter.kv.get(KV_KEY);}catch(e){if(pcIsFunds(e))pcHit('sync');throw e;}
   pcOk();
@@ -7152,7 +7190,8 @@ async function bgSync(){
 /* ---------- AI: Haiku 5.5 reads photos too (20× cheaper than Sonnet 5.5); Sonnet only if you ask for it ---------- */
 const AI_IMG_BEST=['anthropic/claude-sonnet-5-5','anthropic/claude-haiku-5-5'];
 function aiImgModels(){return S&&S.settings&&S.settings.aiPhoto==='best'&&!pcLow()?AI_IMG_BEST:AI_IMG;}
-async function ai(prompt,img){
+// AI on the person's own Puter allowance (ai() in plans.js tries Lock In's own key first)
+async function aiPuter(prompt,img){
   if(typeof puter==='undefined')throw new Error('offline');
   if(!PC.sess||PC.busy)await pcDue(2500);
   if(pcOut())throw aiOutHit();     // the allowance is used up, so AI is too (keeps the AI note and the admin list in step)
@@ -7185,8 +7224,8 @@ async function processQueue(manual){
   try{for(const item of q){
     // on its own: at most 3 tries, 30 min apart. "Analyze now" always tries.
     if(!manual&&((item.tries||0)>=3||now-(item.last||0)<30*60e3))continue;
-    let r=null,credit=false;try{r=parseJSON(await ai(nutrientPrompt(item.hint,true),item.img));}catch(e){credit=!!(e&&e.code==='ai_credit');}
-    if(credit)break;    // nothing was spent; it waits for the allowance
+    let r=null,credit=false;try{r=parseJSON(await ai(nutrientPrompt(item.hint,true),item.img,'meal'));}catch(e){credit=!!(e&&(e.code==='ai_credit'||e.code==='ai_limit'));}
+    if(credit)break;    // nothing was spent; it waits for the allowance (or tomorrow's meal reads)
     const parts=toParts(r);
     if(!parts.length){const cur=getQ(),it=cur.find(x=>x.id===item.id);if(it){it.tries=(it.tries||0)+1;it.last=Date.now();setQ(cur);}tried=true;continue;}
     const parts2=parts.map(p=>({name:p.name,g:p.g,n:cleanN(p.n),flags:p.flags}));
@@ -7282,7 +7321,7 @@ async function fetchPhotos(){
 function phNote(miss){
   const el=$('photoNote');if(!el)return;
   if(miss==null)miss=photos.filter(p=>!p.url).length;
-  const out=!!user&&pcOut(),off=!navigator.onLine,pend=photos.filter(p=>p.pend).length;let t='';
+  const out=!!user&&pcOut()&&!pcSyncOk(),off=!navigator.onLine,pend=photos.filter(p=>p.pend).length;let t='';
   if(pend)t+=(pend>1?pend+' photos':'1 photo')+' saved on this device — '+(out?(pend>1?'they upload':'it uploads')+' when your Puter allowance refills ('+pcBack()+').':off?(pend>1?'they upload':'it uploads')+' when you’re online.':'uploading…')+' ';
   if(miss&&(out||off))t+=(miss>1?miss+' photos aren’t':'1 photo isn’t')+' on this device yet — '+(out?'they load when your Puter allowance refills ('+pcBack()+').':'they load when you’re online.');
   el.textContent=t.trim();el.hidden=!t;
@@ -7324,6 +7363,402 @@ async function delPhoto(i){
 // while it's used up: look again every so often (free), and when you come back to the app
 setInterval(()=>{if(user&&PC.out&&!document.hidden&&Date.now()-PC.chk>15*60e3)pcCheck();},60e3);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&user&&PC.out&&Date.now()-PC.chk>5*60e3)pcCheck();});
+
+/* ================= PLANS: AI on Lock In's own Claude key, Free / Pro limits, upgrade, admin =================
+   The server (/api/ai) holds the key, checks who's asking and their daily limit, and counts what each person used.
+   Without a key on the server the app keeps using each person's own Puter allowance, exactly as before. */
+const PLAN={d:null,t:0,busy:null,srv:null,offT:0,adm:null,admT:0,wait:0};
+const PLAN_LBL={free:'Free',pro:'Pro',admin:'Admin'};
+const planKey=()=>'lockin_plan_'+(user?user.username:'');
+function planSave(){try{if(PLAN.d)localStorage.setItem(planKey(),JSON.stringify({d:PLAN.d,t:PLAN.t}));}catch(e){}}
+function planRestore(){try{const o=JSON.parse(localStorage.getItem(planKey())||'null');if(o&&o.d&&!PLAN.d){PLAN.d=o.d;PLAN.t=0;if(o.d.ai)PLAN.srv=true;}}catch(e){}}
+async function planLoad(force){
+  if(typeof socTok!=='function'||!socTok()||!navigator.onLine)return PLAN.d;
+  if(PLAN.busy)return PLAN.busy;
+  if(!force&&PLAN.d&&PLAN.t&&Date.now()-PLAN.t<60e3)return PLAN.d;
+  PLAN.busy=(async()=>{
+    const was=PLAN.d&&PLAN.d.plan;
+    try{const d=await sapi('/plan');PLAN.d=d;PLAN.t=Date.now();PLAN.srv=!!d.ai;if(d.ai)PLAN.offT=0;planSave();
+      if(was==='free'&&d.plan==='pro')planWelcome();
+      planUI();return d;}
+    catch(e){if(e.status===404||e.code==='not_ready')PLAN.srv=false;return PLAN.d;}
+    finally{PLAN.busy=null;}
+  })();
+  return PLAN.busy;
+}
+function planOn(){return !!(PLAN.srv&&PLAN.d&&PLAN.d.ai);}
+function planLeft(kind){const d=PLAN.d;if(!d||!d.limits)return null;return Math.max(0,(d.limits[kind]||0)-((d.used||{})[kind]||0));}
+function planResetTxt(){const d=PLAN.d;if(!d||!d.resets)return '';const h=Math.max(0,(d.resets-Date.now())/36e5);return h<1?'in under an hour':'in '+Math.round(h)+' h';}
+function planCount(kind,j){
+  if(!PLAN.d||!j)return;PLAN.d.used=PLAN.d.used||{};PLAN.d.limits=PLAN.d.limits||{};
+  if(typeof j.used==='number')PLAN.d.used[kind]=j.used;if(typeof j.limit==='number')PLAN.d.limits[kind]=j.limit;
+  if(j.plan)PLAN.d.plan=j.plan;if(j.resets)PLAN.d.resets=j.resets;planSave();planUI();
+}
+async function aiSrv(kind,prompt,img){
+  let r;
+  try{r=await fetch('/api/ai',{method:'POST',cache:'no-store',headers:{authorization:'Bearer '+socTok(),'x-lockin':'2','content-type':'application/json'},body:JSON.stringify({kind,prompt,img:img||undefined})});}
+  catch(e){throw Object.assign(new Error('Couldn’t reach the server'),{code:'net'});}
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok)throw Object.assign(new Error(j.message||('Error '+r.status)),{code:j.error||'http',status:r.status,data:j});
+  return j;
+}
+// every AI call in the app: the server first (your plan), each person's own Puter allowance when the server's AI is off
+async function ai(prompt,img,kind){
+  kind=kind||(img?'meal':'other');
+  const tok=typeof socTok==='function'&&socTok();
+  if(tok&&navigator.onLine&&PLAN.srv!==false&&!(PLAN.offT&&Date.now()-PLAN.offT<10*60e3)){
+    try{const j=await aiSrv(kind,prompt,img);if(!PLAN.srv){PLAN.srv=true;planLoad(true);}planCount(kind,j);return String(j.text||'');}
+    catch(e){
+      if(e.code==='ai_limit'){planCount(kind,e.data);throw Object.assign(new Error('ai_limit'),{code:'ai_limit',kind,data:e.data||{}});}
+      if(['ai_bad','bad_image','too_big','bad'].includes(e.code))throw e;      // the request itself — Puter wouldn't do better
+      if(e.code==='ai_off'||e.status===404||e.status===426||e.code==='not_ready'){PLAN.srv=false;PLAN.offT=Date.now();}
+      // busy, key trouble or no connection to our server: this once, the person's own Puter allowance
+    }
+  }
+  return aiPuter(prompt,img);
+}
+
+/* ---------- the upgrade ---------- */
+function planPriceLine(){const d=PLAN.d||{},p=d.price||{monthly:'€4.99',yearly:'€39.99'};return {m:p.monthly||'€4.99',y:p.yearly||'€39.99'};}
+function upgradeHTML(kind,data){
+  const d=PLAN.d||{},lim=(data&&data.limit)||((d.limits||{})[kind])||'',pr=planPriceLine(),buy=d.buy||{},can=!!(buy.monthly||buy.yearly);
+  const what=kind==='review'?'today’s AI workout review':kind==='meal'?'today’s '+lim+' AI meal reads':'today’s AI requests';
+  return '<div class="upg"><div class="upg-ico" aria-hidden="true">⚡</div><h3>You’ve used '+what+'</h3>'+
+    '<p class="muted">Pro gives you <b>30 AI meal reads a day</b> and <b>unlimited AI workout reviews</b>.</p>'+
+    (can?'<button class="btn btn-primary upg-y" onclick="planBuy(\'yearly\',this)">Pro yearly — '+pr.y+' <small>save 33%</small></button>'+
+      '<button class="btn btn-ghost upg-m" onclick="planBuy(\'monthly\',this)">Pro monthly — '+pr.m+'</button>'
+      :'<div class="upg-soon">Pro is coming soon — '+pr.m+' a month or '+pr.y+' a year.</div>')+
+    '<p class="tiny upg-f">Resets '+planResetTxt()+'. Barcode scans, quick add and Again are always free.</p></div>';
+}
+function upgradeAsk(kind,data){openSheet(kind==='review'?'AI workout review':'Daily AI limit',upgradeHTML(kind,data));haptic('light');}
+function planBuy(which,btn){
+  const u=PLAN.d&&PLAN.d.buy&&PLAN.d.buy[which];
+  if(!u){toast('Pro is coming soon','warn');return;}
+  PLAN.wait=Date.now();if(btn)burstAt(btn,'#7b6cff');
+  // the iPhone app opens it in Safari (Apple Pay works there); on the web, a new tab
+  setTimeout(()=>{if(window.__lockinNative)location.href=u;else{const w=window.open(u,'_blank','noopener');if(!w)location.href=u;}},180);
+}
+function planWelcome(){try{closeSheet();}catch(e){}setTimeout(()=>{try{celebrate();}catch(e){}haptic('success');toast('Welcome to Pro — 30 AI meal reads a day, unlimited reviews','ok');},300);}
+// back from the checkout: look again a few times until the webhook has landed
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!PLAN.wait)return;if(Date.now()-PLAN.wait>45*60e3){PLAN.wait=0;return;}
+  planLoad(true);setTimeout(()=>planLoad(true),5000);setTimeout(()=>planLoad(true),15000);});
+
+/* ---------- what you see: Diet line, meal sheets, Setup card ---------- */
+function aiQuotaLine(){
+  if(!planOn()||!PLAN.d||PLAN.d.plan==='admin')return '';
+  const left=planLeft('meal'),lim=(PLAN.d.limits||{}).meal;if(left==null)return '';
+  return left>0?'<p class="tiny aiq">⚡ '+left+' of '+lim+' AI meal reads left today</p>':
+    '<p class="tiny aiq out">No AI meal reads left today — resets '+planResetTxt()+'. <span class="linkbtn" onclick="upgradeAsk(\'meal\')">Get Pro</span></p>';
+}
+function planUI(){
+  const q=$('aiQuota');if(q){const h=aiQuotaLine();if(q.innerHTML!==h)q.innerHTML=h;q.hidden=!h;}
+  if(typeof curView!=='undefined'&&curView==='settings'){planCardRender();planAdmRender();}
+  if(typeof pcUI==='function')try{pcUI();}catch(e){}
+}
+function planCardRender(){
+  const c=$('planCard');if(!c)return;const d=PLAN.d;
+  if(!planOn()||!d){c.hidden=true;c.innerHTML='';return;}
+  c.hidden=false;const L=d.limits||{},U=d.used||{},pr=planPriceLine(),buy=d.buy||{};
+  const row=(lbl,k,inf)=>{const lim=L[k]||0,u=Math.min(U[k]||0,lim),pc=inf?0:Math.round(100*u/Math.max(1,lim));
+    return '<div class="plrow"><span>'+lbl+'</span><b>'+(inf?(U[k]||0)+' · unlimited':u+' / '+lim)+'</b></div>'+(inf?'':'<div class="plbar"><i style="width:'+pc+'%"></i></div>');};
+  let h='<h2>Your plan <span class="right"><span class="plbadge '+d.plan+'">'+(PLAN_LBL[d.plan]||'Free')+'</span></span></h2>';
+  if(d.plan==='admin')h+='<p class="tiny">You’re the admin: no limits. Everyone else is on Free unless they buy Pro or you give it to them (below).</p>';
+  else{
+    h+=row('AI meal reads today','meal',false)+row('AI workout reviews today','review',d.plan==='pro');
+    if(d.plan==='pro')h+='<p class="tiny" style="margin-top:8px">'+(d.until?'Pro until '+new Date(d.until).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Pro — no end date')+(d.src==='admin'?' · a gift from the admin':'')+'.'+
+      (d.src==='ls'&&buy.portal?' <a href="'+esc(buy.portal)+'" target="_blank" rel="noopener">Manage subscription</a>':'')+'</p>';
+    else h+=(buy.monthly||buy.yearly?'<div class="plbuy"><button class="btn btn-primary btn-sm" onclick="planBuy(\'yearly\',this)">Pro — '+pr.y+'/year</button><button class="btn btn-ghost btn-sm" onclick="planBuy(\'monthly\',this)">'+pr.m+'/month</button></div>':
+        '<div class="upg-soon" style="margin-top:10px">Pro is coming soon — '+pr.m+' a month or '+pr.y+' a year.</div>')+
+      '<p class="tiny" style="margin-top:8px">Pro: 30 AI meal reads a day and unlimited AI workout reviews. Limits reset '+planResetTxt()+'.</p>';
+  }
+  c.innerHTML=h;
+}
+/* ---------- admin: who uses what, give or take Pro ---------- */
+const usd=c=>{const v=(+c||0)/1e6;return v>0&&v<0.01?'<$0.01':'$'+v.toFixed(2);};
+async function planAdmRender(force){
+  const c=$('planAdmCard');if(!c)return;
+  if(typeof AIADM!=='undefined'&&AIADM.admin===false){c.hidden=true;return;}
+  if(typeof AIADM!=='undefined'&&AIADM.admin===null){try{AIADM.admin=!!(await sapi('/admin')).admin;}catch(e){c.hidden=true;return;}}
+  if(!AIADM.admin){c.hidden=true;return;}
+  c.hidden=false;
+  if(force||!PLAN.adm||Date.now()-PLAN.admT>60e3){if(!PLAN.adm)c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2><p class="tiny">Loading…</p>';
+    try{PLAN.adm=await sapi('/admin/users');PLAN.admT=Date.now();}catch(e){c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2><p class="tiny">Couldn’t load — '+esc(e.message)+'</p>';return;}}
+  const a=PLAN.adm,us=(a.users||[]).slice().sort((x,y)=>(y.month.cost-x.month.cost)||(y.seen-x.seen));
+  let h='<h2>Plans &amp; AI <span class="right"><button class="linkbtn" onclick="planAdmRender(true)">Refresh</button></span></h2>'+
+    '<div class="adst"><div><b>'+(a.ai?'On':'Off')+'</b><small>Claude key</small></div><div><b>'+(a.pay?'On':'Off')+'</b><small>payments</small></div><div><b>'+usd(a.todayCost)+'</b><small>today (cap '+usd(a.cap)+')</small></div><div><b>'+usd(a.monthCost)+'</b><small>this month</small></div></div>'+
+    (a.ai?'':'<p class="tiny" style="margin:6px 0 10px">No Claude key yet — the app uses everyone’s own Puter allowance. Add the key in Cloudflare to switch.</p>')+
+    '<div class="adlist">'+us.map(u=>'<div class="adrow"><div class="grow"><b>'+esc(u.name||u.handle)+'</b> <span class="tiny">@'+esc(u.handle)+'</span><div class="tiny">today '+u.today.meal+' meal · '+u.today.review+' review · '+u.today.other+' other · month '+usd(u.month.cost)+'</div></div>'+
+      '<span class="plbadge '+u.plan+'">'+(PLAN_LBL[u.plan]||'Free')+'</span>'+
+      (u.plan==='admin'||u.srcs.includes('ls')?'':'<button class="btn btn-ghost btn-sm" onclick="planGive(\''+u.id+'\','+(u.srcs.includes('admin')?'false':'true')+',this)">'+(u.srcs.includes('admin')?'Remove Pro':'Give Pro')+'</button>')+'</div>').join('')+'</div>'+
+    (us.length?'':'<p class="tiny">Nobody yet.</p>');
+  c.innerHTML=h;
+}
+async function planGive(uid,on,btn){
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  try{await sapi('/admin/plan','POST',{uid,pro:!!on});toast(on?'Pro given':'Pro removed','ok');if(on&&btn)burstAt(btn,'#7b6cff');}
+  catch(e){toast('Couldn’t change it — '+e.message,'err');}
+  planAdmRender(true);
+}
+
+/* ================= SYNC ON LOCK IN'S OWN STORAGE (Cloudflare), end-to-end encrypted =================
+   Every piece (the main document, a month of workouts, a month of food) is encrypted on the phone with your own key
+   (the same one friends' sharing uses) before it leaves; the server only stores ciphertext and a version number.
+   A write says which version it changed — if another device saved first, the app merges theirs in and tries again.
+   Each app start reads the whole cloud copy once before it writes anything, so a phone that lost its local copy can
+   never overwrite the account with an empty one. Puter is only needed to sign in and (on a new device) for the key. */
+const SY={mode:null,modeT:0,sv:{},full:false,bad:{},err:'',v:null};
+function h53(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);}
+const sHash=o=>h53(stableStr(o)),EMPTYH=h53('{}');
+async function gzipB(u8){if(typeof CompressionStream==='undefined')return null;try{const st=new Blob([u8]).stream().pipeThrough(new CompressionStream('gzip'));return new Uint8Array(await new Response(st).arrayBuffer());}catch(e){return null;}}
+async function gunzipB(u8){const st=new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'));return new Uint8Array(await new Response(st).arrayBuffer());}
+async function syEnc(k,obj){const raw=TE.encode(JSON.stringify(obj)),z=await gzipB(raw);return (z?'z1.':'s1.')+await encS(E2E.self,z||raw,'sync:'+k);}
+async function syDec(k,str){const z=str.startsWith('z1.');const b=await decS(E2E.self,str.slice(3),'sync:'+k);return JSON.parse(TD.decode(z?await gunzipB(b):b));}
+function syOn(){return SY.mode==='d1'&&!!(E2E.ok&&E2E.self);}
+// can this device sync on Lock In's storage? (server there + your key loaded) — else the Puter copy, as before
+async function syUse(){
+  if(SY.mode==='d1'&&E2E.ok&&E2E.self)return true;
+  if(SY.mode==='puter'&&Date.now()-SY.modeT<10*60e3)return false;
+  if(typeof socTok!=='function'||!socTok()||!navigator.onLine)return false;
+  if(!E2E.ok){try{await e2eLoad();}catch(e){}}
+  if(!E2E.ok||!E2E.self){SY.mode='puter';SY.modeT=Date.now();return false;}
+  try{await sapi('/sync');SY.mode='d1';return true;}
+  catch(e){if(e.status===404||e.status===426||e.code==='not_ready'){SY.mode='puter';SY.modeT=Date.now();}return false;}
+}
+const syMigKey=()=>'lockin_d1mig_'+(user?user.username:'');
+async function syGet(keys){
+  const out={};
+  for(let i=0;i<keys.length;i+=20){
+    const r=await sapi('/sync/get','POST',{keys:keys.slice(i,i+20)});
+    for(const d of r.docs||[]){try{out[d.k]={ver:d.ver,obj:await syDec(d.k,d.data)};}catch(e){out[d.k]={ver:d.ver,bad:true};}}
+  }
+  return out;
+}
+function syRemember(got){
+  for(const k in got){const g=got[k];
+    if(g.bad){SY.bad[k]=1;continue;}delete SY.bad[k];
+    SY.sv[k]=k==='core'?{v:g.ver,h:h53(coreSig(g.obj)),u:g.obj.updatedAt||0,t:Date.now()}:{v:g.ver,h:sHash(g.obj||{})};}
+}
+// what got[] holds, as a (partial) state for mergeStates: pieces that didn't change aren't in it (this device has them)
+function syCloud(got){
+  const core=got.core&&!got.core.bad?got.core.obj:null;
+  const c=Object.assign({},core||{updatedAt:0},{workouts:{},food:{},sharded:true});
+  for(const k in got){if(k==='core'||got[k].bad)continue;Object.assign(k.startsWith('wo_')?c.workouts:c.food,got[k].obj||{});}
+  return c;
+}
+async function syLoad(){
+  const I=await sapi('/sync'),ix=I.docs||[];if(typeof I.v==='number')SY.v=I.v;
+  const need=ix.filter(d=>!SY.full||!SY.sv[d.k]||SY.sv[d.k].v!==d.ver).map(d=>d.k);
+  const got=await syGet(need);
+  syRemember(got);
+  for(const k in SY.sv)if(!ix.some(d=>d.k===k))delete SY.sv[k];
+  SY.full=true;
+  return ix.length?syCloud(got):null;
+}
+// where the app reads the account from: Lock In's storage when it can (the first time also folding in the old Puter copy)
+async function loadCloud(){
+  if(await syUse()){
+    let c=await syLoad();
+    if(!localStorage.getItem(syMigKey())){
+      if(!pcOut()&&typeof puter!=='undefined'&&puter.kv){try{const p=await loadCloudPuter();if(p)c=c?mergeStates(p,c):p;}catch(e){}}
+      try{localStorage.setItem(syMigKey(),'1');}catch(e){}
+    }
+    return c;
+  }
+  return loadCloudPuter();
+}
+async function pushNow(){
+  if(!user||!S||!cloudReady)return;
+  if(pushing){clearTimeout(pushT);pushT=setTimeout(()=>idle(pushNow),1200);return;}
+  if(syOn())return syPushNow();
+  return pushNowPuter();
+}
+function syDocs(){
+  const sh=shards(),out=[],now=Date.now(),c=core(),hc=h53(coreSig(c)),sc=SY.sv.core;
+  if(!SY.bad.core&&(!sc||sc.h!==hc||(c.updatedAt!==sc.u&&now-(sc.t||0)>600e3)))out.push({k:'core',obj:c,h:hc,base:sc?sc.v:0,u:c.updatedAt});
+  for(const k in sh){if(SY.bad[k])continue;const h=sHash(sh[k]),s=SY.sv[k];if(!s||s.h!==h)out.push({k,obj:sh[k],h,base:s?s.v:0});}
+  for(const k in SY.sv){if(k==='core'||sh[k]||SY.bad[k])continue;if(SY.sv[k].h!==EMPTYH)out.push({k,obj:{},h:EMPTYH,base:SY.sv[k].v});}
+  return out;
+}
+async function syPut(docs){
+  const conflicts=[];let batch=[],size=0;
+  const flush=async()=>{
+    if(!batch.length)return;
+    const r=await sapi('/sync','PUT',{docs:batch.map(d=>({k:d.k,base:d.base,data:d.data}))});if(r.v)SY.v=r.v;
+    for(const x of r.docs||[]){const d=batch.find(y=>y.k===x.k);if(!d)continue;
+      if(x.conflict)conflicts.push(x.k);else SY.sv[d.k]={v:x.ver,h:d.h,u:d.u||0,t:Date.now()};}
+    batch=[];size=0;
+  };
+  for(const d of docs){
+    d.data=await syEnc(d.k,d.obj);
+    if(d.data.length>1400000){SY.err='too_big';continue;}
+    if(size+d.data.length>1400000)await flush();
+    batch.push(d);size+=d.data.length;
+  }
+  await flush();
+  return conflicts;
+}
+async function syPushNow(){
+  if(!E2E.ok||!E2E.self)return;
+  // never write before this app start has read the account once (a lost local copy must not overwrite it)
+  if(!SY.full){if(!syncing)bgSync();return;}
+  if(!navigator.onLine){dirty=true;renderSync();return;}
+  pushing=true;const stamp=S.updatedAt;lastPushAt=Date.now();renderSync();
+  try{
+    for(let round=0;round<3;round++){
+      const docs=syDocs();if(!docs.length)break;
+      const conflicts=await syPut(docs);if(!conflicts.length)break;
+      // another device saved first: take theirs, merge, try again
+      const got=await syGet(conflicts);syRemember(got);
+      const prev=S;S=merge(fresh(),mergeStates(syCloud(got),prev));migrate();
+      if(!deepEq(S,prev)){dataVer++;snapSettings();writeLocal();quietRefresh();}
+    }
+    if(S.updatedAt===stamp)dirty=false;offlineMode=false;lastSync=new Date();SY.err='';
+  }catch(e){dirty=true;SY.err=(e&&e.message)||'';}
+  pushing=false;renderSync();
+}
+async function bgSync(){
+  if(syncing)return;syncing=true;renderSync();
+  try{
+    await window.puterReady;
+    if(typeof puter==='undefined'||!navigator.onLine||window.__offlineCopy){offlineMode=true;dirty=true;return;}
+    if(!puter.auth.isSignedIn()){needsSignIn=true;return;}
+    needsSignIn=false;
+    let u=null;try{u=await puter.auth.getUser();}catch(e){}
+    if(u&&user&&u.username!==user.username){location.reload();return;}
+    if(u){user=u;localStorage.setItem('rt_lastuser',u.username);}
+    await pcDue(2500);
+    const d1=await syUse();
+    // the old Puter copy can't be read while the allowance is used up (Puter would pop up) — Lock In's own storage can
+    if(!d1&&pcOut()){dirty=true;return;}
+    let cloud;try{cloud=await loadCloud();}catch(e){if(d1||!pcOut())offlineMode=true;dirty=true;return;}
+    const prev=S;S=merge(fresh(),mergeStates(cloud,prev));migrate();const merged=S;
+    cloudReady=true;offlineMode=false;lastPull=Date.now();
+    if(deepEq(merged,prev))S=prev;else{dataVer++;snapSettings();writeLocal();quietRefresh();}
+    if(d1)pushSoon();
+    else if(!cloud||!cloud.sharded||!cloudEq(merged,cloud)||dirty)pushSoon();else{dirty=false;lastSync=new Date();}
+    processQueue();setTimeout(runPendingAnalyses,4000);
+  }finally{syncing=false;renderSync();try{pcUI();}catch(e){}}
+}
+
+// saves go out quickly on Lock In's storage (your other devices keep up); the old Puter copy keeps its slower pace
+function pushSoon(){const was=dirty;dirty=true;if(!was)renderSync();clearTimeout(pushT);
+  const gap=syOn()?15e3:(woLive()?300e3:20e3),since=Date.now()-lastPushAt;
+  pushT=setTimeout(()=>idle(pushNow),since>=gap?1500:gap-since);}
+// live: while the app is open, look every 30 s whether another device saved something (one tiny row on the server)
+async function syPoll(){
+  if(!syOn()||document.hidden||syncing||pushing||!navigator.onLine)return;
+  try{const r=await sapi('/sync/v');
+    if(SY.v!==null&&r.v!==SY.v){SY.v=r.v;lastPull=0;await bgSync();if(curView==='progress')loadPhotos(true);}
+    else SY.v=r.v;}catch(e){}
+}
+setInterval(syPoll,30e3);
+
+/* ---------- progress photos on Lock In's storage, encrypted (the phone keeps a copy too) ---------- */
+const phMigKey=()=>'lockin_phmig_'+(user?user.username:'');
+async function phD1List(){const r=await sapi('/photos');return (r.photos||[]).map(p=>({name:p.name,path:PDIR+'/'+p.name,date:phDate(p.name)}));}
+async function phD1Get(name){const r=await sapi('/photos/'+encodeURIComponent(name));const b=await decS(E2E.self,String(r.data||'').slice(3),'photo:'+name);return new Blob([b],{type:'image/jpeg'});}
+async function phD1Put(name,blob){const buf=new Uint8Array(blob.arrayBuffer?await blob.arrayBuffer():await new Response(blob).arrayBuffer());
+  await sapi('/photos/'+encodeURIComponent(name),'PUT',{data:'s1.'+await encS(E2E.self,buf,'photo:'+name)});}
+// the first time: copy photos that are only in Puter over (needs a little of the Puter allowance, once)
+async function phMigrate(have){
+  if(localStorage.getItem(phMigKey())||pcOut()||typeof puter==='undefined'||!puter.fs)return 0;
+  let items;try{items=await puter.fs.readdir(PDIR);}catch(e){if(pcIsFunds(e))pcHit('photos');else if(/not.?exist|not.?found|no such|404|subject_does_not_exist/i.test(String((e&&(e.code||e.message))||e))){try{localStorage.setItem(phMigKey(),'1');}catch(_){}}return 0;}
+  const known=new Set(have.map(p=>p.name));let moved=0,failed=0;
+  for(const f of (items||[]).filter(f=>!f.is_dir&&/^p_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{6,16}\.jpg$/.test(f.name)&&!known.has(f.name))){
+    let b=await phGetBlob(f.name);
+    if(!b){try{b=await puter.fs.read(f.path);if(b&&b.size)phPutBlob(f.name,b);}catch(e){if(pcIsFunds(e)){pcHit('photos');failed++;break;}b=null;}}
+    if(!b||!b.size){failed++;continue;}
+    try{await phD1Put(f.name,b);moved++;}catch(e){failed++;}
+  }
+  if(!failed)try{localStorage.setItem(phMigKey(),'1');}catch(e){}
+  return moved;
+}
+async function loadPhotos1(force){
+  if(!PC.sess)await pcDue(2500);
+  const keep=p=>Object.assign(p,{url:PHURL.get(p.name)||null});
+  const c=phListGet();
+  if(c&&Array.isArray(c.a))photos=phWithPending(c.a.map(p=>keep(Object.assign({},p))));
+  else if(!photos.length)photos=phWithPending([]);
+  const stale=force||!c||Date.now()-c.t>15*60e3;
+  const d1=navigator.onLine&&!window.__offlineCopy&&await syUse();
+  if(d1&&stale){
+    try{let list=await phD1List();
+      if(!localStorage.getItem(phMigKey())&&await phMigrate(list))list=await phD1List();
+      phListSet(list);photos=phWithPending(list.map(keep));phPrune(new Set(photos.map(p=>p.name)));}
+    catch(e){}
+  }else if(!d1){
+    const can=!pcOut()&&typeof puter!=='undefined'&&!!puter.fs&&navigator.onLine&&!window.__offlineCopy;
+    if(can&&stale){
+      try{const items=await puter.fs.readdir(PDIR);
+        const list=(items||[]).filter(f=>!f.is_dir&&/\.jpg$/.test(f.name)).map(f=>({name:f.name,path:f.path,date:phDate(f.name)}));
+        phListSet(list);photos=phWithPending(list.map(keep));pcOk();phPrune(new Set(photos.map(p=>p.name)));}
+      catch(e){if(pcIsFunds(e))pcHit('photos');
+        else if(/not.?exist|not.?found|no such|404|subject_does_not_exist/i.test(String((e&&(e.code||e.message||(e.error&&(e.error.code||e.error.message))))||e))){phListSet([]);photos=phWithPending([]);}}
+    }
+  }
+  renderPhotos();if(curView==='progress')fetchPhotos();
+  phqFlush();
+}
+async function fetchPhotos(){
+  if(!PC.sess)await pcDue(2500);
+  if(photoQ){PHS.refetch=true;return;}photoQ=true;let miss=0;
+  try{const d1=syOn(),todo=photos.filter(p=>!p.url).map(p=>({name:p.name,path:p.path,pend:p.pend}));let i=0;
+    const work=async()=>{while(i<todo.length){const p=todo[i++];let b=PHURL.has(p.name)?null:await phGetBlob(p.name);
+      if(!b&&!PHURL.has(p.name)&&!p.pend&&navigator.onLine){
+        if(d1){try{b=await phD1Get(p.name);if(b&&b.size)phPutBlob(p.name,b);}catch(e){b=null;}}
+        if(!b&&!pcOut()&&typeof puter!=='undefined'&&puter.fs){
+          try{b=await puter.fs.read(p.path);if(b&&b.size){phPutBlob(p.name,b);if(d1)phD1Put(p.name,b).catch(()=>{});}pcOk();}catch(e){b=null;if(pcIsFunds(e))pcHit('photos');}}}
+      if(b&&b.size&&!PHURL.has(p.name))PHURL.set(p.name,URL.createObjectURL(b));
+      const u=PHURL.get(p.name),cur=photos.find(x=>x.name===p.name);
+      if(u&&cur){if(!cur.url){cur.url=u;photoCell(cur);}}else if(!u)miss++;}};
+    await Promise.all([work(),work(),work()]);
+  }finally{photoQ=false;}
+  phNote(miss);
+  if(PHS.refetch){PHS.refetch=false;if(photos.some(p=>!p.url))fetchPhotos();}
+}
+function phCanUpload(){return syOn()?navigator.onLine:(!pcOut()&&online());}
+async function phUpload(name,b){if(syOn())await phD1Put(name,b);else{await puter.fs.write(PDIR+'/'+name,b,{createMissingParents:true});pcOk();}}
+function addPhotos(files){
+  const q=[...files];let up=0,later=0;
+  const next=()=>{
+    if(!q.length){loadPhotos(up>0);
+      if(later)toast((later>1?later+' photos':'Photo')+' saved on this device — '+(later>1?'they upload':'it uploads')+(navigator.onLine&&pcOut()&&!syOn()?' when your Puter allowance refills ('+pcBack()+')':' when you’re online'),'ok');
+      else if(up)toast('Photo saved to your account');return;}
+    const f=q.shift(),img=new Image(),url=URL.createObjectURL(f);
+    img.onload=()=>{const sc=Math.min(1,1000/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);
+      cv.toBlob(async b=>{if(!b){next();return;}const name='p_'+todayStr()+'_'+Date.now()+'.jpg',kept=await phPutBlob(name,b);let ok=false;
+        if(phCanUpload()){try{await phUpload(name,b);ok=true;}catch(e){if(pcIsFunds(e))pcHit('photos');}}
+        if(ok)up++;else if(kept){const qq=phqGet();qq.push({name,t:Date.now()});phqSet(qq);later++;}else toast('Upload failed — are you online?');
+        next();},'image/jpeg',0.72);};
+    img.onerror=()=>{URL.revokeObjectURL(url);next();};img.src=url;};
+  next();
+}
+async function phqFlush(){
+  if(phqBusy||!phCanUpload())return;const q=phqGet();if(!q.length)return;phqBusy=true;let up=0;
+  try{for(const it of q){const b=await phGetBlob(it.name);
+      if(!b){phqSet(phqGet().filter(x=>x.name!==it.name));continue;}
+      try{await phUpload(it.name,b);up++;phqSet(phqGet().filter(x=>x.name!==it.name));}
+      catch(e){if(pcIsFunds(e))pcHit('photos');break;}}
+  }finally{phqBusy=false;}
+  if(up){toast(up+' saved photo'+(up>1?'s':'')+' uploaded to your account','ok');loadPhotos(true);}
+}
+async function delPhoto(i){
+  const p=photos[i];if(!p||!confirm('Delete this photo?'))return;
+  if(!p.pend){
+    if(syOn()){
+      try{await sapi('/photos/'+encodeURIComponent(p.name),'DELETE');}catch(e){toast('Could not delete — are you online?');return;}
+      // the old copy in Puter goes too, when the allowance allows
+      if(!pcOut()&&typeof puter!=='undefined'&&puter.fs)try{await puter.fs.delete(PDIR+'/'+p.name);}catch(e){if(pcIsFunds(e))pcHit('photos');}
+    }else{
+      if(pcOut()){toast('Deleting needs your Puter allowance — try again after '+pcBack(),'warn');return;}
+      try{await puter.fs.delete(p.path);}catch(e){if(pcIsFunds(e)){pcHit('photos');toast('Deleting needs your Puter allowance — try again after '+pcBack(),'warn');}else toast('Could not delete — are you online?');return;}
+    }
+  }
+  phqSet(phqGet().filter(x=>x.name!==p.name));phDelBlob(p.name);if(PHURL.has(p.name)){try{URL.revokeObjectURL(PHURL.get(p.name));}catch(e){}PHURL.delete(p.name);}
+  photos.splice(i,1);selPhotos=[];phListSet(photos);renderPhotos();phNote();
+}
 
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */

@@ -83,7 +83,7 @@ const RX = {
   uid: /^[a-z0-9]{8,32}$/
 };
 
-const SCHEMA_V = '6';
+const SCHEMA_V = '9';
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, puid TEXT NOT NULL UNIQUE, handle TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '',
      av INTEGER NOT NULL DEFAULT 0, invite TEXT NOT NULL UNIQUE, defaults TEXT NOT NULL DEFAULT '{}', created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0, pub TEXT, fp TEXT)`,
@@ -117,7 +117,17 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS csm_uid ON csm(uid)`,
   // public follow links: one encrypted, always-latest copy of a split; the key is only in the link (#)
   `CREATE TABLE IF NOT EXISTS pubs(code TEXT PRIMARY KEY, uid TEXT NOT NULL, data TEXT NOT NULL, ver INTEGER NOT NULL, upd INTEGER NOT NULL, created INTEGER NOT NULL, fol INTEGER NOT NULL DEFAULT 0)`,
-  `CREATE INDEX IF NOT EXISTS pubs_uid ON pubs(uid)`
+  `CREATE INDEX IF NOT EXISTS pubs_uid ON pubs(uid)`,
+  // plans: Pro from a Lemon Squeezy subscription (src 'ls') or given by the admin (src 'admin'); until NULL = no end
+  `CREATE TABLE IF NOT EXISTS plans(uid TEXT NOT NULL, src TEXT NOT NULL, plan TEXT NOT NULL, until INTEGER, sub TEXT, status TEXT, variant TEXT, lsu INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL, PRIMARY KEY(uid,src))`,
+  // AI through the app's own key: what each person used per (UTC) day — count, tokens and cost in micro-dollars
+  `CREATE TABLE IF NOT EXISTS ai_use(uid TEXT NOT NULL, day TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, tin INTEGER NOT NULL DEFAULT 0, tout INTEGER NOT NULL DEFAULT 0, cost INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uid,day,kind))`,
+  `CREATE INDEX IF NOT EXISTS ai_use_day ON ai_use(day)`,
+  // your synced data and progress photos, encrypted on your phone (this server can't read them); ver = compare-and-set
+  `CREATE TABLE IF NOT EXISTS sync(uid TEXT NOT NULL, k TEXT NOT NULL, ver INTEGER NOT NULL, ts INTEGER NOT NULL, size INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY(uid,k))`,
+  `CREATE TABLE IF NOT EXISTS photos(uid TEXT NOT NULL, name TEXT NOT NULL, ts INTEGER NOT NULL, size INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY(uid,name))`,
+  // one tiny row per account that changes whenever anything synced does — what open devices check every 30 s
+  `CREATE TABLE IF NOT EXISTS syncv(uid TEXT PRIMARY KEY, v INTEGER NOT NULL, ts INTEGER NOT NULL)`
 ];
 // columns added after the first release (fresh databases get them from SCHEMA, the ALTERs then just fail)
 const MIGRATE = [
@@ -264,6 +274,183 @@ async function isAdmin(db, id, env) {
   return !!(u && u.pname && admins.includes(String(u.pname).toLowerCase()));
 }
 
+/* ============================== PLANS + AI ON THE APP'S OWN CLAUDE KEY ==============================
+   Free: 5 meal reads (photo or description) and 1 AI workout review a day. Pro: 30 and unlimited.
+   "other" (meal grades, coach notes, fixes, split help…) is fair use. Days are UTC days.
+   Needs the secret ANTHROPIC_API_KEY; without it /api/ai answers 503 ai_off and the app uses Puter instead. */
+const PLAN_LIMITS = {
+  free: { meal: 5, review: 1, other: 25 },
+  pro: { meal: 30, review: 50, other: 150 },
+  admin: { meal: 100000, review: 100000, other: 100000 }
+};
+const AI_KINDS = ['meal', 'review', 'other'];
+const AI_MODEL = 'claude-haiku-5-5';
+const AI_PRICE = { in: 0.10, out: 0.50 };           // $ per million tokens (Haiku 5.5, prompts under 100k tokens)
+const utcDay = t => new Date(t || Date.now()).toISOString().slice(0, 10);
+// plans, AI use and your synced data belong to the Puter account (puid): deleting the friends profile (a new id) keeps them
+const PUID = new Map();
+async function puidOf(db, id) {
+  if (PUID.has(id)) return PUID.get(id);
+  const u = await db.prepare('SELECT puid FROM users WHERE id=?').bind(id).first();
+  if (!u) throw new HttpError(401, 'auth', 'Sign in again.');
+  if (PUID.size > 3000) PUID.clear();
+  PUID.set(id, u.puid);
+  return u.puid;
+}
+const PUIDRX = /^[A-Za-z0-9:_.@-]{3,80}$/;
+const nextUtcMidnight = () => { const d = new Date(); d.setUTCHours(24, 0, 0, 0); return d.getTime(); };
+async function planOf(db, id, env) {
+  if (await isAdmin(db, id, env)) return { plan: 'admin', until: null, src: 'admin' };
+  const now = Date.now(), pk = await puidOf(db, id);
+  const r = await db.prepare("SELECT src, until, status FROM plans WHERE uid=? AND plan='pro' AND (until IS NULL OR until>?) ORDER BY until IS NULL DESC, until DESC LIMIT 1").bind(pk, now).first();
+  return r ? { plan: 'pro', until: r.until, src: r.src, status: r.status || null } : { plan: 'free', until: null, src: null };
+}
+async function usedToday(db, id) {
+  const o = { meal: 0, review: 0, other: 0 }, pk = await puidOf(db, id);
+  const r = (await db.prepare('SELECT kind, n FROM ai_use WHERE uid=? AND day=?').bind(pk, utcDay()).all()).results || [];
+  for (const x of r) if (x.kind in o) o[x.kind] = x.n;
+  return o;
+}
+function buyLinks(env, uid) {
+  const add = u => u ? u + (u.includes('?') ? '&' : '?') + 'checkout%5Bcustom%5D%5Buid%5D=' + encodeURIComponent(uid) : '';
+  return { monthly: add(env.LS_BUY_MONTHLY || ''), yearly: add(env.LS_BUY_YEARLY || ''), portal: env.LS_PORTAL || '' };
+}
+async function planOut(db, id, env) {
+  const p = await planOf(db, id, env);
+  return Object.assign(p, { limits: PLAN_LIMITS[p.plan], used: await usedToday(db, id), resets: nextUtcMidnight(),
+    ai: !!env.ANTHROPIC_API_KEY, buy: buyLinks(env, await puidOf(db, id)), price: { monthly: '€4.99', yearly: '€39.99' } });
+}
+async function aiCall(env, prompt, img, max) {
+  const content = [];
+  if (img) {
+    const m = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/]+={0,2})$/.exec(img);
+    if (!m) throw new HttpError(400, 'bad_image', 'That photo couldn’t be read — try another one.');
+    content.push({ type: 'image', source: { type: 'base64', media_type: m[1], data: m[2] } });
+  }
+  content.push({ type: 'text', text: prompt });
+  let r;
+  try {
+    r = await fetch((env.ANTHROPIC_API || 'https://api.anthropic.com') + '/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: env.AI_MODEL || AI_MODEL, max_tokens: max, messages: [{ role: 'user', content }] })
+    });
+  } catch (e) { throw new HttpError(503, 'ai_busy', 'The AI couldn’t be reached — try again in a moment.'); }
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j) {
+    console.log('ai error', r.status, j && j.error && j.error.type);
+    if (r.status === 401 || r.status === 403) throw new HttpError(503, 'ai_key', 'The AI key isn’t working.');
+    if (r.status === 400) throw new HttpError(400, 'ai_bad', 'The AI couldn’t read that — try again.');
+    throw new HttpError(503, 'ai_busy', 'The AI is busy — try again in a moment.');
+  }
+  const text = (j.content || []).filter(x => x && x.type === 'text').map(x => x.text).join('');
+  const u = j.usage || {};
+  return { text, tin: +u.input_tokens || 0, tout: +u.output_tokens || 0 };
+}
+async function aiRun(db, id, env, b) {
+  if (!env.ANTHROPIC_API_KEY) return err(503, 'ai_off', 'AI through the app isn’t switched on.');
+  const kind = AI_KINDS.includes(b && b.kind) ? b.kind : 'other';
+  const prompt = typeof (b && b.prompt) === 'string' ? b.prompt : '';
+  if (!prompt || prompt.length > 60000) return err(400, 'bad', 'Bad request.');
+  const img = typeof b.img === 'string' && b.img ? b.img : null;
+  if (img && img.length > 1500000) return err(413, 'too_big', 'That photo is too big.');
+  await limit(db, 'u:' + id + ':ai', 20, 60e3);
+  const day = utcDay();
+  // the app's whole AI bill for the day is capped, so a bug or an abuser can't run it up (then: each person's own Puter)
+  const cap = Math.round((+env.AI_DAY_USD || 3) * 1e6);
+  const tot = await db.prepare('SELECT COALESCE(SUM(cost),0) AS c FROM ai_use WHERE day=?').bind(day).first();
+  if (tot && tot.c >= cap) return err(503, 'ai_busy', 'The AI is busy — try again later.');
+  const p = await planOf(db, id, env), lim = PLAN_LIMITS[p.plan][kind], pk = await puidOf(db, id);
+  const row = await db.prepare('INSERT INTO ai_use(uid,day,kind,n) VALUES(?,?,?,1) ON CONFLICT(uid,day,kind) DO UPDATE SET n=n+1 RETURNING n').bind(pk, day, kind).first();
+  const n = row ? row.n : 1;
+  const refund = () => db.prepare('UPDATE ai_use SET n=MAX(0,n-1) WHERE uid=? AND day=? AND kind=?').bind(pk, day, kind).run();
+  if (n > lim) {
+    await refund();
+    return J({ error: 'ai_limit', kind, plan: p.plan, limit: lim, used: lim, resets: nextUtcMidnight(), message: 'You’ve used today’s AI ' + (kind === 'meal' ? 'meal reads' : kind === 'review' ? 'workout reviews' : 'requests') + '.' }, 429);
+  }
+  let out;
+  try { out = await aiCall(env, prompt, img, kind === 'meal' ? 4096 : 2048); }
+  catch (e) { await refund(); throw e; }
+  const cost = Math.round(out.tin * AI_PRICE.in + out.tout * AI_PRICE.out);   // micro-dollars
+  await db.prepare('UPDATE ai_use SET tin=tin+?, tout=tout+?, cost=cost+? WHERE uid=? AND day=? AND kind=?').bind(out.tin, out.tout, cost, pk, day, kind).run();
+  return J({ text: out.text, kind, plan: p.plan, used: n, limit: lim, left: Math.max(0, lim - n), resets: nextUtcMidnight() });
+}
+async function adminUsers(db, env) {
+  const day = utcDay(), month = day.slice(0, 7), now = Date.now();
+  const users = (await db.prepare('SELECT id, puid, handle, name, pname, created, seen FROM users ORDER BY seen DESC LIMIT 300').all()).results || [];
+  const use = (await db.prepare('SELECT uid, day, kind, n, cost FROM ai_use WHERE day>=?').bind(month + '-01').all()).results || [];
+  const plans = (await db.prepare("SELECT uid, src, until, status FROM plans WHERE plan='pro' AND (until IS NULL OR until>?)").bind(now).all()).results || [];
+  const admins = String(env.ADMIN || 'Trohorm').toLowerCase().split(/[\s,]+/);
+  const U = new Map(users.map(u => [u.puid, { id: u.id, handle: u.handle, name: u.name || u.handle, seen: u.seen || 0, created: u.created,
+    admin: admins.includes(String(u.pname || '').toLowerCase()), plan: 'free', srcs: [], until: null, today: { meal: 0, review: 0, other: 0 }, month: { n: 0, cost: 0 } }]));
+  let todayCost = 0, monthCost = 0;
+  for (const x of use) {
+    monthCost += x.cost; if (x.day === day) todayCost += x.cost;
+    const u = U.get(x.uid); if (!u) continue;
+    u.month.n += x.n; u.month.cost += x.cost; if (x.day === day && x.kind in u.today) u.today[x.kind] = x.n;
+  }
+  for (const pl of plans) { const u = U.get(pl.uid); if (!u) continue; u.plan = 'pro'; u.srcs.push(pl.src); if (pl.until === null || u.until !== null && pl.until > u.until) u.until = pl.until; }
+  for (const u of U.values()) if (u.admin) u.plan = 'admin';
+  return { users: [...U.values()], todayCost, monthCost, cap: Math.round((+env.AI_DAY_USD || 3) * 1e6), ai: !!env.ANTHROPIC_API_KEY, pay: !!(env.LS_SECRET && env.LS_BUY_MONTHLY) };
+}
+/* Lemon Squeezy webhooks: subscription_created / _updated / _cancelled / _resumed / _expired / _paused … */
+async function lsWebhook(req, env, db) {
+  if (!env.LS_SECRET) return err(503, 'off', 'Payments aren’t set up.');
+  const raw = await req.text();
+  if (raw.length > 300000) return err(413, 'too_big', 'Too big.');
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.LS_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw)))].map(x => x.toString(16).padStart(2, '0')).join('');
+  const sig = String(req.headers.get('x-signature') || '').toLowerCase();
+  let diff = mac.length ^ sig.length;
+  for (let i = 0; i < mac.length; i++) diff |= mac.charCodeAt(i) ^ (sig.charCodeAt(i) || 0);
+  if (diff) return err(401, 'bad_sig', 'Bad signature.');
+  const b = parse(raw) || {}, meta = b.meta || {}, d = b.data || {}, a = d.attributes || {};
+  if (d.type !== 'subscriptions') return J({ ok: true, ignored: 'not a subscription' });
+  const uid = String((meta.custom_data || {}).uid || '');
+  if (!PUIDRX.test(uid)) return J({ ok: true, ignored: 'no uid' });
+  const now = Date.now(), t = s => (s ? Date.parse(s) || 0 : 0), GRACE = 3 * DAY, st = String(a.status || '');
+  // paid (or retrying a failed payment) → Pro until the next renewal + a few days; cancelled → until it ends; otherwise it stops now
+  let until = now;
+  if (['active', 'on_trial', 'past_due'].includes(st)) until = Math.max(t(a.renews_at), t(a.trial_ends_at), now) + GRACE;
+  else if (st === 'cancelled') until = Math.max(t(a.ends_at), now);
+  const lsu = t(a.updated_at) || now;
+  await db.prepare("INSERT INTO plans(uid,src,plan,until,sub,status,variant,lsu,updated) VALUES(?,'ls','pro',?,?,?,?,?,?) ON CONFLICT(uid,src) DO UPDATE SET until=excluded.until, sub=excluded.sub, status=excluded.status, variant=excluded.variant, lsu=excluded.lsu, updated=excluded.updated WHERE excluded.lsu>=plans.lsu")
+    .bind(uid, until, String(d.id || '').slice(0, 40), st.slice(0, 20), String(a.variant_id || '').slice(0, 40), lsu, now).run();
+  return J({ ok: true });
+}
+
+/* ============================== YOUR DATA: encrypted sync + progress photos ==============================
+   The phone encrypts every piece with your own key before it leaves (this server only sees ciphertext).
+   Each piece (main document, a month of workouts, a month of food) has a version: a write says which version it
+   changed, and if another device got there first it's told to merge and try again — nothing is overwritten blindly. */
+const SYNCK = /^(core|(wo|food)_[0-9]{4}-[0-9]{2})$/;
+const SYNCD = /^[sz]1\.[A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]{22,}$/;
+const SYNC_MAX = 60e6, PHOTO_MAX = 400;
+async function syncPut(db, id, pk, b) {
+  await limit(db, 'u:' + id + ':syncw', 900, HOUR);
+  const docs = Array.isArray(b && b.docs) ? b.docs.slice(0, 40) : [];
+  if (!docs.length) return J({ docs: [] });
+  for (const d of docs) if (!d || !SYNCK.test(d.k) || typeof d.data !== 'string' || !SYNCD.test(d.data) || !(Number.isInteger(d.base) && d.base >= 0)) return err(400, 'bad', 'Couldn’t save that.');
+  const cur = (await db.prepare('SELECT k, size FROM sync WHERE uid=?').bind(pk).all()).results || [];
+  const sizes = new Map(cur.map(x => [x.k, x.size]));
+  let total = cur.reduce((a, x) => a + x.size, 0);
+  for (const d of docs) total += d.data.length - (sizes.get(d.k) || 0);
+  if (total > SYNC_MAX) return err(413, 'too_big', 'Your synced data is over the limit.');
+  const now = Date.now();
+  const res = await db.batch(docs.map(d => d.base === 0
+    ? db.prepare('INSERT INTO sync(uid,k,ver,ts,size,data) VALUES(?,?,1,?,?,?) ON CONFLICT(uid,k) DO NOTHING RETURNING ver').bind(pk, d.k, now, d.data.length, d.data)
+    : db.prepare('UPDATE sync SET ver=ver+1, ts=?, size=?, data=? WHERE uid=? AND k=? AND ver=? RETURNING ver').bind(now, d.data.length, d.data, pk, d.k, d.base)));
+  const out = [];let wrote = 0;
+  for (let i = 0; i < docs.length; i++) {
+    const row = res[i] && res[i].results && res[i].results[0];
+    if (row) { out.push({ k: docs[i].k, ver: row.ver }); wrote++; }
+    else { const c = await db.prepare('SELECT ver FROM sync WHERE uid=? AND k=?').bind(pk, docs[i].k).first(); out.push({ k: docs[i].k, conflict: true, ver: c ? c.ver : 0 }); }
+  }
+  let v = 0;
+  if (wrote) { const r = await db.prepare('INSERT INTO syncv(uid,v,ts) VALUES(?,1,?) ON CONFLICT(uid) DO UPDATE SET v=v+1, ts=excluded.ts RETURNING v').bind(pk, now).first(); v = r ? r.v : 0; }
+  return J({ docs: out, v });
+}
+
 /* ---------- router ---------- */
 const LINKQ = `SELECT l.b AS id, l.state, l.perms AS mine, l.created, u.handle, u.name, u.av, u.defaults, u.pub, u.fp, r.perms AS theirs
   FROM links l JOIN users u ON u.id=l.b LEFT JOIN links r ON r.a=l.b AND r.b=l.a`;
@@ -295,6 +482,8 @@ async function api(req, env, ctx, url) {
       if (!r) return err(404, 'pub_gone', 'This split link was turned off by its owner.');
       return J({ data: r.data, ver: r.ver, upd: r.upd, fol: r.fol, from: pub(r) });
     }
+    /* Lemon Squeezy tells us about subscriptions (signed with the webhook secret) */
+    if (p === '/api/ls/webhook' && M === 'POST') return await lsWebhook(req, env, db);
     /* everything else: the current app, signed in with Puter */
     if ((req.headers.get('x-lockin') || '') !== API_VERSION) return err(426, 'update', 'Lock In was updated — close and reopen the app to keep using friends.');
     const me = await who(req, env, ctx);
@@ -352,6 +541,53 @@ async function api(req, env, ctx, url) {
         return J({ ok: true });
       }
       case 'GET /api/admin': return J({ admin: await isAdmin(db, id, env) });
+      case 'GET /api/plan': return J(await planOut(db, id, env));
+      case 'GET /api/sync': {
+        await limit(db, 'u:' + id + ':syncr', 900, HOUR);
+        const pk = await puidOf(db, id);
+        const r = (await db.prepare('SELECT k, ver, ts, size FROM sync WHERE uid=?').bind(pk).all()).results || [];
+        const v = await db.prepare('SELECT v FROM syncv WHERE uid=?').bind(pk).first();
+        return J({ docs: r, v: v ? v.v : 0, used: r.reduce((a, x) => a + x.size, 0), max: SYNC_MAX });
+      }
+      case 'POST /api/sync/get': {
+        await limit(db, 'u:' + id + ':syncr', 900, HOUR);
+        const ks = Array.isArray(b && b.keys) ? b.keys.filter(k => SYNCK.test(k)).slice(0, 60) : [];
+        const r = ks.length ? await selectIn(db, 'SELECT k, ver, ts, data FROM sync WHERE uid=? AND k IN ', ks, '', [await puidOf(db, id)]) : [];
+        return J({ docs: r });
+      }
+      case 'PUT /api/sync': return await syncPut(db, id, await puidOf(db, id), b);
+      case 'GET /api/sync/v': {
+        await limit(db, 'u:' + id + ':syncv', 400, HOUR);
+        const r = await db.prepare('SELECT v FROM syncv WHERE uid=?').bind(await puidOf(db, id)).first();
+        return J({ v: r ? r.v : 0 });
+      }
+      case 'DELETE /api/sync': {
+        const pk = await puidOf(db, id);
+        await db.batch([db.prepare('DELETE FROM sync WHERE uid=?').bind(pk), db.prepare('DELETE FROM photos WHERE uid=?').bind(pk)]);
+        return J({ ok: true });
+      }
+      case 'GET /api/photos': {
+        await limit(db, 'u:' + id + ':photor', 900, HOUR);
+        const r = (await db.prepare('SELECT name, ts, size FROM photos WHERE uid=? ORDER BY name DESC').bind(await puidOf(db, id)).all()).results || [];
+        return J({ photos: r });
+      }
+      case 'POST /api/ai': return await aiRun(db, id, env, b);
+      case 'GET /api/admin/users': {
+        if (!await isAdmin(db, id, env)) return err(403, 'forbidden', 'Not allowed.');
+        return J(await adminUsers(db, env));
+      }
+      case 'POST /api/admin/plan': {
+        if (!await isAdmin(db, id, env)) return err(403, 'forbidden', 'Not allowed.');
+        const uid = String((b && b.uid) || '');
+        const who2 = RX.uid.test(uid) && await db.prepare('SELECT id, puid FROM users WHERE id=?').bind(uid).first();
+        if (!who2) return err(404, 'no_user', 'No such person.');
+        if (b.pro) {
+          const until = b.days > 0 ? Date.now() + Math.min(+b.days, 3650) * DAY : null;
+          await db.prepare("INSERT INTO plans(uid,src,plan,until,updated) VALUES(?,'admin','pro',?,?) ON CONFLICT(uid,src) DO UPDATE SET plan='pro', until=excluded.until, updated=excluded.updated")
+            .bind(who2.puid, until, Date.now()).run();
+        } else await db.prepare("DELETE FROM plans WHERE uid=? AND src='admin'").bind(who2.puid).run();
+        return J({ ok: true, plan: await planOf(db, uid, env) });
+      }
       case 'GET /api/lookup': {
         await limit(db, 'u:' + id + ':lookup', 40, 10 * 60e3);
         const h = String(url.searchParams.get('h') || '').toLowerCase().replace(/^@/, '').trim();
@@ -365,6 +601,31 @@ async function api(req, env, ctx, url) {
       if (m[2] && M === 'GET') return await postImg(db, id, m[1]);
       if (!m[2] && M === 'PUT') return await upgradePost(db, id, m[1], b);
       if (!m[2] && M === 'DELETE') { await db.prepare('DELETE FROM posts WHERE id=? AND uid=?').bind(m[1], id).run(); return J({ ok: true }); }
+    }
+    if ((m = /^\/api\/photos\/(p_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{6,16}\.jpg)$/.exec(p))) {
+      const name = m[1], pk = await puidOf(db, id);
+      if (M === 'GET') {
+        await limit(db, 'u:' + id + ':photor', 900, HOUR);
+        const r = await db.prepare('SELECT data, ts FROM photos WHERE uid=? AND name=?').bind(pk, name).first();
+        return r ? J({ name, ts: r.ts, data: r.data }) : err(404, 'no_photo', 'That photo isn’t there any more.');
+      }
+      if (M === 'PUT') {
+        await limit(db, 'u:' + id + ':photow', 120, HOUR);
+        const data = b && b.data;
+        if (typeof data !== 'string' || !SYNCD.test(data) || data.length > 1500000) return err(400, 'bad', 'That photo couldn’t be saved.');
+        const n = await db.prepare('SELECT COUNT(*) AS n FROM photos WHERE uid=?').bind(pk).first();
+        const have = await db.prepare('SELECT 1 AS x FROM photos WHERE uid=? AND name=?').bind(pk, name).first();
+        if (!have && n && n.n >= PHOTO_MAX) return err(429, 'too_many', 'You have ' + PHOTO_MAX + ' progress photos — delete some to add more.');
+        await db.batch([db.prepare('INSERT INTO photos(uid,name,ts,size,data) VALUES(?,?,?,?,?) ON CONFLICT(uid,name) DO UPDATE SET ts=excluded.ts, size=excluded.size, data=excluded.data')
+          .bind(pk, name, Date.now(), data.length, data),
+          db.prepare('INSERT INTO syncv(uid,v,ts) VALUES(?,1,?) ON CONFLICT(uid) DO UPDATE SET v=v+1, ts=excluded.ts').bind(pk, Date.now())]);
+        return J({ ok: true });
+      }
+      if (M === 'DELETE') {
+        await db.batch([db.prepare('DELETE FROM photos WHERE uid=? AND name=?').bind(pk, name),
+          db.prepare('INSERT INTO syncv(uid,v,ts) VALUES(?,1,?) ON CONFLICT(uid) DO UPDATE SET v=v+1, ts=excluded.ts').bind(pk, Date.now())]);
+        return J({ ok: true });
+      }
     }
     if (p.startsWith('/api/cs')) { const r = await csApi(db, id, M, p, b); if (r) return r; }
     if (p === '/api/pub' && M === 'POST') {

@@ -60,6 +60,23 @@ When it runs out, Puter refuses those calls with `402 insufficient_funds` and Pu
   timestamp fresh), at most one push every 20 s — every 5 min during a workout — and right away when the app
   is hidden. Automatic AI retries are capped (offline photo queue: 3 tries 30 min apart; a meal grade: 2 more tries).
 
+## Sync on Lock In's own storage (D1)
+Since 2026.10.21.2 the account syncs through `/api/sync` (tables `sync`, `photos`, `syncv`), not Puter KV/FS.
+Each piece (main document, a month of workouts, a month of food, each progress photo) is gzipped and encrypted on
+the phone with the account's own key (the E2E "self" key) before upload; the server stores ciphertext only.
+Writes are compare-and-set on a version number: a conflict makes the phone merge the newer copy and retry.
+Every app start reads the whole cloud copy before it writes anything. Open devices check `/api/sync/v` every 30 s.
+The first time on a device the old Puter copy is folded in (when the allowance allows) and old photos are copied over.
+
+## Plans and AI on the app's own key
+`/api/ai` runs Claude Haiku 5.5 with the Cloudflare secret **`ANTHROPIC_API_KEY`**; without it the app uses each
+person's Puter allowance as before. Free: 5 meal reads, 1 AI workout review, 25 other AI requests per (UTC) day;
+Pro: 30, unlimited, 150. `AI_DAY_USD` caps the whole app's AI spend per day (default 3). Admins (`ADMIN`, Puter
+usernames) are unlimited and see everyone's use in Setup, where they can give or remove Pro.
+Payments (Lemon Squeezy, merchant of record): `LS_BUY_MONTHLY` / `LS_BUY_YEARLY` (checkout links), `LS_PORTAL`
+(customer portal) and the webhook secret `LS_SECRET`; webhook URL `https://web.lockin-app.online/api/ls/webhook`.
+The checkout passes the account id as `checkout[custom][uid]`; subscription events set Pro until the renewal (+3 days).
+
 ## Public split links
 `/p/<code>#<key>` — anyone can follow; only the owner's app writes (`/api/pub`). The key after `#` never reaches
 the server, so the stored copy is encrypted. Followers poll for the latest version; to change it they duplicate it.
