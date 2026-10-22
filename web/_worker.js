@@ -15,8 +15,9 @@ const SEC = {
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'strict-origin-when-cross-origin',
   'x-frame-options': 'DENY',
-  'permissions-policy': 'camera=(self), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()',
-  'content-security-policy': "frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests"
+  // payment: Stripe's checkout runs inside the app (Apple Pay / Google Pay need it in Stripe's frame)
+  'permissions-policy': 'camera=(self), microphone=(), geolocation=(), payment=(self "https://js.stripe.com" "https://checkout.stripe.com"), usb=(), browsing-topics=()',
+  'content-security-policy': "frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self' https://*.stripe.com; upgrade-insecure-requests"
 };
 function secure(res, extra) {
   const h = new Headers(res.headers);
@@ -567,8 +568,9 @@ const nextUtcMidnight = () => { const d = new Date(); d.setUTCHours(24, 0, 0, 0)
 async function planOf(db, id, env) {
   if (await isAdmin(db, id, env)) return { plan: 'admin', until: null, src: 'admin' };
   const now = Date.now(), pk = await puidOf(db, id);
-  const r = await db.prepare("SELECT src, until, status FROM plans WHERE uid=? AND plan='pro' AND (until IS NULL OR until>?) ORDER BY until IS NULL DESC, until DESC LIMIT 1").bind(pk, now).first();
-  return r ? { plan: 'pro', until: r.until, src: r.src, status: r.status || null } : { plan: 'free', until: null, src: null };
+  const r = await db.prepare("SELECT src, until, status, lsu FROM plans WHERE uid=? AND plan='pro' AND (until IS NULL OR until>?) ORDER BY until IS NULL DESC, until DESC LIMIT 1").bind(pk, now).first();
+  // exact: the date came from the subscription itself (not the stopgap set the moment it was paid)
+  return r ? { plan: 'pro', until: r.until, src: r.src, status: r.status || null, exact: r.src !== 'stripe' || r.lsu > 0 } : { plan: 'free', until: null, src: null };
 }
 async function usedToday(db, id) {
   const o = { meal: 0, review: 0, other: 0 }, pk = await puidOf(db, id);
@@ -587,10 +589,13 @@ function buyLinks(env, uid) {
   const add = u => u ? u + (u.includes('?') ? '&' : '?') + 'checkout%5Bcustom%5D%5Buid%5D=' + encodeURIComponent(uid) : '';
   return { monthly: add(env.LS_BUY_MONTHLY || ''), yearly: add(env.LS_BUY_YEARLY || ''), portal: env.LS_PORTAL || '' };
 }
+// paying inside the app (Stripe's embedded checkout) needs the secret key, the publishable key and the webhook
+const payEmbed = env => !!(env.STRIPE_KEY && env.STRIPE_PK && env.STRIPE_WHSEC);
 async function planOut(db, id, env) {
   const p = await planOf(db, id, env);
   return Object.assign(p, { limits: PLAN_LIMITS[p.plan], used: await usedToday(db, id), resets: nextUtcMidnight(),
-    ai: !!env.ANTHROPIC_API_KEY, buy: buyLinks(env, await puidOf(db, id)), price: { monthly: '€4.99', yearly: '€39.99' } });
+    ai: !!env.ANTHROPIC_API_KEY, buy: buyLinks(env, await puidOf(db, id)), price: { monthly: '€4.99', yearly: '€39.99' },
+    pay: { embed: payEmbed(env), pk: payEmbed(env) ? String(env.STRIPE_PK) : '' } });
 }
 async function aiCall(env, prompt, img, max) {
   const content = [];
@@ -663,7 +668,138 @@ async function adminUsers(db, env) {
   }
   for (const pl of plans) { const u = U.get(pl.uid); if (!u) continue; u.plan = 'pro'; u.srcs.push(pl.src); if (pl.until === null || u.until !== null && pl.until > u.until) u.until = pl.until; }
   for (const u of U.values()) if (u.admin) u.plan = 'admin';
-  return { users: [...U.values()], todayCost, monthCost, cap: Math.round((+env.AI_DAY_USD || 3) * 1e6), ai: !!env.ANTHROPIC_API_KEY, pay: !!(env.STRIPE_WHSEC && (env.STRIPE_LINK_MONTHLY || env.STRIPE_LINK_YEARLY)) || !!(env.LS_SECRET && env.LS_BUY_MONTHLY) };
+  const links = !!(env.STRIPE_WHSEC && (env.STRIPE_LINK_MONTHLY || env.STRIPE_LINK_YEARLY)) || !!(env.LS_SECRET && env.LS_BUY_MONTHLY);
+  let payErr = null;
+  try { const e = await db.prepare("SELECT v FROM meta WHERE k='stripe_err'").first(); payErr = e ? parse(e.v) : null; } catch (e) {}
+  return { users: [...U.values()], todayCost, monthCost, cap: Math.round((+env.AI_DAY_USD || 3) * 1e6), ai: !!env.ANTHROPIC_API_KEY, pay: links || payEmbed(env),
+    payMode: payEmbed(env) ? 'app' : links ? 'links' : 'off', payErr: payErr && Date.now() - payErr.t < 7 * DAY ? payErr : null };
+}
+/* ---------- Stripe: checkout inside the app (embedded), Pro switched on the moment it's paid ----------
+   STRIPE_KEY: a restricted key (Checkout Sessions: write, Prices: read, Payment Links: read) or the secret key.
+   STRIPE_PK: the publishable key. The prices: STRIPE_PRICE_MONTHLY / STRIPE_PRICE_YEARLY, else the ones behind
+   the payment links (STRIPE_LINK_*), else the account's active €4.99 / €39.99 monthly / yearly prices. */
+const STRIPE_VER = '2026-04-22.dahlia';
+function stripeForm(o, pre, out) {
+  out = out || [];
+  for (const k in o) {
+    const v = o[k], key = pre ? pre + '[' + k + ']' : k;
+    if (v === undefined || v === null || v === '') continue;
+    if (typeof v === 'object') stripeForm(v, key, out);
+    else out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v)));
+  }
+  return out.join('&');
+}
+async function stripeCall(env, db, method, path, params) {
+  if (!env.STRIPE_KEY) throw new HttpError(503, 'pay_off', 'Paying in the app isn’t set up yet.');
+  const q = params ? stripeForm(params) : '', get = method === 'GET';
+  let r;
+  try {
+    r = await fetch((env.STRIPE_API || 'https://api.stripe.com') + '/v1' + path + (get && q ? '?' + q : ''), {
+      method, body: get ? undefined : q,
+      headers: Object.assign({ authorization: 'Bearer ' + env.STRIPE_KEY, 'stripe-version': STRIPE_VER }, get ? {} : { 'content-type': 'application/x-www-form-urlencoded' })
+    });
+  } catch (e) { throw new HttpError(503, 'pay_busy', 'Couldn’t reach the payment service — try again in a moment.'); }
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j) {
+    const m = String((j && j.error && (j.error.message || j.error.code)) || 'HTTP ' + r.status).slice(0, 300);
+    console.log('stripe error', method, path.split('?')[0], r.status, m);
+    // the admin sees the last error in Setup → Plans & AI (a missing permission on the key, say)
+    if (db) try { await db.prepare("INSERT OR REPLACE INTO meta(k,v) VALUES('stripe_err',?)").bind(JSON.stringify({ t: Date.now(), at: method + ' ' + path.split('?')[0].replace(/cs_[A-Za-z0-9_]+/, 'cs_…'), status: r.status, m })).run(); } catch (e) {}
+    throw new HttpError(502, 'pay_err', r.status === 401 || r.status === 403 ? 'Payments aren’t working right now — the app’s payment key was refused.' : 'The payment service didn’t accept that — try again in a moment.');
+  }
+  return j;
+}
+let SPRICE = null;   // { t, monthly, yearly } for 10 minutes
+const linkNorm = u => String(u || '').split('?')[0].replace(/\/+$/, '').toLowerCase();
+async function stripePrice(env, db, plan) {
+  const own = plan === 'yearly' ? env.STRIPE_PRICE_YEARLY : env.STRIPE_PRICE_MONTHLY;
+  if (own) return String(own);
+  if (SPRICE && Date.now() - SPRICE.t < 10 * 60e3 && SPRICE[plan]) return SPRICE[plan];
+  const out = { t: Date.now(), monthly: '', yearly: '' };
+  // 1) the prices behind the payment links you made (they're the ones with Managed Payments set up)
+  const want = { monthly: linkNorm(env.STRIPE_LINK_MONTHLY), yearly: linkNorm(env.STRIPE_LINK_YEARLY) };
+  if (want.monthly || want.yearly) {
+    try {
+      const pl = await stripeCall(env, null, 'GET', '/payment_links', { active: 'true', limit: 100 });
+      for (const k of ['monthly', 'yearly']) {
+        const l = want[k] && (pl.data || []).find(x => linkNorm(x.url) === want[k]);
+        if (!l) continue;
+        const li = await stripeCall(env, null, 'GET', '/payment_links/' + l.id + '/line_items', { limit: 5 });
+        const pr = ((li.data || [])[0] || {}).price;
+        if (pr) out[k] = typeof pr === 'string' ? pr : pr.id;
+      }
+    } catch (e) { /* no permission for payment links: look at the prices */ }
+  }
+  // 2) the account's active recurring prices: €4.99 a month / €39.99 a year, else the newest of each
+  if (!out.monthly || !out.yearly) {
+    const j = await stripeCall(env, db, 'GET', '/prices', { active: 'true', type: 'recurring', limit: 100 });
+    for (const [k, iv, cents] of [['monthly', 'month', 499], ['yearly', 'year', 3999]]) {
+      if (out[k]) continue;
+      const c = (j.data || []).filter(p => p && p.recurring && p.recurring.interval === iv && (p.recurring.interval_count || 1) === 1).sort((a, b) => (b.created || 0) - (a.created || 0));
+      const pick = c.find(p => p.currency === 'eur' && p.unit_amount === cents) || c.find(p => p.currency === 'eur') || c[0];
+      if (pick) out[k] = pick.id;
+    }
+  }
+  SPRICE = out;
+  if (!out[plan]) throw new HttpError(503, 'pay_off', 'Pro isn’t on sale right now — try again later.');
+  return out[plan];
+}
+// an account id from a checkout (client_reference_id 'a__…' or metadata uid); a Puter-era id follows its account
+async function stripeAcct(db, uid) {
+  uid = String(uid || '');
+  if (!PUIDRX.test(uid)) return '';
+  if (!uid.startsWith('a:')) { const m = await db.prepare('SELECT id FROM accounts WHERE legacy=?').bind(uid).first(); if (m) uid = 'a:' + m.id; }
+  return uid;
+}
+const subId = s => String(s && typeof s === 'object' ? s.id || '' : s || '').slice(0, 60);
+// ties a subscription to the account; paid = Pro now. Once the subscription's own events have been applied
+// (lsu > 0) they decide the dates — a late or repeated "paid" never stretches or revives them.
+async function stripeLink(db, uid, sub, mode, paid) {
+  const now = Date.now();
+  // (a subscription that's still being paid — incomplete / pending — does switch on when the payment is confirmed)
+  const KEEP = "plans.sub IS excluded.sub AND plans.lsu>0 AND NOT (excluded.status='active' AND plans.status IN ('incomplete','pending'))";
+  await db.prepare("INSERT INTO plans(uid,src,plan,until,sub,status,variant,lsu,updated) VALUES(?,'stripe','pro',?,?,?,?,0,?) ON CONFLICT(uid,src) DO UPDATE SET " +
+    "until=CASE WHEN " + KEEP + " THEN plans.until WHEN excluded.status='active' THEN MAX(COALESCE(plans.until,0),excluded.until) ELSE plans.until END, " +
+    "status=CASE WHEN " + KEEP + " THEN plans.status WHEN excluded.status='active' OR plans.sub IS NOT excluded.sub THEN excluded.status ELSE plans.status END, " +
+    "lsu=CASE WHEN plans.sub IS excluded.sub THEN plans.lsu ELSE 0 END, sub=excluded.sub, updated=excluded.updated")
+    .bind(uid, paid ? now + 35 * DAY : now, sub, paid ? 'active' : 'pending', String(mode || 'subscription').slice(0, 20), now).run();
+}
+async function payCheckout(db, env, me, id, b, url) {
+  if (!payEmbed(env)) return err(503, 'pay_off', 'Paying in the app isn’t set up yet.');
+  await limit(db, 'u:' + id + ':pay', 20, HOUR);
+  const plan = b && b.plan === 'monthly' ? 'monthly' : 'yearly';
+  const p = await planOf(db, id, env);
+  if (p.plan === 'admin') return err(400, 'admin', 'You’re the admin — everything in Pro is already yours.');
+  const uid = await puidOf(db, id);
+  const own = await db.prepare("SELECT until FROM plans WHERE uid=? AND src='stripe' AND plan='pro' AND until>?").bind(uid, Date.now()).first();
+  if (own) return err(409, 'already_pro', 'You already have Pro — manage it in Setup → Your plan.');
+  let email = '';
+  if (me.aid) { const a = await db.prepare('SELECT email FROM accounts WHERE id=?').bind(me.aid).first(); email = (a && a.email) || ''; }
+  const price = await stripePrice(env, db, plan);
+  const s = await stripeCall(env, db, 'POST', '/checkout/sessions', {
+    mode: 'subscription', ui_mode: 'embedded_page', redirect_on_completion: 'if_required',
+    return_url: url.origin + '/?paid={CHECKOUT_SESSION_ID}',
+    line_items: [{ price, quantity: 1 }],
+    managed_payments: { enabled: 'true' },
+    client_reference_id: stripeRef(uid),
+    customer_email: EMAILRX.test(email) ? email : undefined,
+    metadata: { uid, plan },
+    subscription_data: { metadata: { uid } }
+  });
+  if (!s.client_secret) return err(502, 'pay_err', 'The payment service didn’t start the checkout — try again.');
+  return J({ clientSecret: s.client_secret, id: s.id, plan });
+}
+// after paying in the app: ask Stripe (not the phone) whether it's paid, and switch Pro on right away
+async function payStatus(db, env, id, sid) {
+  if (!/^cs_(?:test|live)_[A-Za-z0-9]{10,300}$/.test(sid || '')) return err(400, 'bad', 'Bad request.');
+  await limit(db, 'u:' + id + ':pays', 120, HOUR);
+  const uid = await puidOf(db, id);
+  const s = await stripeCall(env, db, 'GET', '/checkout/sessions/' + sid);
+  const su = await stripeAcct(db, stripeUid(s.client_reference_id) || (s.metadata || {}).uid);
+  if (su !== uid) return err(403, 'forbidden', 'That checkout isn’t yours.');
+  const paid = s.status === 'complete' && s.payment_status !== 'unpaid';
+  if (s.status === 'complete' && s.subscription) await stripeLink(db, uid, subId(s.subscription), s.mode, paid);
+  return J({ status: s.status || 'open', paid, plan: await planOut(db, id, env) });
 }
 /* Stripe webhooks (Managed Payments: Stripe is the seller and handles VAT). checkout.session.completed ties the
    subscription to the account (client_reference_id); customer.subscription.* keep Pro until the paid period ends (+3 days). */
@@ -678,23 +814,28 @@ async function stripeWebhook(req, env, db) {
   const mac = [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(t + '.' + raw)))].map(x => x.toString(16).padStart(2, '0')).join('');
   if (!sigs.some(x => hexEq(x, mac))) return err(401, 'bad_sig', 'Bad signature.');
   const ev = parse(raw) || {}, o = (ev.data && ev.data.object) || {}, now = Date.now(), GRACE = 3 * DAY, at = (+ev.created || 0) * 1000 || now;
-  if (ev.type === 'checkout.session.completed') {
-    let uid = stripeUid(o.client_reference_id);
-    if (!PUIDRX.test(uid) || !o.subscription) return J({ ok: true, ignored: 'no account' });
-    if (!uid.startsWith('a:')) { const m = await db.prepare('SELECT id FROM accounts WHERE legacy=?').bind(uid).first(); if (m) uid = 'a:' + m.id; }
-    // paid now; the subscription event that follows sets the exact renewal date
-    await db.prepare("INSERT INTO plans(uid,src,plan,until,sub,status,variant,lsu,updated) VALUES(?,'stripe','pro',?,?,'active',?,0,?) ON CONFLICT(uid,src) DO UPDATE SET until=MAX(COALESCE(plans.until,0),excluded.until), sub=excluded.sub, status='active', updated=excluded.updated")
-      .bind(uid, now + 32 * DAY + GRACE, String(o.subscription).slice(0, 60), String(o.mode || '').slice(0, 20), now).run();
+  if (ev.type === 'checkout.session.completed' || ev.type === 'checkout.session.async_payment_succeeded') {
+    const uid = await stripeAcct(db, stripeUid(o.client_reference_id) || (o.metadata || {}).uid);
+    if (!uid || !o.subscription) return J({ ok: true, ignored: 'no account' });
+    // paid now (a bank payment that's still on its way: linked, Pro once it arrives); the subscription events set the dates
+    await stripeLink(db, uid, subId(o.subscription), o.mode, o.payment_status !== 'unpaid');
     return J({ ok: true });
   }
   if (/^customer\.subscription\.(created|updated|deleted|paused|resumed)$/.test(ev.type || '')) {
-    const row = await db.prepare("SELECT uid FROM plans WHERE src='stripe' AND sub=?").bind(String(o.id || '')).first();
-    if (!row) return J({ ok: true, ignored: 'unknown subscription' });   // checkout.session.completed links it; Stripe retries
+    let row = await db.prepare("SELECT uid FROM plans WHERE src='stripe' AND sub=?").bind(String(o.id || '')).first();
+    if (!row) {
+      // bought in the app: the subscription carries the account itself
+      const mu = await stripeAcct(db, (o.metadata || {}).uid);
+      if (mu) { await stripeLink(db, mu, subId(o.id), 'subscription', false); row = { uid: mu }; }
+      // bought through a payment link: checkout.session.completed links it — until then, ask Stripe to send this again
+      else if (ev.type !== 'customer.subscription.deleted' && now - at < 3 * DAY) return err(409, 'not_linked', 'Not linked to an account yet — send it again later.');
+      else return J({ ok: true, ignored: 'unknown subscription' });
+    }
     const item = ((o.items || {}).data || [])[0] || {}, end = (+(o.current_period_end || item.current_period_end) || 0) * 1000, st = String(o.status || '');
     let until = now;
     if (ev.type !== 'customer.subscription.deleted' && ['active', 'trialing', 'past_due'].includes(st)) until = Math.max(end, now) + (o.cancel_at_period_end ? 0 : GRACE);
-    await db.prepare("UPDATE plans SET until=?, status=?, lsu=?, updated=? WHERE uid=? AND src='stripe' AND lsu<=?")
-      .bind(until, (o.cancel_at_period_end && st === 'active' ? 'cancelled' : st).slice(0, 20), at, now, row.uid, at).run();
+    await db.prepare("UPDATE plans SET until=?, status=?, lsu=?, updated=? WHERE uid=? AND src='stripe' AND sub=? AND lsu<=?")
+      .bind(until, (o.cancel_at_period_end && st === 'active' ? 'cancelled' : st).slice(0, 20), at, now, row.uid, subId(o.id), at).run();
     return J({ ok: true });
   }
   return J({ ok: true, ignored: ev.type || 'event' });
@@ -901,6 +1042,8 @@ async function api(req, env, ctx, url) {
         return J({ ok: true });
       }
       case 'GET /api/plan': return J(await planOut(db, id, env));
+      case 'POST /api/pay/checkout': return await payCheckout(db, env, me, id, b, url);
+      case 'GET /api/pay/status': return await payStatus(db, env, id, String(url.searchParams.get('id') || ''));
       case 'GET /api/sync': {
         await limit(db, 'u:' + id + ':syncr', 900, HOUR);
         const pk = await puidOf(db, id);

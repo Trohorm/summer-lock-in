@@ -1,9 +1,9 @@
 /* Lock In — offline shell. App shell cached; exercise demos (ExerciseDB / free-exercise-db) cached as you view
    them in a separate long-lived cache. API calls always hit the network. */
-const CACHE = 'lockin-v36';
+const CACHE = 'lockin-v37';
 const MEDIA_CACHE = 'lockin-media-v1';
 const SHELL = ['./', './index.html', './exlib.json', './manifest.webmanifest'];
-const ICONS = ['./icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const ICONS = ['./icon-192.png', './icon-512.png', './apple-touch-icon.png', './apple-touch-icon-pro.png'];
 const MEDIA_HOSTS = ['static.exercisedb.dev', 'images.weserv.nl', 'raw.githubusercontent.com'];
 
 self.addEventListener('install', e => {

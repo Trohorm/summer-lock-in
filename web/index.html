@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Lock In">
+<script>try{var lp=localStorage.getItem("lockin_pro");if(lp&&lp!=="0"){document.documentElement.classList.add("pro");if(lp==="2")document.documentElement.classList.add("gold");}}catch(e){}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1013'/%3E%3Crect x='8' y='27' width='6' height='10' rx='2' fill='%235b93ff'/%3E%3Crect x='50' y='27' width='6' height='10' rx='2' fill='%235b93ff'/%3E%3Crect x='15' y='23' width='7' height='18' rx='2' fill='%235b93ff'/%3E%3Crect x='42' y='23' width='7' height='18' rx='2' fill='%235b93ff'/%3E%3Crect x='22' y='30' width='20' height='4' rx='2' fill='%23e9ecf1'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1572,15 +1573,164 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
 .acc-del .linkbtn{color:var(--bad)}
 .adopen{width:100%;display:flex;align-items:center;gap:8px;margin-top:12px;text-align:left}
 #admQ{width:100%}
+/* ---- Lock In Pro: gold */
+:root{--goldg:linear-gradient(135deg,#ffe9a3 0%,#f0bf4c 45%,#c98a1e 100%);--gold:#f0bf4c;--goldl:#ffd97a;--goldink:#1d1503}
+.goldt{background:var(--goldg);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.ptile{position:relative;display:inline-grid;place-items:center;width:44px;height:44px;border-radius:14px;flex:none;vertical-align:middle;background:linear-gradient(180deg,#202024,#0c0c0e);box-shadow:0 0 0 1px rgba(240,191,76,.38),0 8px 22px rgba(240,191,76,.16);overflow:hidden;font-size:9px}
+.ptile svg{width:62%;height:62%;fill:none;stroke:url(#lkGold);stroke-width:2;stroke-linecap:round}
+.ptile.pp svg{transform:translateY(-12%)}
+.ptile i{position:absolute;bottom:10%;left:50%;transform:translateX(-50%);padding:.08em .55em;border-radius:99px;background:var(--goldg);color:var(--goldink);font-style:normal;font-weight:900;font-size:1em;letter-spacing:.1em;line-height:1.35}
+.ptile.mini{width:22px;height:22px;border-radius:7px;box-shadow:0 0 0 1px rgba(240,191,76,.4)}
+.ptile.mini svg{width:70%;height:70%}
+/* every Lock In logo turns gold for Pro */
+html.pro .brand:not(.hasav),html.pro .lg-mark,html.pro .wizmark{background:linear-gradient(180deg,#202024,#0c0c0e);box-shadow:0 0 0 1px rgba(240,191,76,.42),0 8px 26px rgba(240,191,76,.22)}
+html.pro .brand:not(.hasav) svg,html.pro .lg-mark svg,html.pro .wizmark svg{stroke:url(#lkGold)}
+html.pro .lg-mark{box-shadow:0 0 0 1px rgba(240,191,76,.45),0 18px 60px rgba(240,191,76,.3)}
+html.pro .brand.hasav{box-shadow:0 0 0 2px #f0bf4c,0 6px 18px rgba(240,191,76,.3)}
+html.pro .hero-card .deco{stroke:url(#lkGold);opacity:.16}
+html.pro .lg-title span{background:var(--goldg);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.brandw{position:relative;flex:none}
+.brandpro{display:none;position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1.5px 5px;border-radius:6px;background:var(--goldg);color:var(--goldink);font-size:8px;line-height:1.2;font-weight:900;letter-spacing:.1em;font-style:normal;box-shadow:0 2px 8px rgba(0,0,0,.45);pointer-events:none}
+html.pro .brandpro{display:block}
+/* the gold accent (Pro, switchable in Setup) */
+html.gold .btn-primary{background:var(--goldg);color:var(--goldink);box-shadow:0 8px 22px rgba(240,191,76,.24)}
+html.gold .btn-primary svg{stroke:var(--goldink)}
+html.gold nav button.on{color:#ffe7a6!important;text-shadow:0 0 12px rgba(240,191,76,.55)}
+html.gold nav .pill{background:radial-gradient(130% 90% at 50% 0%,rgba(255,232,160,.30),rgba(255,214,120,.10) 55%,rgba(255,214,120,.05))!important;border-color:rgba(255,226,140,.34)!important;box-shadow:inset 0 1px 1px rgba(255,255,255,.45),inset 0 -2px 6px rgba(240,191,76,.26),0 6px 18px rgba(0,0,0,.3)}
+html.gold .kicker{color:var(--goldl)}
+html.gold .hero-card{background:radial-gradient(420px 220px at 100% 0%,rgba(240,191,76,.2),transparent 70%),linear-gradient(160deg,#272114,#16140f);border-color:rgba(240,191,76,.36)!important;box-shadow:0 14px 40px rgba(110,80,15,.25),inset 0 1px 0 rgba(255,255,255,.08)}
+html.gold .hero-card::after{background:linear-gradient(100deg,transparent,rgba(255,226,140,.12),transparent)}
+html.gold .ambient i:nth-child(1){background:radial-gradient(circle,rgba(240,191,76,.18),transparent 62%)}
+html.gold .ambient i:nth-child(2){background:radial-gradient(circle,rgba(201,138,30,.14),transparent 62%)}
+html.gold .plbar i{background:var(--goldg)}
+/* the Pro screen */
+.pw{text-align:center;padding:0 2px 6px}
+.pw-hero{position:relative;height:128px;display:grid;place-items:center;margin:0 0 8px}
+.pw-rays{position:absolute;width:280px;height:280px;left:50%;top:50%;margin:-140px 0 0 -140px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(240,191,76,.17) 0 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 16%,transparent 64%);mask:radial-gradient(circle,#000 16%,transparent 64%);pointer-events:none}
+.pw-logo{width:96px;height:96px;border-radius:30px;font-size:13px;box-shadow:0 0 0 1px rgba(240,191,76,.5),0 18px 50px rgba(240,191,76,.28)}
+.pw-logo::after,.ptile.proad-logo::after{content:'';position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 42%,rgba(255,246,214,.6) 50%,transparent 58%);transform:translateX(-100%)}
+.pw-title{font-size:28px;font-weight:900;letter-spacing:-.02em;margin:0 0 4px;color:#fff}
+.pw-sub{color:var(--slate);font-size:14px;line-height:1.45;margin:0 auto 14px;max-width:330px}
+.pw-perks{display:grid;gap:8px;margin:0 0 16px;text-align:left}
+.pw-perk{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+.pw-perk>i{font-style:normal;font-size:19px;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(240,191,76,.12);flex:none}
+.pw-perk>div{flex:1;min-width:0}.pw-perk b{display:block;font-size:14.5px;color:#fff}.pw-perk small{color:var(--mist);font-size:12px}
+.pw-ck{width:20px;height:20px;flex:none;fill:none;stroke:var(--gold);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.pw-plans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pw-plan{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:15px 12px 12px;border-radius:16px;background:rgba(255,255,255,.035);border:1.5px solid rgba(255,255,255,.1);color:var(--navy);font-family:inherit;cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s,transform .25s var(--spring)}
+.pw-plan b{font-size:11.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.08em}
+.pw-price{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.01em;line-height:1.15}.pw-price small{font-size:12px;font-weight:700;color:var(--mist);margin-left:2px}
+.pw-per{font-size:11.5px;color:var(--mist);line-height:1.3}
+.pw-plan.on{border-color:var(--gold);background:linear-gradient(180deg,rgba(240,191,76,.14),rgba(240,191,76,.04));box-shadow:0 8px 26px rgba(240,191,76,.13)}
+.pw-plan.on b,.pw-plan.on .pw-per{color:var(--goldl)}
+.pw-plan:active{transform:scale(.97)}
+.pw-best{position:absolute;top:-9px;right:10px;padding:2px 8px;border-radius:99px;background:var(--goldg);color:var(--goldink);font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.btn.pw-cta{position:relative;overflow:hidden;isolation:isolate;width:100%;background:var(--goldg);color:var(--goldink);font-weight:800;font-size:15.5px;padding:14px 16px;border-radius:14px;box-shadow:0 10px 28px rgba(240,191,76,.26)}
+.btn.pw-cta.btn-sm{font-size:13.5px;padding:10px 12px;border-radius:12px}
+.btn.pw-cta small{opacity:.75;font-weight:800;margin-left:4px}
+.btn.pw-cta::after{content:'';position:absolute;z-index:-1;top:0;bottom:0;left:0;width:38%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-130%) skewX(-18deg);pointer-events:none}
+.pw-fine{margin-top:10px;line-height:1.45}.pw-soon{margin-top:4px}
+@media (prefers-reduced-motion:no-preference){
+  .pw-rays{animation:pwspin 30s linear infinite}
+  .pw-logo{animation:float 4s ease-in-out infinite}
+  .pw-logo::after{animation:pwshine 3.8s ease-in-out .5s infinite}
+  .ptile.proad-logo::after{animation:pwshine 5.5s ease-in-out 1.5s infinite}
+  .btn.pw-cta::after{animation:ctashine 3.4s ease-in-out 1s infinite}
+}
+@keyframes pwshine{0%{transform:translateX(-100%)}35%,100%{transform:translateX(100%)}}
+@keyframes pwspin{to{transform:rotate(360deg)}}
+@keyframes ctashine{0%{transform:translateX(-130%) skewX(-18deg)}42%,100%{transform:translateX(330%) skewX(-18deg)}}
+/* checkout inside the app */
+.pco-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 10px}
+.pco-back{font-size:13.5px}
+.pco-sum{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--slate)}.pco-sum b{color:#fff}
+.pco-box{min-height:440px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);display:grid;place-items:center;overflow:hidden;transition:background .3s,border-color .3s}
+.pco-box.on{display:block;background:#fff;border-color:transparent;min-height:540px;padding:6px 0}
+.pco-load{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--slate);font-size:13.5px}
+.pspin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(240,191,76,.22);border-top-color:var(--gold);animation:pspinr .8s linear infinite}
+@keyframes pspinr{to{transform:rotate(360deg)}}
+.pco-msg{padding:24px 16px;text-align:center;width:100%}.pco-msg b{font-size:16px;color:#fff}.pco-msg p{color:var(--slate);font-size:13.5px;margin:6px 0 16px;line-height:1.45}
+.pco-done{padding:40px 16px;text-align:center}
+.pco-tick{width:66px;height:66px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:var(--goldg);box-shadow:0 12px 34px rgba(240,191,76,.35);animation:pcotick .6s var(--spring) both}
+.pco-tick svg{width:30px;height:30px;fill:none;stroke:var(--goldink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:pcodraw .45s ease .3s forwards}
+@keyframes pcotick{from{transform:scale(.3);opacity:0}}@keyframes pcodraw{to{stroke-dashoffset:0}}
+.pco-done b{display:block;font-size:17px;color:#fff}.pco-done p{color:var(--slate);font-size:13.5px;margin-top:4px}
+.pco-fine{text-align:center;margin-top:10px}
+/* the welcome: the logo turns gold */
+.pfx{position:fixed;inset:0;z-index:400;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 40%,rgba(70,52,12,.6),rgba(6,6,8,.95) 62%);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);opacity:0;transition:opacity .45s ease}
+.pfx.pfx-on{opacity:1}.pfx.pfx-out{opacity:0;transition:opacity .5s ease}
+.pfx-c{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pfx-rays{position:absolute;width:150vmax;height:150vmax;left:50%;top:40%;margin:-75vmax 0 0 -75vmax;background:repeating-conic-gradient(from 0deg,rgba(240,191,76,.13) 0 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 3%,transparent 42%);mask:radial-gradient(circle,#000 3%,transparent 42%);opacity:0;transition:opacity .9s ease;pointer-events:none}
+.pfx.pfx-burst .pfx-rays{opacity:1}
+.pfx-in{position:relative;text-align:center;max-width:340px;width:100%}
+.pfx-logo{position:relative;width:132px;height:132px;margin:0 auto 28px;perspective:800px;transform:scale(.5);opacity:0;transition:transform .7s var(--spring),opacity .35s ease}
+.pfx.pfx-on .pfx-logo{transform:none;opacity:1}
+.pfx-card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.45,-.25,.3,1.35)}
+.pfx.pfx-flip .pfx-card{transform:rotateY(180deg)}
+.pfx-face{position:absolute;inset:0;border-radius:40px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.pfx-old{background:var(--grad);box-shadow:0 18px 50px rgba(79,124,247,.45)}
+.pfx-new{background:linear-gradient(180deg,#202024,#0c0c0e);box-shadow:0 0 0 1.5px rgba(240,191,76,.55),0 20px 64px rgba(240,191,76,.38);transform:rotateY(180deg)}
+.pfx-face svg{width:58%;height:58%;fill:none;stroke-width:2;stroke-linecap:round}
+.pfx-old svg{stroke:#fff}.pfx-new svg{stroke:url(#lkGold);transform:translateY(-11%)}
+.pfx-new i{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:99px;background:var(--goldg);color:var(--goldink);font-style:normal;font-weight:900;font-size:13px;letter-spacing:.12em}
+.pfx-shine{position:absolute;inset:-30%;background:linear-gradient(115deg,transparent 40%,rgba(255,246,214,.75) 50%,transparent 60%);transform:translateX(-110%)}
+.pfx.pfx-done .pfx-shine{animation:pwshine 2.8s ease-in-out .1s infinite}
+.pfx-ring{position:absolute;inset:-4px;border-radius:44px;border:2px solid rgba(255,226,140,.85);opacity:0;pointer-events:none}
+.pfx.pfx-burst .pfx-ring{animation:pfxring 1.1s ease-out forwards}
+.pfx.pfx-burst .pfx-logo{animation:pfxbump .55s var(--spring)}
+@keyframes pfxring{0%{opacity:.9;transform:scale(.92)}100%{opacity:0;transform:scale(1.9)}}
+@keyframes pfxbump{50%{transform:scale(1.12)}}
+.pfx-t{font-size:27px;font-weight:900;letter-spacing:-.02em;color:#fff;margin:0 0 6px;line-height:1.15}
+.pfx-s{color:var(--slate);font-size:14.5px;margin:0 0 16px}
+.pfx-perks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:22px}
+.pfx-perks span{padding:7px 11px;border-radius:99px;background:rgba(240,191,76,.12);border:1px solid rgba(240,191,76,.32);color:#ffe7a6;font-size:12.5px;font-weight:700}
+.pfx-t,.pfx-s,.pfx-perks span,.pfx-go{opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .6s var(--spring)}
+.pfx-s{transition-delay:.08s}.pfx-perks span:nth-child(1){transition-delay:.16s}.pfx-perks span:nth-child(2){transition-delay:.24s}.pfx-perks span:nth-child(3){transition-delay:.32s}.pfx-go{transition-delay:.45s}
+.pfx.pfx-done .pfx-t,.pfx.pfx-done .pfx-s,.pfx.pfx-done .pfx-perks span,.pfx.pfx-done .pfx-go{opacity:1;transform:none}
+.proshim{position:fixed;inset:0;z-index:300;pointer-events:none;background:linear-gradient(115deg,transparent 32%,rgba(255,226,140,0) 40%,rgba(255,226,140,.3) 50%,rgba(255,226,140,0) 60%,transparent 68%);background-size:300% 100%;background-position:100% 0;mix-blend-mode:screen;animation:proshim 1.3s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes proshim{to{background-position:0 0}}
+/* Pro offered (Free): Today / Progress cards, the reminder, Setup */
+.proad{position:relative;display:flex;align-items:center;gap:12px;padding:14px 44px 14px 14px;cursor:pointer;overflow:hidden;border:1px solid rgba(240,191,76,.3)!important;background:radial-gradient(260px 130px at 0% 0%,rgba(240,191,76,.17),transparent 70%),linear-gradient(160deg,#1f1b12,#141310)!important}
+.proad-logo{width:48px;height:48px;border-radius:15px}
+.proad-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.proad-k{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--goldl)}
+.proad-txt b{font-size:15px;color:#fff;line-height:1.25}.proad-txt span:last-child{font-size:12.5px;color:var(--slate);line-height:1.35}
+.proad-go{flex:none;padding:7px 12px;border-radius:99px;background:var(--goldg);color:var(--goldink);font-weight:800;font-size:12.5px;white-space:nowrap}
+.proad-x{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.07);display:grid;place-items:center;cursor:pointer;z-index:1;padding:0}
+.proad-x svg{width:11px;height:11px;stroke:var(--slate);stroke-width:2.6;fill:none;stroke-linecap:round}
+.proad .proad-go{position:absolute;right:12px;bottom:12px}
+.proad .proad-txt{padding-bottom:22px}
+#proNudge{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:79;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:16px;background:rgba(30,26,16,.97);border:1px solid rgba(240,191,76,.36);box-shadow:0 14px 40px rgba(0,0,0,.5);color:var(--navy);font-size:13px;line-height:1.35;transform:translateY(24px);opacity:0;pointer-events:none;transition:opacity .25s,transform .45s var(--spring);max-width:520px;margin:0 auto}
+#proNudge.show{opacity:1;transform:none;pointer-events:auto}
+#proNudge>.pn-t{flex:1;min-width:0}#proNudge b{color:var(--goldl)}
+#proNudge .btn.pw-cta{width:auto;padding:8px 12px;font-size:13px;border-radius:11px;flex:none}
+#planCard.plpro{border-color:rgba(240,191,76,.32)!important;background:radial-gradient(320px 150px at 100% 0%,rgba(240,191,76,.15),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,0) 60%),var(--snow)}
+.plp-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}.plp-t{font-size:19px;font-weight:900;letter-spacing:-.01em;color:#fff;line-height:1.2}.plp-head .tiny{margin:2px 0 0}
+.plp-logo{width:50px;height:50px;border-radius:16px;font-size:8.5px}
+.plp-opts{display:grid;gap:2px;margin-top:12px}
+.plp-manage{margin-top:10px;width:100%}
+.plup{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;border-radius:14px;cursor:pointer;background:linear-gradient(160deg,rgba(240,191,76,.15),rgba(240,191,76,.04));border:1px solid rgba(240,191,76,.32)}
+.plup .grow{display:flex;flex-direction:column;min-width:0}.plup b{color:#fff;font-size:14px}.plup span{font-size:12px;color:var(--slate);line-height:1.35}
+.plup-logo{width:42px;height:42px;border-radius:13px;font-size:7.5px}
+.plbadge.pro{background:var(--goldg);color:var(--goldink)}
+.aiq.pro{color:var(--goldl);display:flex;align-items:center;justify-content:center;gap:6px}
+.prolink{color:var(--goldl);font-weight:800;cursor:pointer;white-space:nowrap}
+.upg .upg-logo{width:62px;height:62px;border-radius:20px;font-size:9px;margin:4px auto 12px;display:grid}
+#estBox .upg{border-color:rgba(240,191,76,.26);background:radial-gradient(260px 120px at 50% 0%,rgba(240,191,76,.12),transparent 70%),rgba(255,255,255,.03)}
+.adprev{margin-top:10px;display:grid;gap:6px}.adprev>div{display:flex;flex-wrap:wrap;gap:6px}.adprev .btn{flex:1 1 auto}.adprev .btn.on{border-color:var(--gold);color:var(--goldl)}
+.aderr{margin:6px 0 10px;color:#f5c26b}
+.wnpro:not(:empty){margin-top:14px}.wnpro:not(:empty)+.wnok{margin-top:8px!important}
+@media (prefers-reduced-motion:reduce){.pfx-card{transition:none}.proshim{display:none}}
 </style>
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><linearGradient id="lkGold" x1="3" y1="7" x2="21" y2="17" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffe9a3"/><stop offset=".45" stop-color="#f0bf4c"/><stop offset="1" stop-color="#c98a1e"/></linearGradient></defs></svg>
 <div id="app">
 <div class="ambient"><i></i><i></i><i></i></div>
 <div id="topbar"><span id="topTitle">Lock In</span></div>
 <div id="scroller">
-<header class="hero"><div class="hrow"><div><div class="sub" id="heroSub"></div><h1 id="heroTitle">Lock In</h1></div><div class="brand"><svg viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg></div></div></header>
+<header class="hero"><div class="hrow"><div><div class="sub" id="heroSub"></div><h1 id="heroTitle">Lock In</h1></div><div class="brandw"><div class="brand"><svg viewBox="0 0 24 24"><path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/></svg></div><i class="brandpro" aria-label="Pro">PRO</i></div></div></header>
 
 <div class="wrap">
   <!-- LOGIN -->
@@ -1629,6 +1779,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
     <div id="todayMain"></div>
     <div id="yday"></div>
     <div class="hubgrid" id="todayHub"></div>
+    <div id="todayPro" hidden></div>
     <div class="card">
       <h2>Last 7 days <span class="right"><span style="color:var(--glacier)">●</span> lifted &nbsp;<span style="color:var(--ok)">●</span> food &nbsp;<b style="color:#8ff0c2">A</b> food grade</span></h2>
       <div class="wkstrip" id="todayWeek"></div>
@@ -1771,6 +1922,7 @@ nav button[data-v=settings].on svg{animation:nv-gear .9s var(--sp-bounce)}
       <p class="tiny phnote" id="photoNote" hidden></p>
       <div id="compareBox"></div>
     </div>
+    <div id="progPro" hidden></div>
   </section>
 
   <!-- FRIENDS -->
@@ -2333,7 +2485,7 @@ async function resync(){
   S=merge(fresh(),mergeStates(cloud,S));migrate();dataVer++;cloudReady=true;offlineMode=false;needsSignIn=false;writeLocal();await pushNow();quietRefresh();processQueue();
 }
 function refreshCurrent(){const a=document.querySelector('.view.active');if(!a)return;const v=a.id.replace('view-','');if(v!=='editor')show(v);}
-function enterApp(){snapSettings();planRestore();setTimeout(()=>planLoad(),1800);if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
+function enterApp(){snapSettings();planRestore();try{proApply();proReturnCheck();}catch(e){}setTimeout(()=>planLoad(),1800);if(user&&/^trohorm$/i.test(user.username||'')&&S&&S.settings.sport===undefined){S.settings.sport='expert-level skiing';save();}afterSplash(()=>Promise.resolve().then(()=>whatsNewCheck(true)));setTimeout(dobLoad,3000);migrate();if(!LOCAL_FRESH)setTimeout(()=>idle(writeLocal),2500);LOCAL_FRESH=false;document.body.classList.add('authed');socLoad();show('today');setTimeout(loadPhotos,3500);setTimeout(()=>processQueue(),1500);socInit();}
 let wzGoal='recomp';
 function openWizard(){
   $('wz-name').value=S.settings.name||accFirst();
@@ -2432,11 +2584,12 @@ function show(v){
   enteringView='';schedulePrerender(1400);
   renderHeader();wakeLock(v==='workout');
   if(v==='friends')socOnShow();
+  if(v==='today')try{proTodayCard();}catch(e){}
   if(g)startLeave(g,dir);
   animateView(v,dir,!!prev&&prev!==el);
   sc.scrollTop=0;
   countUp(el,true);fillRings(el,true);requestAnimationFrame(movePill);
-  if(v==='progress'){fetchPhotos();if(phStale()||!photos.length)loadPhotos();}
+  if(v==='progress'){try{proProgCard();}catch(e){}fetchPhotos();if(phStale()||!photos.length)loadPhotos();}
   if(v==='workout')dayPillSoon();
   heroDeco=el.querySelector('.hero-card .deco');
   onScroll();requestAnimationFrame(()=>setupReveal(el));
@@ -2512,6 +2665,7 @@ function renderToday(){
     const dg=dayGrade(d);
     html+='<div class="wd'+(d===t?' today':'')+'" style="--j:'+(6-i)+'"><div class="dots"><i class="'+(l?'l':'')+'"></i><i class="'+(f?'f':'')+'"></i></div>'+L[parseD(d).getDay()]+(dg?'<b class="wg g-'+dg+'">'+dg+'</b>':'<b class="wg none"></b>')+'</div>';}
   $('todayWeek').innerHTML=html;
+  try{proTodayCard();}catch(e){}
 }
 function liftsThisWeek(){const t=todayStr();let n=0;for(const k in S.workouts){const w=S.workouts[k];if(w.date>addDays(t,-7)&&w.date<=t&&woHasData(w))n++;}return n;}
 function nextWorkoutTxt(){for(let i=1;i<=7;i++){const d=addDays(todayStr(),i),p=plannedDay(d);if(p)return 'Next: '+p.name+' · '+parseD(d).toLocaleDateString('en-GB',{weekday:'short'});}return 'Open the split editor to plan your week';}
@@ -6301,8 +6455,13 @@ function folUnfollow(){
 function burstAt(el,c){try{const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,c||'#3ecf8e');}catch(e){}}
 
 /* ================= VERSIONS: what's new after an update, and the iPhone app must be current ================= */
-const WEB_VER='2026.10.21.3';
+const WEB_VER='2026.10.22.1';
 const WHATSNEW=[
+ {v:'2026.10.22.1',d:'22 Oct',items:[
+  ['✨','Lock In Pro','30 AI meal reads a day, unlimited AI workout reviews and the gold look. Find it in Setup → Your plan.'],
+  ['💳','Pay without leaving the app','Getting Pro opens Stripe’s secure checkout right here in the app, and Pro switches on the moment it’s paid.'],
+  ['🏅','Gold for Pro','Pro turns every Lock In logo gold, adds a gold accent (you can switch it off) and greets you with a little show.'],
+  ['📱','iPhone app 3.5','Payment pages open inside the app, and Pro gets a gold app icon and a gold launch screen.']]},
  {v:'2026.10.21.3',d:'21 Oct',items:[
   ['🔑','Your own Lock In account','Sign in with Google or your email — a 6-digit code, or add a password in Setup. No more Puter: signing in is simpler, and you stay signed in.'],
   ['📦','Everything comes along','Open the app on a phone you used before and sign in: its data moves into your new account — friends, Pro and history included.']]},
@@ -6370,7 +6529,9 @@ function showWhatsNew(all){
   try{localStorage.setItem(k,WEB_VER);}catch(e){}
   let j=0;
   openSheet('What’s new','<div class="wnlist">'+list.map((r,ri)=>(ri?'<div class="nsec" style="margin-top:14px">Earlier · '+esc(r.d)+'</div>':'')+r.items.map(it=>'<div class="wnitem" style="--j:'+(j++)+'"><i>'+it[0]+'</i><div><b>'+esc(it[1])+'</b><p>'+esc(it[2])+'</p></div></div>').join('')).join('')+'</div>'+
-    '<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="closeSheet()">Let’s go</button>',{tall:list.length>1||list[0].items.length>4});
+    (list.some(r=>r.v==='2026.10.22.1')?'<div id="wnPro" class="wnpro"></div>':'')+
+    '<button class="btn btn-primary wnok" style="width:100%;margin-top:14px" onclick="closeSheet()">Let’s go</button>',{tall:list.length>1||list[0].items.length>4});
+  try{if($('wnPro'))wnProFill();}catch(e){}
   if(!all)haptic('light');
 }
 // is there anything new this user hasn't seen? (a brand-new account starts from now; a newer 'seen' means nothing to show)
@@ -7441,7 +7602,9 @@ async function ai(prompt,img,kind){
   kind=kind||(img?'meal':'other');
   const tok=typeof socTok==='function'&&socTok();
   if(tok&&navigator.onLine&&PLAN.srv!==false&&!(PLAN.offT&&Date.now()-PLAN.offT<10*60e3)){
-    try{const j=await aiSrv(kind,prompt,img);if(!PLAN.srv){PLAN.srv=true;planLoad(true);}planCount(kind,j);return String(j.text||'');}
+    try{const j=await aiSrv(kind,prompt,img);if(!PLAN.srv){PLAN.srv=true;planLoad(true);}planCount(kind,j);
+      try{proAfterAi(kind,j);}catch(e){}
+      return String(j.text||'');}
     catch(e){
       if(e.code==='ai_limit'){planCount(kind,e.data);throw Object.assign(new Error('ai_limit'),{code:'ai_limit',kind,data:e.data||{}});}
       if(['ai_bad','bad_image','too_big','bad'].includes(e.code))throw e;      // the request itself — Puter wouldn't do better
@@ -7455,24 +7618,18 @@ async function ai(prompt,img,kind){
 /* ---------- the upgrade ---------- */
 function planPriceLine(){const d=PLAN.d||{},p=d.price||{monthly:'€4.99',yearly:'€39.99'};return {m:p.monthly||'€4.99',y:p.yearly||'€39.99'};}
 function upgradeHTML(kind,data){
-  const d=PLAN.d||{},lim=(data&&data.limit)||((d.limits||{})[kind])||'',pr=planPriceLine(),buy=d.buy||{},can=!!(buy.monthly||buy.yearly);
-  const what=kind==='review'?'today’s AI workout review':kind==='meal'?'today’s '+lim+' AI meal reads':'today’s AI requests';
-  return '<div class="upg"><div class="upg-ico" aria-hidden="true">⚡</div><h3>You’ve used '+what+'</h3>'+
+  const d=PLAN.d||{},lim=(data&&data.limit)||((d.limits||{})[kind])||'',pr=proPrices(),can=proCanBuy();
+  const what=kind==='review'?'today’s free AI workout review':kind==='meal'?'today’s '+lim+' free AI meal reads':'today’s free AI requests';
+  return '<div class="upg">'+proTile('upg-logo',true)+'<h3>You’ve used '+what+'</h3>'+
     '<p class="muted">Pro gives you <b>30 AI meal reads a day</b> and <b>unlimited AI workout reviews</b>.</p>'+
-    (can?'<button class="btn btn-primary upg-y" onclick="planBuy(\'yearly\',this)">Pro yearly — '+pr.y+' <small>save 33%</small></button>'+
-      '<button class="btn btn-ghost upg-m" onclick="planBuy(\'monthly\',this)">Pro monthly — '+pr.m+'</button>'
-      :'<div class="upg-soon">Pro is coming soon — '+pr.m+' a month or '+pr.y+' a year.</div>')+
+    (can?'<button class="btn pw-cta upg-y" onclick="proBuy(\'yearly\',this)">Pro yearly — '+esc(pr.y)+(pr.save>0?' <small>save '+pr.save+'%</small>':'')+'</button>'+
+      '<button class="btn btn-ghost upg-m" onclick="proBuy(\'monthly\',this)">Pro monthly — '+esc(pr.m)+'</button>'
+      :'<div class="upg-soon">Pro is coming soon — '+esc(pr.m)+' a month or '+esc(pr.y)+' a year.</div>')+
     '<p class="tiny upg-f">Resets '+planResetTxt()+'. Barcode scans, quick add and Again are always free.</p></div>';
 }
-function upgradeAsk(kind,data){openSheet(kind==='review'?'AI workout review':'Daily AI limit',upgradeHTML(kind,data));haptic('light');}
-function planBuy(which,btn){
-  const u=PLAN.d&&PLAN.d.buy&&PLAN.d.buy[which];
-  if(!u){toast('Pro is coming soon','warn');return;}
-  PLAN.wait=Date.now();if(btn)burstAt(btn,'#7b6cff');
-  // the iPhone app opens it in Safari (Apple Pay works there); on the web, a new tab
-  setTimeout(()=>{if(window.__lockinNative)location.href=u;else{const w=window.open(u,'_blank','noopener');if(!w)location.href=u;}},180);
-}
-function planWelcome(){try{closeSheet();}catch(e){}setTimeout(()=>{try{celebrate();}catch(e){}haptic('success');toast('Welcome to Pro — 30 AI meal reads a day, unlimited reviews','ok');},300);}
+function upgradeAsk(kind,data){proPaywall(kind,data);}
+function planBuy(which,btn){proBuy(which,btn);}
+function planWelcome(){proWelcome();}
 // back from the checkout: look again a few times until the webhook has landed
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!PLAN.wait)return;if(Date.now()-PLAN.wait>45*60e3){PLAN.wait=0;return;}
   planLoad(true);setTimeout(()=>planLoad(true),5000);setTimeout(()=>planLoad(true),15000);});
@@ -7481,32 +7638,47 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden||!PLAN.wait
 function aiQuotaLine(){
   if(!planOn()||!PLAN.d||PLAN.d.plan==='admin')return '';
   const left=planLeft('meal'),lim=(PLAN.d.limits||{}).meal;if(left==null)return '';
-  return left>0?'<p class="tiny aiq">⚡ '+left+' of '+lim+' AI meal reads left today</p>':
-    '<p class="tiny aiq out">No AI meal reads left today — resets '+planResetTxt()+'. <span class="linkbtn" onclick="upgradeAsk(\'meal\')">Get Pro</span></p>';
+  if(PLAN.d.plan==='pro')return '<p class="tiny aiq pro">'+proTile('mini')+' '+left+' of '+lim+' AI meal reads left today</p>';
+  const ad=proAds();
+  return left>0?'<p class="tiny aiq">⚡ '+left+' of '+lim+' free AI meal reads left today'+(ad?' · <span class="prolink" onclick="proPaywall()">Pro: 30 a day</span>':'')+'</p>':
+    '<p class="tiny aiq out">No free AI meal reads left today — resets '+planResetTxt()+'.'+(proCanBuy()?' <span class="prolink" onclick="proPaywall(\'meal\')">Get Pro</span>':'')+'</p>';
 }
 function planUI(){
+  try{proApply();}catch(e){}
   const q=$('aiQuota');if(q){const h=aiQuotaLine();if(q.innerHTML!==h)q.innerHTML=h;q.hidden=!h;}
   if(typeof curView!=='undefined'&&curView==='settings'){planCardRender();planAdmRender();}
+  if(typeof curView!=='undefined'&&curView==='today')try{proTodayCard();}catch(e){}
+  if(typeof curView!=='undefined'&&curView==='progress')try{proProgCard();}catch(e){}
   if(typeof pcUI==='function')try{pcUI();}catch(e){}
 }
 function planCardRender(){
   const c=$('planCard');if(!c)return;const d=PLAN.d;
   if(!planOn()||!d){c.hidden=true;c.innerHTML='';return;}
-  c.hidden=false;const L=d.limits||{},U=d.used||{},pr=planPriceLine(),buy=d.buy||{};
+  c.hidden=false;const L=d.limits||{},U=d.used||{},pr=proPrices(),buy=d.buy||{},pro=d.plan==='pro',adm=d.plan==='admin',view=proIs();
   const row=(lbl,k,inf)=>{const lim=L[k]||0,u=Math.min(U[k]||0,lim),pc=inf?0:Math.round(100*u/Math.max(1,lim));
     return '<div class="plrow"><span>'+lbl+'</span><b>'+(inf?(U[k]||0)+' · unlimited':u+' / '+lim)+'</b></div>'+(inf?'':'<div class="plbar"><i style="width:'+pc+'%"></i></div>');};
-  let h='<h2>Your plan <span class="right"><span class="plbadge '+d.plan+'">'+(PLAN_LBL[d.plan]||'Free')+'</span></span></h2>';
-  if(d.plan==='admin')h+='<p class="tiny">You’re the admin: no limits. Everyone else is on Free unless they buy Pro or you give it to them (below).</p>';
-  else{
-    h+=row('AI meal reads today','meal',false)+row('AI workout reviews today','review',d.plan==='pro');
-    if(d.plan==='pro')h+='<p class="tiny" style="margin-top:8px">'+(d.until?'Pro until '+new Date(d.until).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Pro — no end date')+(d.src==='admin'?' · a gift from the admin':'')+'.'+
-      ((d.src==='ls'||d.src==='stripe')&&buy.portal?' <a href="'+esc(buy.portal)+'" target="_blank" rel="noopener">Manage subscription</a>':'')+'</p>';
-    else h+=(buy.monthly||buy.yearly?'<div class="plbuy"><button class="btn btn-primary btn-sm" onclick="planBuy(\'yearly\',this)">Pro — '+pr.y+'/year</button><button class="btn btn-ghost btn-sm" onclick="planBuy(\'monthly\',this)">'+pr.m+'/month</button></div>':
-        '<div class="upg-soon" style="margin-top:10px">Pro is coming soon — '+pr.m+' a month or '+pr.y+' a year.</div>')+
-      '<p class="tiny" style="margin-top:8px">Pro: 30 AI meal reads a day and unlimited AI workout reviews. Limits reset '+planResetTxt()+'.</p>';
+  const fmt=t=>new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  c.classList.toggle('plpro',(pro||adm)&&view);
+  let h;
+  if((pro||adm)&&view){
+    const when=adm?'You’re the admin — everything in Pro, no limits.':d.src==='stripe'&&d.until?(d.status==='cancelled'?'Cancelled — Pro until '+fmt(d.until)+', then Free.':d.exact===false?'Renews automatically.':'Renews around '+fmt(d.until-3*864e5)+'.'):
+      d.until?'Pro until '+fmt(d.until)+(d.src==='admin'?' · a gift from the admin':'')+'.':'Pro — no end date'+(d.src==='admin'?' · a gift from the admin':'')+'.';
+    h='<div class="plp-head">'+proTile('plp-logo',true)+'<div class="grow"><div class="plp-t">Lock In <span class="goldt">Pro</span></div><p class="tiny">'+when+'</p></div>'+(adm?'<span class="plbadge admin">Admin</span>':'')+'</div>';
+    if(pro)h+=row('AI meal reads today','meal',false)+row('AI workout reviews today','review',true);
+    h+='<div class="plp-opts"><label class="checkline"><input type="checkbox" switch'+(proGoldOn()?' checked':'')+' onchange="proSetGold(this.checked)"> Gold accents</label>'+
+      (proIconsOK()?'<label class="checkline"><input type="checkbox" switch'+(proIconOn()?' checked':'')+' onchange="proSetIcon(this.checked)"> Gold app icon</label>':'')+'</div>';
+    if(pro&&(d.src==='ls'||d.src==='stripe')&&buy.portal)h+='<button class="btn btn-ghost btn-sm plp-manage" onclick="proOpen(PLAN.d.buy.portal)">Manage subscription</button>';
+  }else{
+    h='<h2>Your plan <span class="right"><span class="plbadge free">'+(adm?'Free (preview)':'Free')+'</span></span></h2>'+row('AI meal reads today','meal',false)+row('AI workout reviews today','review',false);
+    h+=proCanBuy()?'<div class="plup" role="button" onclick="proPaywall()">'+proTile('plup-logo',true)+'<div class="grow"><b>Upgrade to Lock In Pro</b><span>30 AI meal reads a day · unlimited reviews · the gold look</span></div><i class="chev"></i></div>'+
+        '<div class="plbuy"><button class="btn pw-cta btn-sm" onclick="proBuy(\'yearly\',this)">Pro — '+esc(pr.y)+'/year</button><button class="btn btn-ghost btn-sm" onclick="proBuy(\'monthly\',this)">'+esc(pr.m)+'/month</button></div>':
+      '<div class="upg-soon" style="margin-top:10px">Pro is coming soon — '+esc(pr.m)+' a month or '+esc(pr.y)+' a year.</div>';
+    h+='<p class="tiny" style="margin-top:8px">Limits reset '+planResetTxt()+'.</p>';
   }
   c.innerHTML=h;
 }
+function proSetGold(on){if(!S)return;S.settings.proGold=!!on;save();proApply(true);haptic('selection');}
+function proSetIcon(on){if(!S)return;S.settings.proIcon=!!on;save();proApply(true);haptic('selection');}
 /* ---------- admin: who uses what, give or take Pro ---------- */
 const usd=c=>{const v=(+c||0)/1e6;return v>0&&v<0.01?'<$0.01':'$'+v.toFixed(2);};
 async function planAdmRender(force){
@@ -7529,7 +7701,7 @@ async function planAdmRender(force){
 }
 async function planGive(uid,on,btn){
   if(btn){btn.disabled=true;btn.textContent='…';}
-  try{await sapi('/admin/plan','POST',{uid,pro:!!on});toast(on?'Pro given':'Pro removed','ok');if(on&&btn)burstAt(btn,'#7b6cff');}
+  try{await sapi('/admin/plan','POST',{uid,pro:!!on});toast(on?'Pro given':'Pro removed','ok');if(on&&btn)burstAt(btn,'#f0bf4c');}
   catch(e){toast('Couldn’t change it — '+e.message,'err');}
   planAdmRender(true);
 }
@@ -8095,6 +8267,7 @@ async function doSignOut(){
   await accWipeLocal();ACC.tok='';ACC.a=null;accWrite();location.reload();
 }
 async function accWipeLocal(){
+  try{localStorage.removeItem('lockin_pro');sessionStorage.removeItem('lockin_proview');const n=window.__lockinNative;if(n&&n.pro)nat({action:'pro',on:false});}catch(e){}
   try{await phWipe();localStorage.removeItem(phLK());localStorage.removeItem(phQK());}catch(e){}
   try{const k=cacheKey();localStorage.removeItem(k);localStorage.removeItem(k+'_idb');localStorage.removeItem(socKey());localStorage.removeItem(e2eLK());localStorage.removeItem('rt_lastuser');await lidbDel(k);}catch(e){}
 }
@@ -8281,7 +8454,7 @@ async function ai(prompt,img,kind){
   kind=kind||(img?'meal':'other');
   if(!socTok())throw Object.assign(new Error('Sign in to use AI'),{code:'signin'});
   if(!navigator.onLine)throw Object.assign(new Error('You’re offline'),{code:'offline'});
-  try{const j=await aiSrv(kind,prompt,img);PLAN.srv=true;planCount(kind,j);return String(j.text||'');}
+  try{const j=await aiSrv(kind,prompt,img);PLAN.srv=true;planCount(kind,j);try{proAfterAi(kind,j);}catch(e){}return String(j.text||'');}
   catch(e){
     if(e.code==='ai_limit'){planCount(kind,e.data);throw Object.assign(new Error('ai_limit'),{code:'ai_limit',kind,data:e.data||{}});}
     if(e.code==='ai_off')PLAN.srv=false;
@@ -8384,9 +8557,13 @@ async function planAdmRender(force){
   let a;try{a=await planAdmLoad(force);}catch(e){c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2><p class="tiny">Couldn’t load — '+esc(e.message)+'</p>';return;}
   const us=a.users||[],pro=us.filter(u=>u.plan==='pro').length;
   c.innerHTML='<h2>Plans &amp; AI <span class="right">admin</span></h2>'+
-    '<div class="adst"><div><b>'+(a.ai?'On':'Off')+'</b><small>Claude key</small></div><div><b>'+(a.pay?'On':'Off')+'</b><small>payments</small></div><div><b>'+usd(a.todayCost)+'</b><small>today (cap '+usd(a.cap)+')</small></div><div><b>'+usd(a.monthCost)+'</b><small>this month</small></div></div>'+
+    '<div class="adst"><div><b>'+(a.ai?'On':'Off')+'</b><small>Claude key</small></div><div><b>'+(a.payMode==='app'?'In app':a.pay?'Links':'Off')+'</b><small>payments</small></div><div><b>'+usd(a.todayCost)+'</b><small>today (cap '+usd(a.cap)+')</small></div><div><b>'+usd(a.monthCost)+'</b><small>this month</small></div></div>'+
     (a.ai?'':'<p class="tiny" style="margin:6px 0 10px">No Claude key yet — AI is off until ANTHROPIC_API_KEY is added in Cloudflare.</p>')+
-    '<button class="btn btn-ghost adopen" onclick="planAdmSheet()"><span class="grow">Everyone · '+us.length+' '+(us.length===1?'person':'people')+(pro?' · '+pro+' Pro':'')+'</span><i class="chev"></i></button>';
+    (a.pay&&a.payMode!=='app'?'<p class="tiny" style="margin:6px 0 10px">Checkout opens on Stripe’s page. Add STRIPE_KEY and STRIPE_PK in Cloudflare to pay inside the app.</p>':'')+
+    (a.payErr?'<p class="tiny aderr">Last payment error ('+esc(new Date(a.payErr.t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))+'): '+esc(a.payErr.m)+'</p>':'')+
+    '<button class="btn btn-ghost adopen" onclick="planAdmSheet()"><span class="grow">Everyone · '+us.length+' '+(us.length===1?'person':'people')+(pro?' · '+pro+' Pro':'')+'</span><i class="chev"></i></button>'+
+    '<div class="adprev"><span class="tiny">See what others see</span><div><button class="btn btn-ghost btn-sm" onclick="proPreview(\'paywall\')">Pro screen</button><button class="btn btn-ghost btn-sm" onclick="proPreview(\'welcome\')">Upgrade effect</button>'+
+      '<button class="btn btn-ghost btn-sm'+(PRO.view==='free'?' on':'')+'" onclick="proPreview(PRO.view===\'free\'?\'\':\'free\')">'+(PRO.view==='free'?'Back to Admin':'View as Free')+'</button></div></div>';
   if($('admList'))planAdmList();
 }
 function planAdmSheet(){
@@ -8418,6 +8595,262 @@ function openE2EInfo(){
     '<div class="scode sm">'+(E2E.ok?esc(E2E.fp.slice(0,4)+' '+E2E.fp.slice(4,8)+' '+E2E.fp.slice(8,12)):'—')+'</div>'+
     '<p class="tiny" style="margin-top:8px">To check a friend, open their profile → “What they can see of you” → Security code, and compare it with theirs.</p></div>');
 }
+/* ================= LOCK IN PRO: the gold look, paying inside the app, the welcome, and where Pro is offered =================
+   Pro (and the admin) get the gold logo everywhere (+ a gold accent, switchable in Setup); the iPhone app can switch to the
+   gold app icon. Paying is Stripe's embedded checkout inside a sheet (no trip to Safari), with the payment links as a fallback.
+   Free sees Pro offered in a few places: never before someone is using the app, never twice a day in one place,
+   never when payments are off. */
+const PRO={on:null,gold:null,view:'',co:null,coN:0,sid:'',pick:'yearly',stripe:null,welT:0,nudgeT:0};
+try{PRO.view=sessionStorage.getItem('lockin_proview')||'';}catch(e){}
+const PRO_BAR='<path d="M3 12h2M19 12h2M7.5 12h9"/><rect x="5" y="8" width="2.6" height="8" rx="1"/><rect x="16.4" y="8" width="2.6" height="8" rx="1"/>';
+const proTile=(cls,pill)=>'<span class="ptile'+(pill?' pp':'')+' '+(cls||'')+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+PRO_BAR+'</svg>'+(pill?'<i>PRO</i>':'')+'</span>';
+function proReal(){const d=PLAN.d;return !!(d&&(d.plan==='pro'||d.plan==='admin'));}
+function proIs(){if(PRO.view==='free')return false;if(PRO.view==='pro')return true;return proReal();}
+function proCanBuy(){const d=PLAN.d;if(!d||!d.ai)return false;const b=d.buy||{};return !!((d.pay&&d.pay.embed&&d.pay.pk)||b.monthly||b.yearly);}
+function proAds(){const d=PLAN.d;return !proIs()&&proCanBuy()&&!!d&&(d.plan==='free'||PRO.view==='free');}
+function proPrices(){const p=planPriceLine(),n=s=>parseFloat(String(s).replace(',','.').replace(/[^0-9.]/g,''))||0,cur=String(p.y).replace(/[0-9.,\s]/g,'')||'€';
+  const y=n(p.y),m=n(p.m);return {y:p.y,m:p.m,ym:y?cur+(Math.floor(y/12*100)/100).toFixed(2):'',save:y&&m?Math.round((1-y/(m*12))*100):0};}
+const proIconsOK=()=>!!(window.__lockinNative&&window.__lockinNative.icons);
+
+/* ---------- the look ---------- */
+const GOLD_ICON="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="8" y1="20" x2="56" y2="46" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffe9a3"/><stop offset=".45" stop-color="#f0bf4c"/><stop offset="1" stop-color="#c98a1e"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="#111113"/><g fill="url(#g)"><rect x="8" y="27" width="6" height="10" rx="2"/><rect x="50" y="27" width="6" height="10" rx="2"/><rect x="15" y="23" width="7" height="18" rx="2"/><rect x="42" y="23" width="7" height="18" rx="2"/><rect x="22" y="30" width="20" height="4" rx="2"/></g></svg>');
+function proIcons(on){
+  try{const l=document.querySelector('link[rel="icon"]');if(l){if(!l.dataset.std)l.dataset.std=l.href;l.href=on?GOLD_ICON:l.dataset.std;}
+    const a=document.querySelector('link[rel="apple-touch-icon"]');if(a){if(!a.dataset.std)a.dataset.std=a.getAttribute('href');a.setAttribute('href',on?'apple-touch-icon-pro.png':a.dataset.std);}}catch(e){}
+}
+const proGoldOn=()=>!(S&&S.settings&&S.settings.proGold===false);
+const proIconOn=()=>!(S&&S.settings&&S.settings.proIcon===false);
+// the iPhone app: gold launch screen and (if you like) the gold app icon
+function proNative(on){
+  const n=window.__lockinNative;if(!n)return;
+  if(n.pro&&PRO.natOn!==on){PRO.natOn=on;nat({action:'pro',on:!!on});}
+  if(n.icons&&PRO.view===''){const want=on&&proIconOn()?'pro':'default';if((n.icon||'default')!==want&&nat({action:'icon',name:want}))n.icon=want;}
+}
+function proApply(force){
+  const on=proIs(),gold=on&&proGoldOn();
+  if(on===PRO.on&&gold===PRO.gold&&!force)return;
+  const was=PRO.on;PRO.on=on;PRO.gold=gold;
+  const h=document.documentElement;h.classList.toggle('pro',on);h.classList.toggle('gold',gold);
+  proIcons(on);proNative(on);
+  try{localStorage.setItem('lockin_pro',on?(gold?'2':'1'):'0');}catch(e){}
+  if(was!==null){try{if(curView==='today')renderToday();if(curView==='progress')proProgCard();if(curView==='settings')planCardRender();}catch(e){}}
+}
+
+/* ---------- the Pro screen (paywall) ---------- */
+function proPaywallHTML(kind,data){
+  const d=PLAN.d||{},pr=proPrices(),lim=(data&&data.limit)||((d.limits||{}).meal)||5,can=proCanBuy();
+  const sub=kind==='meal'?'You’ve used today’s '+lim+' free AI meal reads. Pro gives you 30 a day.':kind==='review'?'Today’s free AI workout review is used. Pro reviews every workout.':'More AI every day — and everything in Lock In turns gold.';
+  const perk=(i,t,s)=>'<div class="pw-perk"><i>'+i+'</i><div><b>'+t+'</b><small>'+s+'</small></div><svg class="pw-ck" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>';
+  return '<div class="pw"><div class="pw-hero"><div class="pw-rays"></div>'+proTile('pw-logo',true)+'</div>'+
+    '<h3 class="pw-title">Lock In <span class="goldt">Pro</span></h3><p class="pw-sub">'+sub+'</p>'+
+    '<div class="pw-perks">'+perk('📸','30 AI meal reads a day','Free has 5')+perk('🧠','Unlimited AI workout reviews','Free has 1 a day')+
+      perk('✨','The gold Pro look','Gold logo and accents'+(proIconsOK()?', and a gold app icon':''))+'</div>'+
+    (can?'<div class="pw-plans"><button class="pw-plan'+(PRO.pick!=='monthly'?' on':'')+'" data-p="yearly" onclick="proPick(\'yearly\')"><span class="pw-best">Best value</span><b>Yearly</b><span class="pw-price">'+esc(pr.y)+'<small>/year</small></span><span class="pw-per">'+(pr.ym?esc(pr.ym)+' a month'+(pr.save>0?' · save '+pr.save+'%':''):'')+'</span></button>'+
+      '<button class="pw-plan'+(PRO.pick==='monthly'?' on':'')+'" data-p="monthly" onclick="proPick(\'monthly\')"><b>Monthly</b><span class="pw-price">'+esc(pr.m)+'<small>/month</small></span><span class="pw-per">Cancel any time</span></button></div>'+
+      '<button class="btn pw-cta" id="pwCta" onclick="proBuy(PRO.pick,this)">'+proCtaTxt()+'</button>'+
+      '<p class="tiny pw-fine">Paid securely with Stripe, the seller, which handles VAT. Renews automatically — cancel any time in Setup → Your plan.'+(kind?' Free limits reset '+planResetTxt()+'.':'')+'</p>'
+    :'<div class="upg-soon pw-soon">Pro is coming soon — '+esc(pr.m)+' a month or '+esc(pr.y)+' a year.</div>')+'</div>';
+}
+function proCtaTxt(){const pr=proPrices();return 'Continue · '+(PRO.pick==='monthly'?esc(pr.m)+'/month':esc(pr.y)+'/year');}
+function proPick(w){PRO.pick=w==='monthly'?'monthly':'yearly';document.querySelectorAll('.pw-plan').forEach(b=>b.classList.toggle('on',b.dataset.p===PRO.pick));const c=$('pwCta');if(c)c.textContent=proCtaTxt();haptic('selection');}
+function proPaywall(kind,data){
+  if(proReal()&&PRO.view!=='free'){proPlanSheet();return;}
+  openSheet('Lock In Pro',proPaywallHTML(kind,data),{tall:true});haptic('light');
+}
+// already Pro: what you have
+function proPlanSheet(){show('settings');setTimeout(()=>{const c=$('planCard');if(c)c.scrollIntoView({block:'center',behavior:'smooth'});},350);}
+
+/* ---------- paying: Stripe's checkout inside the app ---------- */
+let STRIPE_P=null;
+function stripeJs(){
+  if(window.Stripe)return Promise.resolve(window.Stripe);if(STRIPE_P)return STRIPE_P;
+  STRIPE_P=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://js.stripe.com/dahlia/stripe.js';s.async=true;
+    const t=setTimeout(()=>rej(new Error('Stripe didn’t load')),20000);
+    s.onload=()=>{clearTimeout(t);window.Stripe?res(window.Stripe):rej(new Error('Stripe didn’t load'));};
+    s.onerror=()=>{clearTimeout(t);rej(new Error('Stripe didn’t load'));};document.head.appendChild(s);}).catch(e=>{STRIPE_P=null;throw e;});
+  return STRIPE_P;
+}
+function proCoDestroy(){PRO.coN++;if(PRO.co){const c=PRO.co;PRO.co=null;try{c.destroy();}catch(e){}}}
+function proBuy(which,btn){
+  which=which==='monthly'?'monthly':'yearly';PRO.pick=which;
+  const d=PLAN.d||{};
+  if(d.plan==='admin'){toast('You’re the admin — everything in Pro is already yours','ok');return;}
+  if(d.pay&&d.pay.embed&&d.pay.pk)return proCheckout(which);
+  return proLink(which,btn);
+}
+function proCoHTML(which,inner){
+  const pr=proPrices();
+  return '<div class="pco"><div class="pco-head"><button class="linkbtn pco-back" onclick="proPaywall()">‹ Plans</button><span class="pco-sum">'+proTile('mini')+'<b>Pro '+(which==='monthly'?'monthly':'yearly')+'</b><span>'+(which==='monthly'?esc(pr.m)+'/month':esc(pr.y)+'/year')+'</span></span></div>'+
+    '<div class="pco-box" id="payBox">'+(inner||'<div class="pco-load"><i class="pspin"></i>Opening secure checkout…</div>')+'</div>'+
+    '<p class="tiny pco-fine">🔒 Payment by Stripe. Your card goes straight to Stripe — Lock In never sees it.</p></div>';
+}
+async function proCheckout(which){
+  if(!navigator.onLine){toast('You’re offline — connect to pay','err');return;}
+  proCoDestroy();const tok=PRO.coN;
+  openSheet('Lock In Pro',proCoHTML(which),{tall:true});haptic('light');
+  let secret;
+  try{
+    const [Stripe,j]=await Promise.all([stripeJs(),sapi('/pay/checkout','POST',{plan:which})]);
+    if(tok!==PRO.coN)return;
+    PRO.sid=j.id;secret=j.clientSecret;
+    const st=PRO.stripe||(PRO.stripe=Stripe(PLAN.d.pay.pk));
+    const make=st.createEmbeddedCheckoutPage||st.initEmbeddedCheckout;
+    const sid=j.id,co=await make.call(st,{fetchClientSecret:()=>Promise.resolve(secret),onComplete:()=>proPaid(sid)});
+    if(tok!==PRO.coN||!$('payBox')){try{co.destroy();}catch(e){}return;}
+    PRO.co=co;const box=$('payBox');box.innerHTML='';box.classList.add('on');co.mount('#payBox');
+  }catch(e){if(tok===PRO.coN)proCoFail(which,e);}
+}
+function proCoFail(which,e){
+  const box=$('payBox');
+  if(e&&e.code==='already_pro'){planLoad(true);if(box)box.innerHTML='<div class="pco-msg"><b>You already have Pro</b><p>'+esc(e.message)+'</p></div>';return;}
+  if(e&&e.code==='admin'){if(box)box.innerHTML='<div class="pco-msg"><b>You’re the admin</b><p>'+esc(e.message)+'</p></div>';return;}
+  const b=(PLAN.d&&PLAN.d.buy)||{},alt=!!b[which];
+  if(box)box.innerHTML='<div class="pco-msg"><b>The checkout didn’t open</b><p>'+esc((e&&e.message)||'Try again in a moment.')+'</p>'+
+    '<button class="btn pw-cta" onclick="proCheckout(\''+which+'\')">Try again</button>'+
+    (alt?'<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="proLink(\''+which+'\',this)">Pay on Stripe’s page instead</button>':'')+'</div>';
+}
+// paid: ask the server (it asks Stripe) and switch Pro on — the webhook does the same a moment later anyway
+async function proPaid(sid,quiet){
+  PLAN.wait=Date.now();
+  if(!quiet){haptic('success');const box=$('payBox');if(box){box.classList.remove('on');box.innerHTML='<div class="pco-done"><span class="pco-tick"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>Payment received</b><p>Switching on Pro…</p></div>';}}
+  for(let i=0;i<24;i++){
+    try{const j=await sapi('/pay/status?id='+encodeURIComponent(sid));
+      if(j.plan&&j.plan.plan){const was=PLAN.d&&PLAN.d.plan;PLAN.d=j.plan;PLAN.t=Date.now();planSave();
+        if(j.plan.plan==='pro'||j.plan.plan==='admin'){proCoDestroy();closeSheet();planUI();proApply();if(was!=='pro')proWelcome();return true;}}
+      if(j.status==='open'&&quiet)return false;}
+    catch(e){if(e.code==='forbidden'||e.code==='bad')return false;}
+    await new Promise(z=>setTimeout(z,i<6?1500:4000));
+  }
+  const box=$('payBox');if(box)box.innerHTML='<div class="pco-done"><span class="pco-tick"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>Payment received</b><p>Pro switches on in a moment — you can close this.</p></div>';
+  return false;
+}
+// a payment method that went to its own page comes back here with ?paid=<checkout id>
+function proReturnCheck(){
+  let sid='';try{const u=new URL(location.href);sid=u.searchParams.get('paid')||'';if(sid){u.searchParams.delete('paid');history.replaceState(null,'',u.pathname+(u.search||'')+u.hash);}}catch(e){}
+  if(/^cs_(test|live)_\w+$/.test(sid))setTimeout(()=>proPaid(sid,true),900);
+}
+const proStandalone=()=>navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+// a Stripe page (payment link, manage subscription): inside the app where it can be
+function proOpen(u){
+  const n=window.__lockinNative;
+  if(n&&n.browser&&nat({action:'browser',url:u}))return;
+  if(n||proStandalone()){location.href=u;return;}
+  const w=window.open(u,'_blank','noopener');if(!w)location.href=u;
+}
+function proLink(which,btn){
+  const u=PLAN.d&&PLAN.d.buy&&PLAN.d.buy[which];
+  if(!u){toast('Pro is coming soon','warn');return;}
+  PLAN.wait=Date.now();if(btn)burstAt(btn,'#f0bf4c');
+  setTimeout(()=>proOpen(u),180);
+}
+// the in-app browser closed (iPhone app): look for Pro a few times
+window.addEventListener('lockin:browserclosed',()=>{if(!PLAN.wait)return;planLoad(true);setTimeout(()=>planLoad(true),4000);setTimeout(()=>planLoad(true),12000);});
+
+/* ---------- the welcome: the logo turns gold ---------- */
+function proWelcome(preview){
+  if(!preview&&Date.now()-PRO.welT<20000)return;PRO.welT=Date.now();
+  try{closeSheet();}catch(e){}
+  const old=$('proFx');if(old)old.remove();
+  const el=document.createElement('div');el.id='proFx';el.className='pfx';
+  el.innerHTML='<canvas class="pfx-c"></canvas><div class="pfx-rays"></div><div class="pfx-in">'+
+    '<div class="pfx-logo"><div class="pfx-card"><span class="pfx-face pfx-old"><svg viewBox="0 0 24 24">'+PRO_BAR+'</svg></span><span class="pfx-face pfx-new"><svg viewBox="0 0 24 24">'+PRO_BAR+'</svg><i>PRO</i><b class="pfx-shine"></b></span></div><span class="pfx-ring"></span></div>'+
+    '<h2 class="pfx-t">Welcome to <span class="goldt">Lock In Pro</span></h2><p class="pfx-s">'+(preview?'This is what people see when they get Pro.':'Thanks for supporting Lock In.')+'</p>'+
+    '<div class="pfx-perks"><span>📸 30 meal reads a day</span><span>🧠 Unlimited reviews</span><span>✨ Gold look</span></div>'+
+    '<button class="btn pw-cta pfx-go" onclick="proWelcomeEnd()">Let’s go</button></div>';
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('pfx-on'));
+  haptic('medium');
+  if(RM){el.classList.add('pfx-flip','pfx-done');return;}
+  setTimeout(()=>{if(!el.isConnected)return;el.classList.add('pfx-flip');},900);
+  setTimeout(()=>{if(!el.isConnected)return;el.classList.add('pfx-burst');haptic('heavy');proFxBurst(el);},1180);
+  setTimeout(()=>{if(!el.isConnected)return;el.classList.add('pfx-done');haptic('success');},1700);
+}
+function proWelcomeEnd(){
+  const el=$('proFx');if(!el)return;
+  el.classList.add('pfx-out');setTimeout(()=>el.remove(),520);
+  proApply();if(!RM)proShimmer();
+  const b=document.querySelector('.hero .brand');if(b&&!RM)b.animate([{transform:'scale(1)'},{transform:'scale(1.25) rotate(-8deg)'},{transform:'scale(1)'}],{duration:700,easing:'cubic-bezier(.34,1.56,.64,1)',delay:250});
+}
+function proShimmer(){const s=document.createElement('div');s.className='proshim';document.body.appendChild(s);setTimeout(()=>s.remove(),1500);}
+// gold confetti + sparkles from the logo (canvas, ~2.5 s)
+function proFxBurst(el){
+  const cv=el.querySelector('.pfx-c'),lg=el.querySelector('.pfx-logo');if(!cv||!lg)return;
+  const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const r=lg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,C=['#ffe9a3','#f0bf4c','#c98a1e','#fff6d6','#e5a93a'];
+  const P=[];for(let i=0;i<150;i++){const a=Math.random()*Math.PI*2,v=3+Math.random()*9;
+    P.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-3,r:Math.random()*Math.PI,vr:(Math.random()-.5)*.4,s:3+Math.random()*5,c:C[i%C.length],t:i%3===0?'dot':'rect',life:1});}
+  const t0=performance.now();let last=t0;
+  const step=now=>{if(!el.isConnected)return;const dt=Math.min(2,(now-last)/16.7);last=now;const age=now-t0;
+    g.clearRect(0,0,W,H);
+    for(const p of P){p.vy+=.18*dt;p.vx*=Math.pow(.985,dt);p.vy*=Math.pow(.985,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;p.life=Math.max(0,1-age/2600);
+      g.globalAlpha=p.life;g.fillStyle=p.c;g.save();g.translate(p.x,p.y);g.rotate(p.r);
+      if(p.t==='dot'){g.beginPath();g.arc(0,0,p.s*.45,0,7);g.fill();}else g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);g.restore();}
+    // twinkles around the logo
+    if(age<2400)for(let k=0;k<2;k++){const a=Math.random()*7,d=r.width*.55+Math.random()*60,x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d,s=1.5+Math.random()*2.5;
+      g.globalAlpha=.9;g.fillStyle='#fff6d6';g.beginPath();g.moveTo(x,y-s*2);g.lineTo(x+s*.5,y);g.lineTo(x,y+s*2);g.lineTo(x-s*.5,y);g.fill();g.beginPath();g.moveTo(x-s*2,y);g.lineTo(x,y+s*.5);g.lineTo(x+s*2,y);g.lineTo(x,y-s*.5);g.fill();}
+    g.globalAlpha=1;
+    if(age<2800)requestAnimationFrame(step);else g.clearRect(0,0,W,H);};
+  requestAnimationFrame(step);
+}
+
+/* ---------- where Pro is offered (Free only) ---------- */
+const PRO_ADS=[
+  {i:'📸',t:'30 AI meal reads a day',s:'Snap every meal — Free stops at 5.'},
+  {i:'🧠',t:'A review after every workout',s:'Unlimited AI coach reviews with Pro.'},
+  {i:'✨',t:'Go gold',s:'The gold Pro look — every Lock In logo turns gold.'}];
+const proAdKey=()=>'lockin_ad_'+(user?user.username:'');
+function proAdGet(){try{return JSON.parse(localStorage.getItem(proAdKey())||'{}')||{};}catch(e){return {};}}
+function proAdSet(o){try{localStorage.setItem(proAdKey(),JSON.stringify(o));}catch(e){}}
+// someone actually using the app: a few meals or a workout logged
+function proEngaged(){if(!S)return false;const w=Object.keys(S.workouts||{}).some(id=>woHasData(S.workouts[id]));let n=0;for(const d in S.food||{})n+=(S.food[d]||[]).length;return w||n>=3;}
+function proAdOk(slot){if(!proAds()||!proEngaged())return false;const a=proAdGet(),h=a[slot];if(!h)return true;const days=(a[slot+'n']||1)>=3?14:3;return Date.now()-h>days*864e5;}
+function proAdHide(slot){const a=proAdGet();a[slot]=Date.now();a[slot+'n']=(a[slot+'n']||0)+1;proAdSet(a);
+  const el=$(slot==='today'?'todayPro':'progPro');if(el){const c=el.firstElementChild;if(c&&!RM){c.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.96)'}],{duration:260,easing:'ease-in'}).onfinish=()=>{el.innerHTML='';el.hidden=true;};}else{el.innerHTML='';el.hidden=true;}}
+  toast('Hidden for a few days','ok');}
+function proAdCard(slot,v){
+  return '<div class="card proad" role="button" onclick="proPaywall()"><button class="proad-x" aria-label="Hide" onclick="event.stopPropagation();proAdHide(\''+slot+'\')"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>'+
+    proTile('proad-logo')+'<div class="proad-txt"><span class="proad-k">Lock In Pro</span><b>'+esc(v.t)+'</b><span>'+esc(v.s)+'</span></div><span class="proad-go">Try Pro</span></div>';
+}
+function proTodayCard(){
+  const el=$('todayPro');if(!el)return;
+  if(!proAdOk('today')){if(el.innerHTML)el.innerHTML='';el.hidden=true;return;}
+  const v=PRO_ADS[(new Date().getDate())%PRO_ADS.length],h=proAdCard('today',v);
+  if(el.innerHTML!==h)el.innerHTML=h;el.hidden=false;
+}
+function proProgCard(){
+  const el=$('progPro');if(!el)return;
+  if(!proAdOk('prog')){if(el.innerHTML)el.innerHTML='';el.hidden=true;return;}
+  const h=proAdCard('prog',{t:'Every workout, reviewed',s:'Pro’s AI coach looks at each session — Free gets one a day.'});
+  if(el.innerHTML!==h)el.innerHTML=h;el.hidden=false;
+}
+// a small reminder above the tab bar when the free AI runs low (once a day each)
+function proNudge(kind){
+  if(!proAds()||Date.now()-PRO.nudgeT<60e3)return;
+  const a=proAdGet(),k='n_'+kind,day=todayStr();if(a[k]===day)return;a[k]=day;proAdSet(a);PRO.nudgeT=Date.now();
+  let el=$('proNudge');if(!el){el=document.createElement('div');el.id='proNudge';document.body.appendChild(el);}
+  el.innerHTML=proTile('mini')+'<span class="pn-t">'+(kind==='review'?'That was today’s free AI review — <b>Pro reviews every workout</b>':'1 free AI meal read left today — <b>Pro gives you 30</b>')+'</span><button class="btn pw-cta" onclick="proNudgeGo()">See Pro</button>';
+  el.classList.remove('show');void el.offsetWidth;el.classList.add('show');haptic('light');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),7000);
+}
+// after an AI answer on Free: the last free meal read / today's free review → the reminder
+function proAfterAi(kind,j){if(j&&j.plan==='free'&&((kind==='meal'&&j.left===1)||(kind==='review'&&j.left===0)))setTimeout(()=>proNudge(kind),kind==='meal'?2200:4000);}
+// What's new: Free can go straight to Pro (once the plan is known)
+function wnProFill(){const go=()=>{const x=$('wnPro');if(x)x.innerHTML=proAds()?'<button class="btn pw-cta" onclick="proPaywall()">See Lock In Pro</button>':'';};go();if(!PLAN.d&&typeof planLoad==='function')Promise.resolve(planLoad()).then(go).catch(()=>{});}
+function proNudgeGo(){const el=$('proNudge');if(el)el.classList.remove('show');proPaywall();}
+
+/* ---------- admin: see what everyone sees ---------- */
+function proPreview(what){
+  if(what==='paywall'){const v=PRO.view;PRO.view='free';const h=proPaywallHTML('');PRO.view=v;openSheet('Lock In Pro',h,{tall:true});return;}
+  if(what==='welcome'){proWelcome(true);return;}
+  if(what==='free'||what==='pro'||what===''){PRO.view=what;try{sessionStorage.setItem('lockin_proview',what);}catch(e){}proApply(true);planUI();
+    toast(what==='free'?'Showing the app as Free sees it — until you close it':what==='pro'?'Showing the Pro look':'Back to your own view','ok');}
+}
+
+/* ---------- every sheet change: a checkout that's not on screen any more is closed ---------- */
+{const _o=openSheet,_c=closeSheet;
+  openSheet=function(t,h,o){if(PRO.co&&!/id="payBox"/.test(String(h||'')))proCoDestroy();const n=$('proNudge');if(n)n.classList.remove('show');return _o.apply(this,arguments);};
+  closeSheet=function(){if(PRO.co)proCoDestroy();return _c.apply(this,arguments);};}
+
 /* ================= INIT ================= */
 /* ================= UI LAYER: transitions, nav pill, haptics, count-up, confetti, sheet drag ================= */
 const VIEWORDER=['today','workout','diet','progress','friends','settings'];

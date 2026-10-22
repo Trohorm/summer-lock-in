@@ -83,7 +83,22 @@ Pro: 30, unlimited, 150. `AI_DAY_USD` caps the whole app's AI spend per day (def
 Payments — **Stripe Managed Payments** (Stripe is the merchant of record and handles VAT): `STRIPE_LINK_MONTHLY` /
 `STRIPE_LINK_YEARLY` (Payment Links with Managed Payments on), `STRIPE_PORTAL` (customer portal login link) and the webhook
 signing secret `STRIPE_WHSEC`; webhook URL `https://web.lockin-app.online/api/stripe/webhook` with `checkout.session.completed`
-and `customer.subscription.created/updated/deleted`. The link carries the account as `client_reference_id` (`a__<id>`).
+and `customer.subscription.created/updated/deleted` (+ `checkout.session.async_payment_succeeded` for bank payments).
+The link carries the account as `client_reference_id` (`a__<id>`).
+**Paying inside the app**: with `STRIPE_KEY` (a restricted key: Checkout Sessions write, Prices read, Payment Links read)
+and `STRIPE_PK` (publishable key) as well, Get Pro opens Stripe's embedded checkout in a sheet (`POST /api/pay/checkout`
+→ a Checkout Session with `ui_mode=embedded_page`, Managed Payments on, the account in `client_reference_id`, `metadata.uid`
+and the subscription's `metadata.uid`; Stripe-Version `2026-04-22.dahlia`). The price is `STRIPE_PRICE_MONTHLY` /
+`STRIPE_PRICE_YEARLY`, else the one behind the payment link, else the account's active €4.99 / €39.99 price. When it's paid
+the app asks `GET /api/pay/status?id=<cs_…>` (the server checks with Stripe) and Pro is on before the webhook lands. A
+payment method that leaves the page comes back to `/?paid=<cs_…>`. Stripe errors are logged for the admin card. A
+subscription event that can't be linked yet (bought through a link, checkout event still on its way) gets a 409 so Stripe
+sends it again. Without the key the payment links are used (in the iPhone app ≥ 3.5 in an in-app browser sheet).
+**Pro look**: Pro and the admin get every logo in gold (`html.pro`), a gold accent (`html.gold`, Setup switch), the gold
+favicon / home-screen icon, and in the iPhone app ≥ 3.5 the gold app icon (`setAlternateIconName("ProIcon")`) and a gold
+launch screen. Free sees Pro on Today and Progress (✕ hides it for 3 days, 14 after the third time), in the Diet line,
+in a reminder when the free AI runs low and in What's new — only once someone is using the app and payments are on.
+Admins can preview it all in Setup → Plans & AI.
 When Stripe links are set they're used; otherwise Lemon Squeezy (merchant of record): `LS_BUY_MONTHLY` / `LS_BUY_YEARLY` (checkout links), `LS_PORTAL`
 (customer portal) and the webhook secret `LS_SECRET`; webhook URL `https://web.lockin-app.online/api/ls/webhook`.
 The checkout passes the account id as `checkout[custom][uid]` (`a:<account id>`; an old Puter id is mapped to the account
