@@ -12,6 +12,14 @@
    "tintColor": "5b93ff",
    "versions": [
     {
+     "version": "3.5.0",
+     "date": "2026-10-22",
+     "localizedDescription": "Lock In 3.5.0",
+     "downloadURL": "https://github.com/Trohorm/summer-lock-in/releases/download/v3.5.0/SummerLockIn.ipa",
+     "size": 198875,
+     "minOSVersion": "15.0"
+    },
+    {
      "version": "3.4.1",
      "date": "2026-10-19",
      "localizedDescription": "Lock In 3.4.1",
