@@ -2,6 +2,7 @@ import UIKit
 import WebKit
 import UserNotifications
 import LinkPresentation
+import SafariServices
 
 let LIVE_URL = URL(string: "https://web.lockin-app.online")!
 
@@ -26,7 +27,7 @@ final class ShareItem: NSObject, UIActivityItemSource {
 }
 
 // MARK: - Main view controller (thin shell around the live site)
-/// Bridge for the page: window.webkit.messageHandlers.lockin.postMessage({action:'notify'|'cancel'|'auth', ...})
+/// Bridge for the page: window.webkit.messageHandlers.lockin.postMessage({action:'notify'|'cancel'|'auth'|'haptic'|'share'|'browser'|'icon'|'pro', ...})
 final class NotifyBridge: NSObject, WKScriptMessageHandler {
     weak var presenter: UIViewController?
     func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -60,6 +61,21 @@ final class NotifyBridge: NSObject, WKScriptMessageHandler {
                 }
                 top.present(ac, animated: true)
             }
+        case "browser":
+            // a Stripe page (checkout link, manage subscription): in an in-app browser sheet, not Safari
+            guard let s = body["url"] as? String, let url = URL(string: s), let sc = url.scheme?.lowercased(), sc == "https" || sc == "http" else { return }
+            DispatchQueue.main.async { [weak self] in (self?.presenter as? ViewController)?.openInApp(url) }
+        case "icon":
+            // Lock In Pro: the gold app icon (iOS shows a short notice when it changes)
+            let name: String? = (body["name"] as? String) == "pro" ? "ProIcon" : nil
+            DispatchQueue.main.async {
+                let app = UIApplication.shared
+                guard app.supportsAlternateIcons, app.alternateIconName != name else { return }
+                app.setAlternateIconName(name) { _ in }
+            }
+        case "pro":
+            // remembered for the launch screen: gold for Pro
+            UserDefaults.standard.set((body["on"] as? Bool) ?? false, forKey: "lockinPro")
         case "cancel":
             center.removePendingNotificationRequests(withIdentifiers: ["rest"])
         case "notify":
@@ -81,7 +97,7 @@ final class NotifyBridge: NSObject, WKScriptMessageHandler {
     }
 }
 
-final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UNUserNotificationCenterDelegate {
+final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UNUserNotificationCenterDelegate, SFSafariViewControllerDelegate {
     private let bridge = NotifyBridge()
     private var webView: WKWebView!
     private var retryView: UIView?
@@ -100,7 +116,10 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
         config.userContentController.add(bridge, name: "lockin")
         bridge.presenter = self
-        let native = "window.__lockinNative={share:true,links:true,version:'" + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") + "'};"
+        let app = UIApplication.shared
+        let icons = app.supportsAlternateIcons ? "true" : "false"
+        let icon = app.alternateIconName == "ProIcon" ? "pro" : "default"
+        let native = "window.__lockinNative={share:true,links:true,browser:true,pro:true,icons:" + icons + ",icon:'" + icon + "',version:'" + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") + "'};"
         config.userContentController.addUserScript(WKUserScript(source: native, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         // Sign-in popups on puter.com get a dark theme so they match the app (Google/Apple pages follow dark mode themselves).
         let darkAuth = """
@@ -125,13 +144,21 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         let v = UIView(frame: view.bounds); v.backgroundColor = bg; v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         let tile = UIView(frame: CGRect(x: 0, y: 0, width: 84, height: 84))
         let g = CAGradientLayer(); g.frame = tile.bounds; g.cornerRadius = 26
-        g.colors = [UIColor(red: 0.43, green: 0.65, blue: 1, alpha: 1).cgColor, UIColor(red: 0.31, green: 0.49, blue: 0.97, alpha: 1).cgColor, UIColor(red: 0.48, green: 0.42, blue: 1, alpha: 1).cgColor]
-        g.startPoint = CGPoint(x: 0, y: 0); g.endPoint = CGPoint(x: 1, y: 1)
+        let pro = UserDefaults.standard.bool(forKey: "lockinPro"), gold = UIColor(red: 0.94, green: 0.75, blue: 0.30, alpha: 1)
+        if pro {
+            // Lock In Pro: black tile, gold barbell
+            g.colors = [UIColor(red: 0.125, green: 0.125, blue: 0.14, alpha: 1).cgColor, UIColor(red: 0.047, green: 0.047, blue: 0.055, alpha: 1).cgColor]
+            g.startPoint = CGPoint(x: 0.5, y: 0); g.endPoint = CGPoint(x: 0.5, y: 1)
+            g.borderColor = gold.withAlphaComponent(0.5).cgColor; g.borderWidth = 1
+        } else {
+            g.colors = [UIColor(red: 0.43, green: 0.65, blue: 1, alpha: 1).cgColor, UIColor(red: 0.31, green: 0.49, blue: 0.97, alpha: 1).cgColor, UIColor(red: 0.48, green: 0.42, blue: 1, alpha: 1).cgColor]
+            g.startPoint = CGPoint(x: 0, y: 0); g.endPoint = CGPoint(x: 1, y: 1)
+        }
         tile.layer.addSublayer(g)
-        tile.layer.shadowColor = UIColor(red: 0.31, green: 0.49, blue: 0.97, alpha: 1).cgColor
-        tile.layer.shadowOpacity = 0.45; tile.layer.shadowRadius = 25; tile.layer.shadowOffset = CGSize(width: 0, height: 18)
+        tile.layer.shadowColor = (pro ? gold : UIColor(red: 0.31, green: 0.49, blue: 0.97, alpha: 1)).cgColor
+        tile.layer.shadowOpacity = pro ? 0.32 : 0.45; tile.layer.shadowRadius = 25; tile.layer.shadowOffset = CGSize(width: 0, height: 18)
         let icon = UIImageView(image: UIImage(systemName: "dumbbell.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 34, weight: .semibold)))
-        icon.tintColor = .white; icon.contentMode = .center; icon.frame = tile.bounds
+        icon.tintColor = pro ? gold : .white; icon.contentMode = .center; icon.frame = tile.bounds
         tile.addSubview(icon)
         tile.center = CGPoint(x: v.bounds.midX, y: v.bounds.midY)
         tile.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
@@ -243,7 +270,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
 
     private var topVC: UIViewController { presentedViewController ?? self }
 
-    // MARK: Navigation — keep app domains inside, open the rest in Safari
+    // MARK: Navigation — keep app domains inside, open the rest in an in-app browser sheet
     private func isAllowed(_ host: String) -> Bool {
         let allowed = ["lockin-app.online", "puter.com", "cloudflare.com"]
         return allowed.contains { host == $0 || host.hasSuffix("." + $0) }
@@ -264,11 +291,26 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
            let url = navigationAction.request.url,
            let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
            let host = url.host, !isAllowed(host) {
-            UIApplication.shared.open(url)
+            openInApp(url)
             decisionHandler(.cancel)
             return
         }
         decisionHandler(.allow)
+    }
+
+    // MARK: In-app browser (Stripe pages, other websites) — the page hears when it closes
+    func openInApp(_ url: URL) {
+        let sf = SFSafariViewController(url: url)
+        sf.delegate = self
+        sf.dismissButtonStyle = .close
+        sf.preferredControlTintColor = UIColor(red: 0.94, green: 0.75, blue: 0.30, alpha: 1)
+        sf.preferredBarTintColor = UIColor(red: 0x17/255.0, green: 0x1a/255.0, blue: 0x20/255.0, alpha: 1)
+        var top: UIViewController = self
+        while let p = top.presentedViewController { top = p }
+        top.present(sf, animated: true)
+    }
+    func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
+        webView.evaluateJavaScript("window.dispatchEvent(new Event('lockin:browserclosed'))", completionHandler: nil)
     }
 
     // MARK: Popups (sign-in) presented inside the app
